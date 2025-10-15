@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { SettingsPanel } from './components/settings/SettingsPanel';
+import { ProjectDetail } from './components/project/ProjectDetail';
 import { useSettingsStore } from './store/settingsStore';
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/settings" element={<SettingsPanel />} />
-        {/* Project detail route will be added later */}
+        <Route path="/project/:id" element={<ProjectDetail />} />
       </Routes>
     </BrowserRouter>
   );
