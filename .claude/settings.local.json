@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd initial design documentation for Vibe Hub\n\nCreated comprehensive design documentation for the Vibe Hub desktop app:\n- Original app idea and core problem statement\n- Design clarifications with user decisions\n- Complete MVP design specification\n- Future features roadmap for post-MVP phases\n\nVibe Hub will be a local-first desktop companion for managing personal vibe-coding projects, with integrated feedback tracking and Claude Code workflow support.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
