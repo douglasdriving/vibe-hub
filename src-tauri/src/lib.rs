@@ -1,14 +1,32 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+mod models;
+mod commands;
+
+use commands::{settings, projects, feedback, launcher};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .invoke_handler(tauri::generate_handler![
+            // Settings commands
+            settings::get_settings,
+            settings::update_settings,
+            settings::select_directory,
+            // Project commands
+            projects::scan_projects,
+            projects::get_project_detail,
+            // Feedback commands
+            feedback::get_feedback,
+            feedback::add_feedback,
+            feedback::update_feedback,
+            feedback::delete_feedback,
+            // Launcher commands
+            launcher::launch_claude_code,
+            launcher::open_in_explorer,
+            launcher::open_url,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
