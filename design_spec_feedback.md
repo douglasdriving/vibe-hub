@@ -1,0 +1,4 @@
+- feedback list does not need a sorting or filtering function for now. remove. sort by priority as default
+- remove theme preference from settings for now
+- remove default claude code launch behaviour from settings for now
+- 

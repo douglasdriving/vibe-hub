@@ -95,10 +95,7 @@ Vibe Hub
 
 #### C. Feedback List Section
 - Title: "Feedback & Improvements"
-- Filter/sort controls:
-  - Sort by: Priority (high to low), Date Added, Status
-  - Filter by: Priority level, Status
-- List of feedback items, each showing:
+- List of feedback items (sorted by priority, highest to lowest), each showing:
   - Checkbox (for marking complete)
   - Feedback text
   - Priority badge (1-5 with color coding and label)
@@ -152,8 +149,6 @@ Vibe Hub
 
 **Settings:**
 - Projects Directory Path (with folder picker)
-- Default Claude Code launch behavior
-- Theme preference (light/dark - if desired)
 
 ---
 
@@ -294,7 +289,6 @@ Vibe Hub
 2. Returns to Vibe Hub
 3. Checks off completed feedback items
 4. Items marked as complete (with timestamp)
-5. Can filter to hide completed items
 
 ---
 
