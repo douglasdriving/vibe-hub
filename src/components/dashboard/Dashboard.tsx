@@ -1,0 +1,125 @@
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Settings, RefreshCw } from 'lucide-react';
+import { useProjectStore } from '../../store/projectStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { ProjectCard } from './ProjectCard';
+import { Button } from '../common/Button';
+import { APP_NAME } from '../../utils/constants';
+
+export function Dashboard() {
+  const navigate = useNavigate();
+  const { projects, isLoading, loadProjects } = useProjectStore();
+  const { settings } = useSettingsStore();
+
+  useEffect(() => {
+    if (settings?.projectsDirectory) {
+      loadProjects();
+    }
+  }, [settings?.projectsDirectory]);
+
+  const handleRefresh = () => {
+    loadProjects();
+  };
+
+  const handleSettings = () => {
+    navigate('/settings');
+  };
+
+  // Empty state - no projects directory configured
+  if (!settings?.projectsDirectory) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{APP_NAME}</h1>
+          <p className="text-gray-600 mb-6">
+            Welcome! Please configure your projects directory to get started.
+          </p>
+          <Button onClick={handleSettings}>
+            <Settings size={18} className="inline mr-2" />
+            Open Settings
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - no projects found
+  if (!isLoading && projects.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={handleRefresh}>
+                <RefreshCw size={16} className="inline mr-2" />
+                Refresh
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleSettings}>
+                <Settings size={16} className="inline mr-2" />
+                Settings
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <p className="text-gray-600 mb-4">
+              No projects found in: <code className="bg-gray-100 px-2 py-1 rounded">{settings.projectsDirectory}</code>
+            </p>
+            <p className="text-gray-500 text-sm">
+              Make sure your projects folder contains subdirectories with git repositories.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Main dashboard
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {projects.length} project{projects.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <RefreshCw size={16} className={`inline mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleSettings}>
+              <Settings size={16} className="inline mr-2" />
+              Settings
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="text-gray-600">Loading projects...</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
