@@ -671,16 +671,46 @@ npm run type-check
 ## Testing Strategy
 
 ### Unit Tests
-- Rust: Test file parsing, project scanning logic
-- TypeScript: Test utilities, formatters, prompt generation
+
+**Rust (using built-in test framework):**
+- Test file parsing logic (vibe-hub.md, feedback JSON)
+- Test project scanning with mock directories
+- Test feedback CRUD operations with temp files
+- Test git operations with mock repos
+- Test utilities (path validation, date formatting)
+
+**Setup:**
+```bash
+# Run Rust tests
+cd src-tauri && cargo test
+```
+
+**TypeScript (using Vitest):**
+- Test utilities (formatters, date handling)
+- Test prompt generation logic
+- Test store actions and state updates
+- Test component logic (using React Testing Library)
+
+**Setup:**
+```bash
+# Install vitest and testing libraries
+npm install -D vitest @testing-library/react @testing-library/jest-dom
+npm install -D @testing-library/user-event happy-dom
+
+# Run tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Coverage
+npm run test:coverage
+```
 
 ### Integration Tests
-- Test Tauri commands with mock filesystem
-- Test state management store actions
-
-### E2E Tests (Deferred)
-- Not critical for MVP
-- Can add later with Playwright or Tauri's testing tools
+- Test Tauri commands with temporary test directories
+- Test state management with mocked Tauri commands
+- Test file I/O operations with temp files
 
 ### Manual Testing Checklist
 - First launch (no settings)
@@ -712,42 +742,78 @@ npm run type-check
 
 ---
 
-## Development Phases
+## Implementation Order
 
-### Phase 1: Setup & Basic Structure (Week 1)
-- Initialize Tauri + React project
-- Set up TypeScript, Tailwind, Zustand
-- Create basic project structure
-- Implement settings storage
-- Build simple UI shell
+### 1. Project Setup & Foundation
+- Initialize Tauri + React + TypeScript project
+- Set up Tailwind CSS, Zustand
+- Configure Vite and build tools
+- Set up testing frameworks (Vitest, Cargo test)
+- Create basic project structure (directories, files)
+- Set up git hooks and linting
 
-### Phase 2: Project Scanning (Week 1-2)
+### 2. Settings System
+- Implement settings storage (Rust backend)
+- Create settings Tauri commands
+- Build settings UI (directory picker)
+- Implement settings store (Zustand)
+- Test settings persistence
+
+### 3. Project Scanning & Display
 - Implement project scanning in Rust
 - Git integration for metadata
 - Parse vibe-hub.md files
-- Display projects in dashboard
-- Project detail view
+- Create Tauri commands for project operations
+- Build dashboard UI with project cards
+- Test project scanning with mock data
 
-### Phase 3: Feedback System (Week 2-3)
-- Implement feedback CRUD operations
-- File I/O for feedback JSON
-- Feedback modal UI
-- Priority system
-- Mark complete functionality
+### 4. Project Detail View
+- Create project detail UI layout
+- Implement project info display
+- Add back navigation
+- Wire up state management
+- Test navigation flow
 
-### Phase 4: Claude Integration (Week 3)
-- Prompt generation
-- Clipboard operations
-- Terminal/Claude Code launching
+### 5. Feedback System (Backend)
+- Implement feedback file I/O (Rust)
+- Create Tauri commands for feedback CRUD
+- Add feedback sorting logic
+- Write unit tests for feedback operations
+
+### 6. Feedback System (Frontend)
+- Build feedback list UI
+- Create feedback modal
+- Implement add/edit/delete functionality
+- Add priority selector
+- Wire up to Tauri commands
+- Test feedback operations
+
+### 7. Claude Code Integration
+- Implement prompt generation logic
+- Create clipboard operations
+- Build launcher Tauri command
+- Add "Open Claude Code" buttons
 - Test on Windows
 
-### Phase 5: Polish & Testing (Week 4)
-- Error handling
-- Loading states
-- Empty states
-- Manual testing
+### 8. Additional Actions
+- Implement "Open in Explorer"
+- Implement "Open Deployment URL"
+- Add action buttons to UI
+- Test all launcher features
+
+### 9. Polish & Error Handling
+- Add loading states throughout
+- Implement error messages
+- Create empty states
+- Add proper error boundaries
+- Improve UI/UX details
+
+### 10. Testing & Documentation
+- Write comprehensive unit tests
+- Add integration tests
+- Manual testing pass
 - Bug fixes
-- Documentation
+- Write usage documentation
 
 ---
 
