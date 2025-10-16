@@ -50,29 +50,29 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={initialData ? 'Edit Feedback' : 'Add Feedback'}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
             Feedback
           </label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={4}
+            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            rows={5}
             placeholder="Describe the issue or improvement..."
           />
-          {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm font-medium text-red-600">{error}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
             Priority
           </label>
           <select
             value={priority}
             onChange={(e) => setPriority(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {([1, 2, 3, 4, 5] as const).map((p) => (
               <option key={p} value={p}>
@@ -82,7 +82,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
           </select>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>

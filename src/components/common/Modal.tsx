@@ -34,19 +34,21 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     >
       {/* Modal panel */}
       <div
-        className="bg-white rounded-lg shadow-2xl max-w-lg w-full mx-4 p-6"
+        className="bg-white rounded-xl shadow-2xl max-w-xl w-full mx-4 p-8"
         style={{
           zIndex: 1000000,
-          position: 'relative'
+          position: 'relative',
+          backgroundColor: '#ffffff',
+          opacity: 1
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-all"
           >
             <X size={24} />
           </button>
