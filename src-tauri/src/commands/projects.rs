@@ -95,13 +95,16 @@ fn get_last_modified(project_path: &Path) -> String {
     // Try to get last modified from filesystem
     if let Ok(metadata) = fs::metadata(project_path) {
         if let Ok(modified) = metadata.modified() {
-            if let Ok(datetime) = modified.duration_since(std::time::UNIX_EPOCH) {
-                return chrono::DateTime::from_timestamp(datetime.as_secs() as i64, 0)
-                    .map(|dt| dt.to_rfc3339())
-                    .unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
+            if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
+                let secs = duration.as_secs() as i64;
+                let nsecs = duration.subsec_nanos();
+                if let Some(dt) = chrono::DateTime::from_timestamp(secs, nsecs) {
+                    return dt.to_rfc3339();
+                }
             }
         }
     }
+    // Fallback to current time
     chrono::Utc::now().to_rfc3339()
 }
 
