@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { ProjectDetail } from './components/project/ProjectDetail';
@@ -14,13 +14,13 @@ function App() {
   }, [loadSettings]);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/settings" element={<SettingsPanel />} />
         <Route path="/project/:id" element={<ProjectDetail />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
