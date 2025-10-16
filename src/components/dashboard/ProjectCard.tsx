@@ -1,9 +1,7 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink, Folder, Terminal } from 'lucide-react';
 import type { Project } from '../../store/types';
 import { formatRelativeTime } from '../../utils/formatters';
-import { Button } from '../common/Button';
 import { useProjectStore } from '../../store/projectStore';
 
 interface ProjectCardProps {

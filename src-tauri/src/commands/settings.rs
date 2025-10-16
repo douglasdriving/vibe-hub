@@ -1,7 +1,7 @@
 use crate::models::Settings;
 use std::fs;
 use std::path::PathBuf;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 fn get_settings_path(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
@@ -46,7 +46,7 @@ pub async fn update_settings(app: AppHandle, settings: Settings) -> Result<(), S
 
 #[tauri::command]
 pub async fn select_directory(app: AppHandle) -> Result<Option<String>, String> {
-    use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+    use tauri_plugin_dialog::DialogExt;
 
     let folder = app.dialog()
         .file()

@@ -1,6 +1,6 @@
 use crate::models::{Project, FeedbackFile};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use uuid::Uuid;
 
 const FEEDBACK_FILE: &str = "vibe-hub-feedback.json";
@@ -167,7 +167,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
     Ok(Project {
         id: Uuid::new_v4().to_string(),
         name,
-        path: project_path,
+        path: project_path.clone(),
         description,
         tech_stack,
         deployment_url,

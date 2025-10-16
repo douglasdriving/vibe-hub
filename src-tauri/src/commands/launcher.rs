@@ -1,7 +1,7 @@
 use std::process::Command;
 
 #[tauri::command]
-pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<(), String> {
+pub async fn launch_claude_code(project_path: String, _prompt: String) -> Result<(), String> {
     // Copy prompt to clipboard using tauri plugin
     #[cfg(target_os = "windows")]
     {

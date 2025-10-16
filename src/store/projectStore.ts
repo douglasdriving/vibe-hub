@@ -193,6 +193,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         selectedFeedback
       );
 
+      // Copy prompt to clipboard first
+      await navigator.clipboard.writeText(prompt);
+
+      // Then launch Claude Code
       await tauri.launchClaudeCode(projectPath, prompt);
     } catch (error) {
       console.error('Failed to launch Claude Code:', error);

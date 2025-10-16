@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
-import { Input } from '../common/Input';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS } from '../../store/types';
 

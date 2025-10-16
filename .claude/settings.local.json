@@ -13,7 +13,14 @@
       "Bash(git restore:*)",
       "Bash(git checkout:*)",
       "Bash(npm install:*)",
-      "Bash(npx tailwindcss init:*)"
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npm run build:*)",
+      "Bash(cargo build:*)",
+      "Bash(npm run tauri:*)",
+      "Bash(where cargo)",
+      "Bash(ls:*)",
+      "Bash(export PATH=\"$PATH:$HOME/.cargo/bin\")",
+      "Bash(cargo --version)"
     ],
     "deny": [],
     "ask": []
