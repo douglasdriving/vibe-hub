@@ -18,20 +18,25 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
   console.log('Modal rendering!');
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ zIndex: 9999 }}>
-      <div className="flex items-center justify-center min-h-screen px-4">
-        {/* Background overlay */}
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75"
-          onClick={onClose}
-          style={{ zIndex: 9998 }}
-        />
-
-        {/* Modal panel */}
-        <div
-          className="relative bg-white rounded-lg text-left overflow-hidden shadow-xl max-w-lg w-full"
-          style={{ zIndex: 9999 }}
-        >
+    <div
+      className="fixed inset-0 overflow-y-auto flex items-center justify-center"
+      style={{
+        zIndex: 999999,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
+      onClick={onClose}
+    >
+      {/* Modal panel */}
+      <div
+        className="relative bg-white rounded-lg text-left overflow-hidden shadow-xl max-w-lg w-full mx-4"
+        style={{ zIndex: 1000000 }}
+        onClick={(e) => e.stopPropagation()}
+      >
           {/* Header */}
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
@@ -47,7 +52,6 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             <div>{children}</div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

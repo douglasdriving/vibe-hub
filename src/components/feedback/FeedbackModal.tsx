@@ -16,7 +16,10 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
   const [priority, setPriority] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [error, setError] = useState('');
 
+  console.log('FeedbackModal render - isOpen:', isOpen);
+
   useEffect(() => {
+    console.log('FeedbackModal useEffect - isOpen:', isOpen, 'initialData:', initialData);
     if (initialData) {
       setText(initialData.text);
       setPriority(initialData.priority);
