@@ -38,8 +38,11 @@ export function ProjectDetail() {
   };
 
   const handleAddFeedback = () => {
+    console.log('Add Feedback button clicked');
+    console.log('Current isModalOpen:', isModalOpen);
     setEditingFeedback(undefined);
     setIsModalOpen(true);
+    console.log('Set isModalOpen to true');
   };
 
   const handleEditFeedback = (item: FeedbackItem) => {
