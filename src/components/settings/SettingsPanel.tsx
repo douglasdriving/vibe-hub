@@ -10,7 +10,11 @@ export function SettingsPanel() {
 
   const handleSelectDirectory = async () => {
     try {
-      await selectDirectory();
+      const path = await selectDirectory();
+      // Navigate back to dashboard after successful directory selection
+      if (path) {
+        navigate('/');
+      }
     } catch (error) {
       console.error('Failed to select directory:', error);
     }

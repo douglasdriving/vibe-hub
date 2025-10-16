@@ -16,7 +16,7 @@ export function Dashboard() {
     if (settings?.projectsDirectory) {
       loadProjects();
     }
-  }, [settings?.projectsDirectory]);
+  }, [settings?.projectsDirectory, loadProjects]);
 
   const handleRefresh = () => {
     loadProjects();
