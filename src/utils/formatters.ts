@@ -5,6 +5,12 @@ import { format, formatDistanceToNow } from 'date-fns';
  */
 export function formatDate(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    return 'Unknown';
+  }
+
   return format(dateObj, 'MMM d, yyyy');
 }
 
@@ -13,6 +19,12 @@ export function formatDate(date: Date | string): string {
  */
 export function formatRelativeTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    return 'Unknown';
+  }
+
   return formatDistanceToNow(dateObj, { addSuffix: true });
 }
 
@@ -21,5 +33,11 @@ export function formatRelativeTime(date: Date | string): string {
  */
 export function formatDateTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  // Check if date is valid
+  if (isNaN(dateObj.getTime())) {
+    return 'Unknown';
+  }
+
   return format(dateObj, 'MMM d, yyyy \'at\' h:mm a');
 }
