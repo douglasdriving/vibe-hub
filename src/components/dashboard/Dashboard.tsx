@@ -9,14 +9,22 @@ import { APP_NAME } from '../../utils/constants';
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { projects, isLoading, loadProjects } = useProjectStore();
+  const { projects, isLoading, loadProjects, error } = useProjectStore();
   const { settings } = useSettingsStore();
 
   useEffect(() => {
     if (settings?.projectsDirectory) {
+      console.log('Loading projects from:', settings.projectsDirectory);
       loadProjects();
     }
   }, [settings?.projectsDirectory, loadProjects]);
+
+  // Log any errors
+  useEffect(() => {
+    if (error) {
+      console.error('Dashboard error:', error);
+    }
+  }, [error]);
 
   const handleRefresh = () => {
     loadProjects();
@@ -25,6 +33,11 @@ export function Dashboard() {
   const handleSettings = () => {
     navigate('/settings');
   };
+
+  // Log settings for debugging
+  console.log('Dashboard settings:', settings);
+  console.log('Projects:', projects);
+  console.log('Is loading:', isLoading);
 
   // Empty state - no projects directory configured
   if (!settings?.projectsDirectory) {

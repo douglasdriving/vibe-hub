@@ -22,7 +22,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   loadSettings: async () => {
     set({ isLoading: true });
     try {
+      console.log('Loading settings...');
       const settings = await tauri.getSettings();
+      console.log('Settings loaded:', settings);
       set({ settings, isLoading: false });
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -33,11 +35,17 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   // Update projects directory
   updateProjectsDirectory: async (path: string) => {
     const { settings } = useSettingsStore.getState();
-    if (!settings) return;
+    console.log('Updating projects directory to:', path);
+    console.log('Current settings:', settings);
+
+    // If no settings exist, create new one
+    const currentSettings = settings || { projectsDirectory: '' };
 
     try {
-      const newSettings = { ...settings, projectsDirectory: path };
+      const newSettings = { ...currentSettings, projectsDirectory: path };
+      console.log('Saving settings:', newSettings);
       await tauri.updateSettings(newSettings);
+      console.log('Settings saved successfully');
       set({ settings: newSettings });
     } catch (error) {
       console.error('Failed to update settings:', error);
@@ -48,7 +56,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   // Open directory picker
   selectDirectory: async () => {
     try {
+      console.log('Opening directory picker...');
       const path = await tauri.selectDirectory();
+      console.log('Selected path:', path);
       if (path) {
         await useSettingsStore.getState().updateProjectsDirectory(path);
       }
