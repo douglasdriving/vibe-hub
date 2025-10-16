@@ -158,7 +158,7 @@ export function ProjectDetail() {
             <p className="text-gray-700 mb-4">{currentProject.description}</p>
           )}
 
-          {currentProject.techStack.length > 0 && (
+          {currentProject.techStack && currentProject.techStack.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="text-sm font-medium text-gray-700">Tech Stack:</span>
               {currentProject.techStack.map((tech) => (
