@@ -17,6 +17,7 @@ pub fn run() {
             // Project commands
             projects::scan_projects,
             projects::get_project_detail,
+            projects::update_project_metadata,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,

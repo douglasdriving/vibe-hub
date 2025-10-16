@@ -179,3 +179,43 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         has_uncommitted_changes: false,
     })
 }
+
+#[tauri::command]
+pub async fn update_project_metadata(
+    project_path: String,
+    description: String,
+    tech_stack: Vec<String>,
+    deployment_url: Option<String>,
+) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(METADATA_FILE);
+
+    // Create the markdown content
+    let mut content = String::from("# Project Metadata\n\n");
+
+    // Add description
+    content.push_str("## Description\n\n");
+    if !description.is_empty() {
+        content.push_str(&description);
+        content.push_str("\n\n");
+    }
+
+    // Add tech stack
+    content.push_str("## Tech Stack\n\n");
+    for tech in &tech_stack {
+        content.push_str(&format!("- {}\n", tech));
+    }
+    content.push('\n');
+
+    // Add deployment URL
+    if let Some(url) = deployment_url {
+        content.push_str("## Deployment\n\n");
+        content.push_str(&url);
+        content.push('\n');
+    }
+
+    fs::write(&metadata_path, content)
+        .map_err(|e| format!("Failed to write metadata file: {}", e))?;
+
+    Ok(())
+}

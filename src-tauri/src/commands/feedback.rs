@@ -1,4 +1,4 @@
-use crate::models::{FeedbackItem, FeedbackFile};
+use crate::models::{FeedbackItem, FeedbackFile, NewFeedbackItem, UpdateFeedbackItem};
 use std::fs;
 use std::path::Path;
 use uuid::Uuid;
@@ -45,7 +45,7 @@ pub async fn get_feedback(project_path: String) -> Result<Vec<FeedbackItem>, Str
 #[tauri::command]
 pub async fn add_feedback(
     project_path: String,
-    feedback: FeedbackItem,
+    feedback: NewFeedbackItem,
 ) -> Result<FeedbackItem, String> {
     let path = Path::new(&project_path);
     let mut feedback_file = read_feedback_file(path)?;
@@ -69,7 +69,7 @@ pub async fn add_feedback(
 pub async fn update_feedback(
     project_path: String,
     feedback_id: String,
-    updates: FeedbackItem,
+    updates: UpdateFeedbackItem,
 ) -> Result<(), String> {
     let path = Path::new(&project_path);
     let mut feedback_file = read_feedback_file(path)?;
@@ -80,10 +80,16 @@ pub async fn update_feedback(
         .find(|f| f.id == feedback_id)
         .ok_or("Feedback item not found")?;
 
-    // Update fields
-    item.text = updates.text;
-    item.priority = updates.priority;
-    item.status = updates.status;
+    // Update fields only if provided
+    if let Some(text) = updates.text {
+        item.text = text;
+    }
+    if let Some(priority) = updates.priority {
+        item.priority = priority;
+    }
+    if let Some(status) = updates.status {
+        item.status = status;
+    }
     if let Some(completed_at) = updates.completed_at {
         item.completed_at = Some(completed_at);
     }

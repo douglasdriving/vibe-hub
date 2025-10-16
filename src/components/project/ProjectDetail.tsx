@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, ChevronDown } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
+import { Dropdown } from '../common/Dropdown';
 import { FeedbackModal } from '../feedback/FeedbackModal';
+import { EditProjectModal } from './EditProjectModal';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
@@ -19,6 +21,7 @@ export function ProjectDetail() {
     updateFeedback,
     deleteFeedback,
     toggleFeedbackComplete,
+    updateProjectMetadata,
     launchClaudeCode,
     openInExplorer,
     openDeploymentUrl,
@@ -26,6 +29,7 @@ export function ProjectDetail() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
+  const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -88,9 +92,18 @@ export function ProjectDetail() {
     }
   };
 
-  const handleLaunchClaude = () => {
+  const handleLaunchClaude = (feedbackIds?: string[]) => {
     if (!currentProject) return;
-    launchClaudeCode(currentProject.path);
+    launchClaudeCode(currentProject.path, feedbackIds);
+  };
+
+  const handleLaunchWithAllPending = () => {
+    const pendingIds = feedback.filter(f => f.status === 'pending').map(f => f.id);
+    handleLaunchClaude(pendingIds);
+  };
+
+  const handleLaunchWithoutContext = () => {
+    handleLaunchClaude([]);
   };
 
   const handleOpenExplorer = () => {
@@ -101,6 +114,16 @@ export function ProjectDetail() {
   const handleOpenDeployment = () => {
     if (!currentProject?.deploymentUrl) return;
     openDeploymentUrl(currentProject.deploymentUrl);
+  };
+
+  const handleSaveProjectMetadata = async (data: { description: string; techStack: string[]; deploymentUrl?: string }) => {
+    if (!currentProject) return;
+
+    try {
+      await updateProjectMetadata(currentProject.path, data);
+    } catch (error) {
+      console.error('Failed to update project metadata:', error);
+    }
   };
 
   if (!currentProject) {
@@ -143,10 +166,25 @@ export function ProjectDetail() {
                   Open App
                 </Button>
               )}
-              <Button size="sm" onClick={handleLaunchClaude}>
-                <Terminal size={16} className="inline mr-2" />
-                Claude Code
-              </Button>
+              <Dropdown
+                trigger={
+                  <Button size="sm">
+                    <Terminal size={16} className="inline mr-2" />
+                    Claude Code
+                    <ChevronDown size={16} className="inline ml-2" />
+                  </Button>
+                }
+                items={[
+                  {
+                    label: 'Open with All Pending Feedback',
+                    onClick: handleLaunchWithAllPending,
+                  },
+                  {
+                    label: 'Open without Context',
+                    onClick: handleLaunchWithoutContext,
+                  },
+                ]}
+              />
             </div>
           </div>
         </div>
@@ -155,13 +193,21 @@ export function ProjectDetail() {
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Project Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Project Information</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-900">Project Information</h2>
+            <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
+              <Settings size={16} className="inline mr-2" />
+              Edit Info
+            </Button>
+          </div>
 
-          {currentProject.description && (
+          {currentProject.description ? (
             <p className="text-gray-700 mb-4">{currentProject.description}</p>
+          ) : (
+            <p className="text-gray-500 text-sm mb-4 italic">No description yet. Click "Edit Info" to add one.</p>
           )}
 
-          {currentProject.techStack && currentProject.techStack.length > 0 && (
+          {currentProject.techStack && currentProject.techStack.length > 0 ? (
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="text-sm font-medium text-gray-700">Tech Stack:</span>
               {currentProject.techStack.map((tech) => (
@@ -170,6 +216,8 @@ export function ProjectDetail() {
                 </span>
               ))}
             </div>
+          ) : (
+            <p className="text-gray-500 text-sm mb-4 italic">No tech stack specified yet.</p>
           )}
 
           <p className="text-sm text-gray-600">
@@ -256,6 +304,13 @@ export function ProjectDetail() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveFeedback}
         initialData={editingFeedback}
+      />
+
+      <EditProjectModal
+        isOpen={isEditProjectModalOpen}
+        onClose={() => setIsEditProjectModalOpen(false)}
+        onSave={handleSaveProjectMetadata}
+        project={currentProject}
       />
     </div>
   );

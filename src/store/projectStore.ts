@@ -21,6 +21,8 @@ interface ProjectStore {
   deleteFeedback: (projectPath: string, feedbackId: string) => Promise<void>;
   toggleFeedbackComplete: (projectPath: string, feedbackId: string) => Promise<void>;
 
+  updateProjectMetadata: (projectPath: string, data: { description: string; techStack: string[]; deploymentUrl?: string }) => Promise<void>;
+
   launchClaudeCode: (projectPath: string, feedbackIds?: string[]) => Promise<void>;
   openInExplorer: (projectPath: string) => Promise<void>;
   openDeploymentUrl: (url: string) => Promise<void>;
@@ -175,6 +177,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       await get().updateFeedback(projectPath, feedbackId, updates);
     } catch (error) {
       console.error('Failed to toggle feedback:', error);
+      throw error;
+    }
+  },
+
+  // Update project metadata
+  updateProjectMetadata: async (projectPath: string, data) => {
+    try {
+      await tauri.updateProjectMetadata(projectPath, data);
+
+      // Refresh the current project to show updated data
+      const { currentProject } = get();
+      if (currentProject) {
+        await get().refreshProject(currentProject.id);
+      }
+    } catch (error) {
+      console.error('Failed to update project metadata:', error);
       throw error;
     }
   },

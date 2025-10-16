@@ -12,9 +12,14 @@ export async function getProjectDetail(projectPath: string): Promise<Project> {
 
 export async function updateProjectMetadata(
   projectPath: string,
-  metadata: ProjectMetadata
+  metadata: { description: string; techStack: string[]; deploymentUrl?: string }
 ): Promise<void> {
-  return await invoke('update_project_metadata', { projectPath, metadata });
+  return await invoke('update_project_metadata', {
+    projectPath,
+    description: metadata.description,
+    techStack: metadata.techStack,
+    deploymentUrl: metadata.deploymentUrl
+  });
 }
 
 // Feedback commands

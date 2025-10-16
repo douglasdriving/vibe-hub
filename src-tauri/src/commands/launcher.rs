@@ -5,9 +5,18 @@ pub async fn launch_claude_code(project_path: String, _prompt: String) -> Result
     // Copy prompt to clipboard using tauri plugin
     #[cfg(target_os = "windows")]
     {
-        // Launch cmd in the project directory with claude command
+        // Launch a new cmd window in the project directory with claude command
+        // Using start with a new window title to handle spaces in paths properly
         Command::new("cmd")
-            .args(&["/c", "start", "cmd", "/k", &format!("cd /d \"{}\" && claude", project_path)])
+            .args(&[
+                "/c",
+                "start",
+                "Claude Code",  // Window title (required when path has spaces)
+                "cmd",
+                "/k",
+                "claude"
+            ])
+            .current_dir(&project_path)
             .spawn()
             .map_err(|e| format!("Failed to launch Claude Code: {}", e))?;
     }
