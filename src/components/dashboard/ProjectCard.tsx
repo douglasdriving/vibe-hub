@@ -49,7 +49,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       )}
 
       {/* Tech Stack */}
-      {project.techStack.length > 0 && (
+      {project.techStack && project.techStack.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {project.techStack.slice(0, 3).map((tech) => (
             <span
