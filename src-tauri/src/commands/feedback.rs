@@ -3,10 +3,11 @@ use std::fs;
 use std::path::Path;
 use uuid::Uuid;
 
-const FEEDBACK_FILE: &str = "vibe-hub-feedback.json";
+const VIBE_DIR: &str = ".vibe";
+const FEEDBACK_FILE: &str = "feedback.json";
 
 fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
-    let feedback_path = project_path.join(FEEDBACK_FILE);
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_FILE);
 
     if !feedback_path.exists() {
         return Ok(FeedbackFile::default());
@@ -20,7 +21,14 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
 }
 
 fn write_feedback_file(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
-    let feedback_path = project_path.join(FEEDBACK_FILE);
+    let vibe_dir = project_path.join(VIBE_DIR);
+    let feedback_path = vibe_dir.join(FEEDBACK_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
 
     let json = serde_json::to_string_pretty(feedback_file)
         .map_err(|e| format!("Failed to serialize feedback: {}", e))?;

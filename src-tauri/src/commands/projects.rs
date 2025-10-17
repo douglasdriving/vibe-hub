@@ -3,11 +3,44 @@ use std::fs;
 use std::path::Path;
 use uuid::Uuid;
 
-const FEEDBACK_FILE: &str = "vibe-hub-feedback.json";
-const METADATA_FILE: &str = "vibe-hub.md";
+const VIBE_DIR: &str = ".vibe";
+const FEEDBACK_FILE: &str = "feedback.json";
+const METADATA_FILE: &str = "metadata.md";
+
+// Legacy file names for migration
+const LEGACY_FEEDBACK_FILE: &str = "vibe-hub-feedback.json";
+const LEGACY_METADATA_FILE: &str = "vibe-hub.md";
 
 fn is_git_repo(path: &Path) -> bool {
     path.join(".git").exists()
+}
+
+fn migrate_to_vibe_folder(project_path: &Path) -> Result<(), String> {
+    let vibe_dir = project_path.join(VIBE_DIR);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    // Migrate feedback file if it exists in old location
+    let old_feedback = project_path.join(LEGACY_FEEDBACK_FILE);
+    let new_feedback = vibe_dir.join(FEEDBACK_FILE);
+    if old_feedback.exists() && !new_feedback.exists() {
+        fs::rename(&old_feedback, &new_feedback)
+            .map_err(|e| format!("Failed to migrate feedback file: {}", e))?;
+    }
+
+    // Migrate metadata file if it exists in old location
+    let old_metadata = project_path.join(LEGACY_METADATA_FILE);
+    let new_metadata = vibe_dir.join(METADATA_FILE);
+    if old_metadata.exists() && !new_metadata.exists() {
+        fs::rename(&old_metadata, &new_metadata)
+            .map_err(|e| format!("Failed to migrate metadata file: {}", e))?;
+    }
+
+    Ok(())
 }
 
 fn get_project_name(path: &Path) -> String {
@@ -18,7 +51,7 @@ fn get_project_name(path: &Path) -> String {
 }
 
 fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
-    let feedback_path = project_path.join(FEEDBACK_FILE);
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_FILE);
 
     if !feedback_path.exists() {
         return Ok(FeedbackFile::default());
@@ -32,7 +65,7 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
 }
 
 fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>) {
-    let metadata_path = project_path.join(METADATA_FILE);
+    let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
         return (None, String::new(), None, Vec::new(), None);
@@ -116,7 +149,14 @@ fn auto_detect_status(_project_path: &Path, has_git: bool, deployment_url: &Opti
 }
 
 fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
-    let metadata_path = project_path.join(METADATA_FILE);
+    let vibe_dir = project_path.join(VIBE_DIR);
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
 
     if metadata_path.exists() {
         return Ok(());
@@ -204,6 +244,9 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
         // Process ALL directories
         if path.is_dir() {
+            // Migrate old files to .vibe folder if needed
+            let _ = migrate_to_vibe_folder(&path);
+
             // Auto-create metadata file if it doesn't exist
             let _ = ensure_metadata_file(&path);
 
@@ -287,7 +330,14 @@ pub async fn update_project_metadata(
     deployment_url: Option<String>,
 ) -> Result<(), String> {
     let path = Path::new(&project_path);
-    let metadata_path = path.join(METADATA_FILE);
+    let vibe_dir = path.join(VIBE_DIR);
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
 
     // Create the markdown content
     let mut content = String::from("# Project Metadata\n\n");
@@ -322,7 +372,14 @@ pub async fn update_project_metadata(
 #[tauri::command]
 pub async fn create_metadata_template(project_path: String) -> Result<(), String> {
     let path = Path::new(&project_path);
-    let metadata_path = path.join(METADATA_FILE);
+    let vibe_dir = path.join(VIBE_DIR);
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
 
     // Only create if it doesn't exist
     if metadata_path.exists() {
@@ -355,7 +412,7 @@ pub async fn create_metadata_template(project_path: String) -> Result<(), String
 #[tauri::command]
 pub async fn check_metadata_exists(project_path: String) -> Result<bool, String> {
     let path = Path::new(&project_path);
-    let metadata_path = path.join(METADATA_FILE);
+    let metadata_path = path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
         return Ok(false);
