@@ -14,13 +14,15 @@ function App() {
   }, [loadSettings]);
 
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/settings" element={<SettingsPanel />} />
-        <Route path="/project/:id" element={<ProjectDetail />} />
-      </Routes>
-    </HashRouter>
+    <div className="px-4 sm:px-6 lg:px-8">
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/settings" element={<SettingsPanel />} />
+          <Route path="/project/:id" element={<ProjectDetail />} />
+        </Routes>
+      </HashRouter>
+    </div>
   );
 }
 
