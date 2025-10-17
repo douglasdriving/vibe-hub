@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 
@@ -6,7 +6,9 @@ interface IdeaEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (idea: IdeaFormData) => Promise<void>;
+  onUpdateDraft: (idea: IdeaFormData) => void;
   projectName: string;
+  draftData: IdeaFormData | null;
 }
 
 export interface IdeaFormData {
@@ -17,14 +19,25 @@ export interface IdeaFormData {
   additionalRequirements: string;
 }
 
-export function IdeaEditorModal({ isOpen, onClose, onSave, projectName }: IdeaEditorModalProps) {
-  const [summary, setSummary] = useState('');
-  const [problem, setProblem] = useState('');
-  const [features, setFeatures] = useState(['', '', '']);
-  const [valueProposition, setValueProposition] = useState('');
-  const [additionalRequirements, setAdditionalRequirements] = useState('');
+export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projectName, draftData }: IdeaEditorModalProps) {
+  const [summary, setSummary] = useState(draftData?.summary || '');
+  const [problem, setProblem] = useState(draftData?.problem || '');
+  const [features, setFeatures] = useState(draftData?.coreFeatures || ['', '', '']);
+  const [valueProposition, setValueProposition] = useState(draftData?.valueProposition || '');
+  const [additionalRequirements, setAdditionalRequirements] = useState(draftData?.additionalRequirements || '');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update form state when draftData changes (when modal reopens with saved draft)
+  useEffect(() => {
+    if (isOpen && draftData) {
+      setSummary(draftData.summary || '');
+      setProblem(draftData.problem || '');
+      setFeatures(draftData.coreFeatures || ['', '', '']);
+      setValueProposition(draftData.valueProposition || '');
+      setAdditionalRequirements(draftData.additionalRequirements || '');
+    }
+  }, [isOpen, draftData]);
 
   const updateFeature = (index: number, value: string) => {
     const newFeatures = [...features];
@@ -79,12 +92,19 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, projectName }: IdeaEd
         additionalRequirements: additionalRequirements.trim(),
       });
 
-      // Reset form
+      // Reset form and clear draft
       setSummary('');
       setProblem('');
       setFeatures(['', '', '']);
       setValueProposition('');
       setAdditionalRequirements('');
+      onUpdateDraft({
+        summary: '',
+        problem: '',
+        coreFeatures: ['', '', ''],
+        valueProposition: '',
+        additionalRequirements: '',
+      });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save project idea');
@@ -95,11 +115,15 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, projectName }: IdeaEd
 
   const handleClose = () => {
     if (!isSaving) {
-      setSummary('');
-      setProblem('');
-      setFeatures(['', '', '']);
-      setValueProposition('');
-      setAdditionalRequirements('');
+      // Save current form state as draft before closing
+      const filledFeatures = features.filter(f => f.trim());
+      onUpdateDraft({
+        summary: summary.trim(),
+        problem: problem.trim(),
+        coreFeatures: filledFeatures.length > 0 ? filledFeatures : features,
+        valueProposition: valueProposition.trim(),
+        additionalRequirements: additionalRequirements.trim(),
+      });
       setError('');
       onClose();
     }

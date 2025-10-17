@@ -17,6 +17,7 @@ interface ProjectSetupCardProps {
 export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
   const { saveProjectIdea } = useProjectStore();
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
+  const [draftIdeaData, setDraftIdeaData] = useState<IdeaFormData | null>(null);
 
   // Only show this card for projects in setup stages
   if (!isSetupStatus(project.status)) {
@@ -29,6 +30,11 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
 
   const handleSaveIdea = async (ideaData: IdeaFormData) => {
     await saveProjectIdea(project.path, ideaData);
+    setDraftIdeaData(null); // Clear draft after successful save
+  };
+
+  const handleUpdateDraft = (ideaData: IdeaFormData) => {
+    setDraftIdeaData(ideaData);
   };
 
   const handleGenerateWithClaude = () => {
@@ -101,7 +107,9 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
         isOpen={isIdeaModalOpen}
         onClose={() => setIsIdeaModalOpen(false)}
         onSave={handleSaveIdea}
+        onUpdateDraft={handleUpdateDraft}
         projectName={project.name}
+        draftData={draftIdeaData}
       />
     </div>
   );
