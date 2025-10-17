@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink, Folder, Terminal } from 'lucide-react';
 import type { Project } from '../../store/types';
+import { STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatRelativeTime } from '../../utils/formatters';
 import { useProjectStore } from '../../store/projectStore';
 
@@ -29,11 +30,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div
       onClick={handleOpenProject}
-      className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+      className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-2 border-purple-200"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-xl font-semibold text-gray-900">{project.name}</h3>
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">{project.displayName || project.name}</h3>
+          <span className={`${STATUS_COLORS[project.status]} text-white text-xs px-2 py-1 rounded mt-1 inline-block`}>
+            {STATUS_LABELS[project.status]}
+          </span>
+        </div>
         {project.feedbackCount > 0 && (
           <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
             {project.feedbackCount}
