@@ -6,7 +6,7 @@ import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
 import { EditProjectModal } from './EditProjectModal';
 import type { FeedbackItem } from '../../store/types';
-import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../store/types';
+import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { createMetadataTemplate, generateMetadataPrompt, launchClaudeCode as launchClaudeTauri } from '../../services/tauri';
 import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
@@ -174,7 +174,12 @@ export function ProjectDetail() {
                 <ArrowLeft size={24} />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{currentProject.name}</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-gray-900">{currentProject.displayName || currentProject.name}</h1>
+                  <span className={`${STATUS_COLORS[currentProject.status]} text-white text-sm px-3 py-1 rounded`}>
+                    {STATUS_LABELS[currentProject.status]}
+                  </span>
+                </div>
                 {currentProject.lastModified && (
                   <p className="text-sm text-gray-600 mt-1">
                     Last modified: {formatDate(currentProject.lastModified)}
@@ -232,15 +237,10 @@ export function ProjectDetail() {
             <p className="text-gray-500 text-sm mb-4 italic">No tech stack specified yet.</p>
           )}
 
-          <button
-            onClick={handleOpenExplorer}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors group"
-          >
-            <Folder size={16} className="text-gray-500 group-hover:text-gray-700" />
-            <code className="bg-gray-100 px-2 py-1 rounded group-hover:bg-gray-200 transition-colors">
-              {currentProject.path}
-            </code>
-          </button>
+          <Button variant="secondary" size="sm" onClick={handleOpenExplorer}>
+            <Folder size={16} className="inline mr-2" />
+            {currentProject.path}
+          </Button>
         </div>
 
         {/* Feedback Section */}
@@ -273,69 +273,97 @@ export function ProjectDetail() {
               <p className="text-sm mt-2">Click "Add Feedback" to create one.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {[...feedback]
-                .sort((a, b) => {
-                  // Sort by status first (pending before completed)
-                  if (a.status !== b.status) {
-                    return a.status === 'pending' ? -1 : 1;
-                  }
-                  // Then by priority
-                  return a.priority - b.priority;
-                })
-                .map((item) => (
-                <div
-                  key={item.id}
-                  className={`border rounded-lg p-4 ${
-                    item.status === 'completed' ? 'bg-gray-50 opacity-75' : 'bg-white'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={item.status === 'completed'}
-                      onChange={() => handleToggleComplete(item.id)}
-                      className="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                    />
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-4">
-                        <p className={`text-gray-900 ${item.status === 'completed' ? 'line-through' : ''}`}>
-                          {item.text}
-                        </p>
-                        <span className={`${PRIORITY_COLORS[item.priority]} text-white text-xs px-2 py-1 rounded whitespace-nowrap`}>
-                          {PRIORITY_LABELS[item.priority]}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-4 mt-2">
-                        {formatDate(item.createdAt) && (
-                          <span className="text-xs text-gray-500">
-                            {formatDate(item.createdAt)}
-                          </span>
-                        )}
-
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditFeedback(item)}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            <Edit size={14} className="inline mr-1" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteFeedback(item.id)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            <Trash2 size={14} className="inline mr-1" />
-                            Delete
-                          </button>
+            <div className="space-y-6">
+              {/* Pending Items */}
+              {feedback.filter(f => f.status === 'pending').sort((a, b) => a.priority - b.priority).length > 0 && (
+                <div className="space-y-3">
+                  {feedback
+                    .filter(f => f.status === 'pending')
+                    .sort((a, b) => a.priority - b.priority)
+                    .map((item) => (
+                      <div key={item.id} className="border rounded-lg p-4 bg-white">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={false}
+                            onChange={() => handleToggleComplete(item.id)}
+                            className="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between gap-4">
+                              <p className="text-gray-900">{item.text}</p>
+                              <span className={`${PRIORITY_COLORS[item.priority]} text-white text-xs px-2 py-1 rounded whitespace-nowrap`}>
+                                {PRIORITY_LABELS[item.priority]}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 mt-2">
+                              {formatDate(item.createdAt) && (
+                                <span className="text-xs text-gray-500">{formatDate(item.createdAt)}</span>
+                              )}
+                              <div className="flex gap-2">
+                                <button onClick={() => handleEditFeedback(item)} className="text-blue-600 hover:text-blue-800 text-sm">
+                                  <Edit size={14} className="inline mr-1" />
+                                  Edit
+                                </button>
+                                <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-600 hover:text-red-800 text-sm">
+                                  <Trash2 size={14} className="inline mr-1" />
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
+                </div>
+              )}
+
+              {/* Completed Items */}
+              {feedback.filter(f => f.status === 'completed').length > 0 && (
+                <div>
+                  <h3 className="text-md font-semibold text-gray-700 mb-3">Implemented</h3>
+                  <div className="space-y-3">
+                    {feedback
+                      .filter(f => f.status === 'completed')
+                      .sort((a, b) => a.priority - b.priority)
+                      .map((item) => (
+                        <div key={item.id} className="border rounded-lg p-4 bg-gray-50 opacity-75">
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={true}
+                              onChange={() => handleToggleComplete(item.id)}
+                              className="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between gap-4">
+                                <p className="text-gray-900 line-through">{item.text}</p>
+                                <span className={`${PRIORITY_COLORS[item.priority]} text-white text-xs px-2 py-1 rounded whitespace-nowrap`}>
+                                  {PRIORITY_LABELS[item.priority]}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 mt-2">
+                                {formatDate(item.createdAt) && (
+                                  <span className="text-xs text-gray-500">{formatDate(item.createdAt)}</span>
+                                )}
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleEditFeedback(item)} className="text-blue-600 hover:text-blue-800 text-sm">
+                                    <Edit size={14} className="inline mr-1" />
+                                    Edit
+                                  </button>
+                                  <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-600 hover:text-red-800 text-sm">
+                                    <Trash2 size={14} className="inline mr-1" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
