@@ -30,6 +30,20 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
     setError('');
   }, [initialData, isOpen]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= 5) {
+          setPriority(num as 1 | 2 | 3 | 4 | 5);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -72,19 +86,25 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Priority
+            Priority (or press 1-5)
           </label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
+          <div className="flex gap-2">
             {([1, 2, 3, 4, 5] as const).map((p) => (
-              <option key={p} value={p}>
-                {p} - {PRIORITY_LABELS[p]}
-              </option>
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPriority(p)}
+                className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
+                  priority === p
+                    ? 'bg-blue-500 text-white border-blue-500 font-semibold'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'
+                }`}
+              >
+                <div className="text-sm font-medium">{p}</div>
+                <div className="text-xs mt-1">{PRIORITY_LABELS[p]}</div>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
