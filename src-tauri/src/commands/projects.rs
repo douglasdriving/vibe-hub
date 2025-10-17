@@ -644,3 +644,79 @@ Please update the vibe-hub.md file now with accurate information based on your a
 
     Ok(prompt)
 }
+
+#[tauri::command]
+pub async fn save_project_idea(
+    project_path: String,
+    summary: String,
+    problem: String,
+    core_features: Vec<String>,
+    value_proposition: String,
+    additional_requirements: String,
+) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let vibe_dir = path.join(VIBE_DIR);
+    let idea_path = vibe_dir.join(IDEA_FILE);
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    // Generate idea.md content
+    let mut content = String::from("# Project Idea\n\n");
+
+    content.push_str("## Summary\n\n");
+    content.push_str(&summary);
+    content.push_str("\n\n");
+
+    content.push_str("## Problem\n\n");
+    content.push_str(&problem);
+    content.push_str("\n\n");
+
+    content.push_str("## Core Features\n\n");
+    for feature in &core_features {
+        content.push_str(&format!("- {}\n", feature));
+    }
+    content.push_str("\n");
+
+    content.push_str("## Value Proposition\n\n");
+    content.push_str(&value_proposition);
+    content.push_str("\n");
+
+    if !additional_requirements.is_empty() {
+        content.push_str("\n## Additional Requirements\n\n");
+        content.push_str(&additional_requirements);
+        content.push_str("\n");
+    }
+
+    // Write idea.md
+    fs::write(&idea_path, content)
+        .map_err(|e| format!("Failed to write idea file: {}", e))?;
+
+    // Update status in metadata.md to "idea"
+    if metadata_path.exists() {
+        let metadata_contents = fs::read_to_string(&metadata_path)
+            .map_err(|e| format!("Failed to read metadata file: {}", e))?;
+
+        // Replace the status line
+        let updated_metadata = metadata_contents
+            .lines()
+            .map(|line| {
+                if line.starts_with("Status:") {
+                    "Status: idea"
+                } else {
+                    line
+                }
+            })
+            .collect::<Vec<&str>>()
+            .join("\n");
+
+        fs::write(&metadata_path, updated_metadata)
+            .map_err(|e| format!("Failed to update metadata file: {}", e))?;
+    }
+
+    Ok(())
+}

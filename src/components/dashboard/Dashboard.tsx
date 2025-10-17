@@ -1,16 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, RefreshCw } from 'lucide-react';
+import { Settings, RefreshCw, Plus } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { ProjectCard } from './ProjectCard';
 import { Button } from '../common/Button';
+import { NewProjectModal } from '../project/NewProjectModal';
 import { APP_NAME } from '../../utils/constants';
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { projects, isLoading, loadProjects, error } = useProjectStore();
+  const { projects, isLoading, loadProjects, createProject, error } = useProjectStore();
   const { settings } = useSettingsStore();
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
   useEffect(() => {
     if (settings?.projectsDirectory) {
@@ -32,6 +34,10 @@ export function Dashboard() {
 
   const handleSettings = () => {
     navigate('/settings');
+  };
+
+  const handleCreateProject = async (projectName: string) => {
+    await createProject(projectName);
   };
 
   // Log settings for debugging
@@ -65,6 +71,10 @@ export function Dashboard() {
           <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
             <div className="flex gap-2">
+              <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
+                <Plus size={16} className="inline mr-2" />
+                New Project
+              </Button>
               <Button variant="secondary" size="sm" onClick={handleRefresh}>
                 <RefreshCw size={16} className="inline mr-2" />
                 Refresh
@@ -87,6 +97,12 @@ export function Dashboard() {
             </p>
           </div>
         </main>
+
+        <NewProjectModal
+          isOpen={isNewProjectModalOpen}
+          onClose={() => setIsNewProjectModalOpen(false)}
+          onCreate={handleCreateProject}
+        />
       </div>
     );
   }
@@ -103,6 +119,10 @@ export function Dashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
+              <Plus size={16} className="inline mr-2" />
+              New Project
+            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -133,6 +153,12 @@ export function Dashboard() {
           </div>
         )}
       </main>
+
+      <NewProjectModal
+        isOpen={isNewProjectModalOpen}
+        onClose={() => setIsNewProjectModalOpen(false)}
+        onCreate={handleCreateProject}
+      />
     </div>
   );
 }

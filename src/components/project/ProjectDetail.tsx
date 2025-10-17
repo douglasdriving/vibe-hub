@@ -5,6 +5,7 @@ import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
 import { EditProjectModal } from './EditProjectModal';
+import { ProjectSetupCard } from './ProjectSetupCard';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
@@ -216,6 +217,9 @@ export function ProjectDetail() {
       </header>
 
       <main className="px-4 py-8 sm:px-6 lg:px-8">
+        {/* Project Setup Card - only shown for setup stages */}
+        <ProjectSetupCard project={currentProject} />
+
         {/* Project Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex items-center justify-end gap-2 mb-3">

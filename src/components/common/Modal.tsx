@@ -19,7 +19,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   console.log('Modal rendering!');
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center"
+      className="fixed inset-0 flex items-center justify-center p-4"
       style={{
         zIndex: 999999,
         position: 'fixed',
@@ -34,7 +34,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     >
       {/* Modal panel */}
       <div
-        className="bg-white rounded-xl shadow-2xl max-w-xl w-full mx-4 p-8"
+        className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col"
         style={{
           zIndex: 1000000,
           position: 'relative',
@@ -44,7 +44,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-8 pt-8 pb-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
@@ -54,8 +54,8 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           </button>
         </div>
 
-        {/* Content */}
-        <div>{children}</div>
+        {/* Content - scrollable */}
+        <div className="overflow-y-auto px-8 py-6 flex-1">{children}</div>
       </div>
     </div>
   );

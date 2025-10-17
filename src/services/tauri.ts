@@ -14,6 +14,24 @@ export async function createNewProject(projectsDir: string, projectName: string)
   return await invoke('create_new_project', { projectsDir, projectName });
 }
 
+export async function saveProjectIdea(
+  projectPath: string,
+  summary: string,
+  problem: string,
+  coreFeatures: string[],
+  valueProposition: string,
+  additionalRequirements: string
+): Promise<void> {
+  return await invoke('save_project_idea', {
+    projectPath,
+    summary,
+    problem,
+    coreFeatures,
+    valueProposition,
+    additionalRequirements
+  });
+}
+
 export async function updateProjectMetadata(
   projectPath: string,
   metadata: { description: string; techStack: string[]; deploymentUrl?: string }

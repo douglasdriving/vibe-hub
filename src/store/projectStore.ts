@@ -13,6 +13,14 @@ interface ProjectStore {
 
   // Actions
   loadProjects: () => Promise<void>;
+  createProject: (projectName: string) => Promise<void>;
+  saveProjectIdea: (projectPath: string, idea: {
+    summary: string;
+    problem: string;
+    coreFeatures: string[];
+    valueProposition: string;
+    additionalRequirements: string;
+  }) => Promise<void>;
   setCurrentProject: (projectId: string) => Promise<void>;
   refreshProject: (projectId: string) => Promise<void>;
 
@@ -53,6 +61,53 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to load projects:', error);
       set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
+  // Create new project
+  createProject: async (projectName: string) => {
+    try {
+      const settingsStore = await import('./settingsStore');
+      const { settings } = settingsStore.useSettingsStore.getState();
+
+      if (!settings?.projectsDirectory) {
+        throw new Error('Projects directory not configured');
+      }
+
+      await tauri.createNewProject(settings.projectsDirectory, projectName);
+
+      // Reload projects list to show the new project
+      await get().loadProjects();
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      throw error;
+    }
+  },
+
+  // Save project idea
+  saveProjectIdea: async (projectPath: string, idea) => {
+    try {
+      await tauri.saveProjectIdea(
+        projectPath,
+        idea.summary,
+        idea.problem,
+        idea.coreFeatures,
+        idea.valueProposition,
+        idea.additionalRequirements
+      );
+
+      // Reload projects list to reflect updated status
+      await get().loadProjects();
+
+      // If this is the current project, refresh it
+      const { currentProject } = get();
+      if (currentProject?.path === projectPath) {
+        const updatedProject = await tauri.getProjectDetail(projectPath);
+        set({ currentProject: updatedProject });
+      }
+    } catch (error) {
+      console.error('Failed to save project idea:', error);
+      throw error;
     }
   },
 
