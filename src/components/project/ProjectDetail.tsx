@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, Sparkles, Wrench } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, Sparkles, Wrench, Copy } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
@@ -9,7 +9,7 @@ import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { createMetadataTemplate, generateMetadataPrompt, launchClaudeCode as launchClaudeTauri } from '../../services/tauri';
-import { copyToClipboard } from '../../services/clipboard';
+import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -101,6 +101,13 @@ export function ProjectDetail() {
   const handleLaunchWithAllPending = () => {
     const pendingIds = feedback.filter(f => f.status === 'pending').map(f => f.id);
     handleLaunchClaude(pendingIds);
+  };
+
+  const handleCopyFixPrompt = async () => {
+    if (!currentProject) return;
+    const pendingFeedback = feedback.filter(f => f.status === 'pending');
+    const prompt = generateClaudePrompt(currentProject.name, pendingFeedback);
+    await copyToClipboard(prompt);
   };
 
   const handleLaunchWithoutContext = () => {
@@ -244,10 +251,16 @@ export function ProjectDetail() {
             <h2 className="text-lg font-semibold text-gray-900">Feedback & Improvements</h2>
             <div className="flex gap-2">
               {feedback.filter(f => f.status === 'pending').length > 0 && (
-                <Button variant="secondary" onClick={handleLaunchWithAllPending}>
-                  <Wrench size={18} className="inline mr-2" />
-                  Fix
-                </Button>
+                <>
+                  <Button variant="secondary" onClick={handleCopyFixPrompt}>
+                    <Copy size={18} className="inline mr-2" />
+                    Copy Prompt
+                  </Button>
+                  <Button variant="secondary" onClick={handleLaunchWithAllPending}>
+                    <Wrench size={18} className="inline mr-2" />
+                    Fix
+                  </Button>
+                </>
               )}
               <Button onClick={handleAddFeedback}>
                 <Plus size={18} className="inline mr-2" />
