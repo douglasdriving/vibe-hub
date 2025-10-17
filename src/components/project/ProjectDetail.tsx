@@ -263,7 +263,16 @@ export function ProjectDetail() {
             </div>
           ) : (
             <div className="space-y-3">
-              {feedback.map((item) => (
+              {[...feedback]
+                .sort((a, b) => {
+                  // Sort by status first (pending before completed)
+                  if (a.status !== b.status) {
+                    return a.status === 'pending' ? -1 : 1;
+                  }
+                  // Then by priority
+                  return a.priority - b.priority;
+                })
+                .map((item) => (
                 <div
                   key={item.id}
                   className={`border rounded-lg p-4 ${

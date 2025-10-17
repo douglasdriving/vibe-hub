@@ -4,41 +4,97 @@
       "id": "5290ce3e-8647-41b2-aa6a-db05c537473d",
       "text": "In the project information section, you have to manually enter a bunch of details. For already existing repos, this could easily be done by claude. Instead add a button that lets you generate this automatically by having claude scan the project files etc. You can add a metadata file (json or md or whatever) inside of the project repo as a template, and then claude just need to fill this document out with the right information. On the page for a project, please add a button that creates this metadata doc if it does not already exists, copies a claude command for filling it out to clipboard, and opens claude in the repo folder for pasting the command.",
       "priority": 3,
-      "status": "pending",
-      "created_at": "2025-10-17T01:21:06.777954200+00:00",
-      "completed_at": null
+      "status": "completed",
+      "createdAt": "2025-10-17T01:21:06.777954200+00:00",
+      "completedAt": null
     },
     {
       "id": "a0ba3adb-58b7-4e3b-9fdd-e3739c8098eb",
       "text": "In the feedback and improvements list, there is a field that right now just says \"unknown\" for all feedback items. I am guessing this MIGHT be for when the feedback was added, but I am not totatally sure. If it is for that, then look into why this is not properly generated for new feedback items, and fix that bug so that it is correct. If the data is actually unknown, dont print \"unknown\" under the feedback item itself - that is not very helpful. Instead, just remove that text alltogether. Only show it if there is actual data.",
       "priority": 4,
-      "status": "pending",
-      "created_at": "2025-10-17T01:23:29.665732300+00:00",
-      "completed_at": null
+      "status": "completed",
+      "createdAt": "2025-10-17T01:23:29.665732300+00:00",
+      "completedAt": null
     },
     {
       "id": "5f5a4e60-bc51-4613-9f1c-73ded09119bb",
       "text": "\"Last modified: unknown\" under all projects. If this data is actually unknown, it would be better to just hide this field entirely. Furthermore, please figure out WHY this is actually unknown, and how it is supposed to be generated. It should probably be contained within some metadata file for vibe hub within the project folder, but maybe it is not properly being generated now.",
       "priority": 4,
-      "status": "pending",
-      "created_at": "2025-10-17T01:24:54.681546300+00:00",
-      "completed_at": null
+      "status": "completed",
+      "createdAt": "2025-10-17T01:24:54.681546300+00:00",
+      "completedAt": null
     },
     {
       "id": "177dafd2-62a7-4af3-92b5-7ad08939b78b",
-      "text": "Every box and piece of content within the app is stretched all the way to the right and left edges of the screen. This looks quite wierd. Please add padding around the entire app, especially on the left and right side.",
+      "text": "Every box and piece of content within the app is stretched all the way to the right and left edges of the screen. This looks quite wierd. Please add padding around the entire app, especially on the left and right side. Edit: a tiiiiny bit of padding was added, but it is still way too small. Please make the padding like 4 times what it currently is",
       "priority": 4,
       "status": "pending",
-      "created_at": "2025-10-17T01:25:52.984695400+00:00",
-      "completed_at": null
+      "createdAt": "2025-10-17T01:25:52.984695400+00:00",
+      "completedAt": null
     },
     {
       "id": "c41c9595-54fa-4005-a722-0fc3840cfe4b",
       "text": "It is a bit strange that the way to fix feedback is to press the \"claude code\" button at the top. Instead, please make the button on top simply say \"claude\", remove the dropdown menu from that button, and just make it open claude for the repo. Then, add a button at the top of the feedback list that says \"fix\". If the user presses the \"fix\" button, you should copy the feedback fix command with all the feedback and open claude code in the repo folder",
       "priority": 4,
+      "status": "completed",
+      "createdAt": "2025-10-17T01:28:05.897482100+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "c456738a-40e2-410c-8022-8208aaf8542d",
+      "text": "Next to the \"fix\" button for feedback items, please add a \"copy fix prompt\" button, that doesnt launch claude code but simply copies the prompt to fix all feedback items to clipboard. This is so that it is possible to use this in case the user already has claude code open for the respective app, and dont need to open another window.",
+      "priority": 4,
       "status": "pending",
-      "created_at": "2025-10-17T01:28:05.897482100+00:00",
-      "completed_at": null
+      "createdAt": "2025-10-17T02:22:14.637946700+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "51d0afb5-2f79-4d48-99d1-679626353e75",
+      "text": "Please move all \"checked\" feedback items to the bottom of the project page, so that you first only see the pending ones that have not been finished yet",
+      "priority": 3,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:23:01.213813100+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "04ea9634-1fd6-4766-b0a4-4a67439a2e10",
+      "text": "When adding a feedback item, add a keyboard command ctrl+enter to add it (so that you dont need to physically press the \"add\" button with a mouse click)",
+      "priority": 4,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:23:39.212096900+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "79bd6a96-c934-4779-a6b4-ddaada87fbd7",
+      "text": "The tech stack is displayed in a really strange way. Each library or language is listed right after another in a long string with no spaces. This makes it hard to read. Instead, make a little box for each, and separate them clearly with a space.",
+      "priority": 4,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:24:50.644067700+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "14d08494-7db5-4331-aaea-5871a084316d",
+      "text": "You can remove the \"project information\" heading. It is pretty clear that the info right under the title of the project is about that project.",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:25:28.452662300+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "1a82b9b1-da3b-494e-8ecd-f8e43dde0460",
+      "text": "Instead of an \"explorer\" button at the top, make it so that the \"path\" info field becomes a button that simply shows the path. left of the path text it can have the folder icon. if you click the button, it opens the folder in explorer.",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:26:48.204204300+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "3c675ecc-47a8-4c2b-a82f-e72fbc7ba357",
+      "text": "When setting the priority of a feedback item, instead of having a dropdown, simply line the 5 priority scales from left to right, so that you can select with one click. Also, add a keyboard command to set the prio level by pressing 1-5 on the keyboard.",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:27:42.805759300+00:00",
+      "completedAt": null
     }
   ]
 }
