@@ -184,10 +184,6 @@ export function ProjectDetail() {
             </div>
 
             <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={handleOpenExplorer}>
-                <Folder size={16} className="inline mr-2" />
-                Explorer
-              </Button>
               {currentProject.deploymentUrl && (
                 <Button variant="secondary" size="sm" onClick={handleOpenDeployment}>
                   <ExternalLink size={16} className="inline mr-2" />
@@ -236,10 +232,15 @@ export function ProjectDetail() {
             <p className="text-gray-500 text-sm mb-4 italic">No tech stack specified yet.</p>
           )}
 
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Path:</span>{' '}
-            <code className="bg-gray-100 px-2 py-1 rounded">{currentProject.path}</code>
-          </p>
+          <button
+            onClick={handleOpenExplorer}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors group"
+          >
+            <Folder size={16} className="text-gray-500 group-hover:text-gray-700" />
+            <code className="bg-gray-100 px-2 py-1 rounded group-hover:bg-gray-200 transition-colors">
+              {currentProject.path}
+            </code>
+          </button>
         </div>
 
         {/* Feedback Section */}
