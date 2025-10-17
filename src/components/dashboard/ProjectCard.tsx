@@ -29,7 +29,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   const cardStyle = project.color
     ? {
-        background: `linear-gradient(135deg, ${project.color}dd 0%, ${project.color}aa 100%)`,
+        backgroundColor: project.color,
         boxShadow: `0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)`,
       }
     : {};

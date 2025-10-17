@@ -143,9 +143,9 @@ export function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: `${currentProject.color}22` }}>
+    <div className="min-h-screen" style={{ backgroundColor: currentProject.color }}>
       {/* Header */}
-      <header className="shadow-sm" style={{ backgroundColor: `${currentProject.color}11` }}>
+      <header className="shadow-sm" style={{ backgroundColor: currentProject.color }}>
         <div className="px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -191,7 +191,7 @@ export function ProjectDetail() {
         <ProjectSetupCard project={currentProject} />
 
         {/* Project Info */}
-        <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: `${currentProject.color}11` }}>
+        <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
           {currentProject.description ? (
             <p className="text-gray-700 mb-4">{currentProject.description}</p>
           ) : (
@@ -227,7 +227,7 @@ export function ProjectDetail() {
 
         {/* Feedback Section - only show for projects past setup stages */}
         {!isSetupStatus(currentProject.status) && (
-        <div className="rounded-lg shadow p-6" style={{ backgroundColor: `${currentProject.color}11` }}>
+        <div className="rounded-lg shadow p-6" style={{ backgroundColor: currentProject.color }}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg text-gray-900">Feedback & Improvements</h2>
             <div className="flex gap-2">
