@@ -31,19 +31,21 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (String, Option<String>, Vec<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>) {
     let metadata_path = project_path.join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (String::new(), None, Vec::new());
+        return (None, String::new(), None, Vec::new(), None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
 
     // Simple parsing - look for patterns in markdown
+    let mut name: Option<String> = None;
     let mut description = String::new();
     let mut deployment_url: Option<String> = None;
     let mut tech_stack = Vec::new();
+    let mut status: Option<String> = None;
 
     let lines: Vec<&str> = contents.lines().collect();
     let mut in_description = false;
@@ -51,6 +53,18 @@ fn parse_metadata_file(project_path: &Path) -> (String, Option<String>, Vec<Stri
 
     for line in lines {
         let trimmed = line.trim();
+
+        // Parse Name: field
+        if trimmed.starts_with("Name:") {
+            name = Some(trimmed.trim_start_matches("Name:").trim().to_string());
+            continue;
+        }
+
+        // Parse Status: field
+        if trimmed.starts_with("Status:") {
+            status = Some(trimmed.trim_start_matches("Status:").trim().to_string());
+            continue;
+        }
 
         if trimmed.starts_with("## Description") {
             in_description = true;
@@ -88,7 +102,50 @@ fn parse_metadata_file(project_path: &Path) -> (String, Option<String>, Vec<Stri
         }
     }
 
-    (description, deployment_url, tech_stack)
+    (name, description, deployment_url, tech_stack, status)
+}
+
+fn auto_detect_status(project_path: &Path, has_git: bool, deployment_url: &Option<String>) -> String {
+    if deployment_url.is_some() {
+        "deployed".to_string()
+    } else if has_git {
+        "in-progress".to_string()
+    } else {
+        "draft".to_string()
+    }
+}
+
+fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
+    let metadata_path = project_path.join(METADATA_FILE);
+
+    if metadata_path.exists() {
+        return Ok(());
+    }
+
+    let folder_name = get_project_name(project_path);
+
+    let template = format!(r#"Name: {}
+Status: draft
+
+## Description
+
+[Add a brief description of what this project does and its purpose]
+
+## Tech Stack
+
+- [Technology 1]
+- [Technology 2]
+- [Technology 3]
+
+## Deployment
+
+[Add deployment URL if applicable, or remove this section]
+"#, folder_name);
+
+    fs::write(&metadata_path, template)
+        .map_err(|e| format!("Failed to create metadata file: {}", e))?;
+
+    Ok(())
 }
 
 fn get_last_modified(project_path: &Path) -> Option<String> {
@@ -145,20 +202,30 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
         let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
         let path = entry.path();
 
-        // Only process directories with git repos
-        if path.is_dir() && is_git_repo(&path) {
-            let name = get_project_name(&path);
-            let (description, deployment_url, tech_stack) = parse_metadata_file(&path);
+        // Process ALL directories
+        if path.is_dir() {
+            // Auto-create metadata file if it doesn't exist
+            let _ = ensure_metadata_file(&path);
+
+            let folder_name = get_project_name(&path);
+            let has_git = is_git_repo(&path);
+            let (display_name, description, deployment_url, tech_stack, metadata_status) = parse_metadata_file(&path);
+
+            // Use metadata status if provided, otherwise auto-detect
+            let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
+
             let feedback_file = read_feedback_file(&path).unwrap_or_default();
             let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
 
             let project = Project {
                 id: Uuid::new_v4().to_string(),
-                name,
+                name: folder_name,
+                display_name,
                 path: path.to_string_lossy().to_string(),
                 description,
                 tech_stack,
                 deployment_url,
+                status,
                 last_modified: get_last_modified(&path),
                 feedback_count,
                 has_uncommitted_changes: false, // Simplified for now
@@ -182,18 +249,24 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         return Err("Project path does not exist".to_string());
     }
 
-    let name = get_project_name(path);
-    let (description, deployment_url, tech_stack) = parse_metadata_file(path);
+    let folder_name = get_project_name(path);
+    let has_git = is_git_repo(path);
+    let (display_name, description, deployment_url, tech_stack, metadata_status) = parse_metadata_file(path);
+
+    let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
+
     let feedback_file = read_feedback_file(path).unwrap_or_default();
     let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
 
     Ok(Project {
         id: Uuid::new_v4().to_string(),
-        name,
+        name: folder_name,
+        display_name,
         path: project_path.clone(),
         description,
         tech_stack,
         deployment_url,
+        status,
         last_modified: get_last_modified(path),
         feedback_count,
         has_uncommitted_changes: false,
@@ -302,13 +375,16 @@ Project: {}
 
 Instructions:
 1. Scan key files in the project (package.json, README.md, source files, etc.)
-2. Identify the project's purpose and write a clear description
-3. List all major technologies in the tech stack
-4. Look for deployment configuration or URLs if present
+2. Come up with a nice display name for the project (not just the folder name)
+3. Determine the project status (draft/in-progress/deployed)
+4. Identify the project's purpose and write a clear description
+5. List all major technologies in the tech stack
+6. Look for deployment configuration or URLs if present
 
 The vibe-hub.md file should have this format:
 
-# Project Metadata
+Name: [A nice human-readable project name]
+Status: [draft OR in-progress OR deployed]
 
 ## Description
 

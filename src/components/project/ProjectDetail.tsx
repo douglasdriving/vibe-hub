@@ -164,7 +164,7 @@ export function ProjectDetail() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <div className="px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -199,17 +199,17 @@ export function ProjectDetail() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-8 sm:px-6 lg:px-8">
         {/* Project Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex items-center justify-end gap-2 mb-3">
             <Button variant="secondary" size="sm" onClick={handleGenerateMetadata}>
               <Sparkles size={16} className="inline mr-2" />
-              Generate with Claude
+              Generate
             </Button>
             <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
               <Settings size={16} className="inline mr-2" />
-              Edit Info
+              Edit
             </Button>
           </div>
 
@@ -252,7 +252,7 @@ export function ProjectDetail() {
                 <>
                   <Button variant="secondary" onClick={handleCopyFixPrompt}>
                     <Copy size={18} className="inline mr-2" />
-                    Copy Prompt
+                     Prompt
                   </Button>
                   <Button variant="secondary" onClick={handleLaunchWithAllPending}>
                     <Wrench size={18} className="inline mr-2" />
@@ -262,7 +262,7 @@ export function ProjectDetail() {
               )}
               <Button onClick={handleAddFeedback}>
                 <Plus size={18} className="inline mr-2" />
-                Add Feedback
+                Add
               </Button>
             </div>
           </div>

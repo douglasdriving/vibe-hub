@@ -28,7 +28,7 @@
       "id": "177dafd2-62a7-4af3-92b5-7ad08939b78b",
       "text": "Every box and piece of content within the app is stretched all the way to the right and left edges of the screen. This looks quite wierd. Please add padding around the entire app, especially on the left and right side. Edit: a tiiiiny bit of padding was added, but it is still way too small. Please make the padding like 4 times what it currently is. Edit 2: I dont think this fix really works. Now, I am thinking specifically about the projects page. When I change the classname numbers in APP.tsx, it doesnt seem to change the padding on this page, it is still stretched all the way to the sides",
       "priority": 3,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T01:25:52.984695400+00:00",
       "completedAt": null
     },
@@ -68,7 +68,7 @@
       "id": "79bd6a96-c934-4779-a6b4-ddaada87fbd7",
       "text": "The tech stack is displayed in a really strange way. Each library or language is listed right after another in a long string with no spaces. This makes it hard to read. Instead, make a little box for each, and separate them clearly with a space. EDIT: This is still not fixed. And to be honest, the entire app looks pretty weird to me at the moment, as if there is no tailwind or CSS styling applied at all. Everything is black and white and with the default font, as though it is only rendering plain html. I am starting to wonder if the styling is applied at all? Since there is also the problem with no padding being added. Please look into this! Also, note that I am testing it with npm run tauri dev, and I dont know if it might be because the styling is only applied on builds (it really should work in dev run, but still, just wanted to add that detail.",
       "priority": 1,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:24:50.644067700+00:00",
       "completedAt": null
     },
@@ -92,8 +92,64 @@
       "id": "3c675ecc-47a8-4c2b-a82f-e72fbc7ba357",
       "text": "When setting the priority of a feedback item, instead of having a dropdown, simply line the 5 priority scales from left to right, so that you can select with one click. Also, add a keyboard command to set the prio level by pressing 1-5 on the keyboard. Edit: In the feedback add view, I cannot see which of the 5 values I have selected. This might also be connected with CSS styling not being properly added.",
       "priority": 5,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:27:42.805759300+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "3bd36eb8-a49e-42d7-8032-6825ccf5a485",
+      "text": "When pressing \"esc\" while adding feedback, please cancel and close the window.",
+      "priority": 4,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:47:37.078287+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "f3845294-609c-4376-8d28-8462950b4233",
+      "text": "I realized that the 1-5 keyboard command does not make sense when adding feedback, since you are editing the text field and sometimes write numbers. Instead of this, make \"enter\" when you are editing the text field simply exit out of the text field, and then enable the ability to toggle between the priority items. When you have exited the text field, the next enter press adds the item. So basically, it would be: feedback window opens > write feedback > hit enter to exit feedback writing > press 1-5 to set prio > hit enter again to add the feedback / esc to cancel",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:50:46.061227600+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "d383f267-bb86-4a84-96a7-0b822dbd7811",
+      "text": "Add an \"implemented\" heading above the checked-off feedback items in the list.",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:51:51.604366600+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "0e6d9378-59af-4529-97d1-d9e4e0100527",
+      "text": "the path button does not really look like a button right now, so you cant really see that you can press it. make it look like the other buttons.",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:52:35.628162100+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "907aa791-f895-498d-8482-e584d40ad75b",
+      "text": "the project title is now just the name of the folder. when you generate metadata for the project with claude, make sure that it also adds a nice name to that project. furthermore, make sure that that name is displayed on the project cards AND on top of the page for a specific project.",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:53:27.061180600+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "6198f523-6289-4df1-9104-8063af510a4a",
+      "text": "The project cards are white on a white background, making them hard to see. please give them a color",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:53:55.518891800+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "1d87f92b-fe90-4f8c-b697-2e4293e03270",
+      "text": "there are some apps in my directory that hasnt actually been started yet. they basically only have a document outlining the idea for the project. it does not even have a git repo yet. for these projects, still make it so that the hub adds them to the project list, only based on that there is a folder. furthermore, add a \"project status\" metadata field, that is displayed for each project, where you can see if it is in draft mode. The status could be \"draft\", \"implementation started\", and \"deployed\", or something like that. Make sure claude adds this status when it generates the project metadata.",
+      "priority": 3,
+      "status": "pending",
+      "createdAt": "2025-10-17T02:57:45.686672200+00:00",
       "completedAt": null
     }
   ]

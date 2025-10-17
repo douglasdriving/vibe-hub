@@ -27,7 +27,8 @@
       "Bash(powershell -Command \"Stop-Process -Id 38444 -Force\")",
       "Bash(timeout:*)",
       "Bash(cargo clean:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 11984 -Force\")"
     ],
     "deny": [],
     "ask": []

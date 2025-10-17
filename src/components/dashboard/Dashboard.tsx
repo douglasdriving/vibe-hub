@@ -62,7 +62,7 @@ export function Dashboard() {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={handleRefresh}>
@@ -77,7 +77,7 @@ export function Dashboard() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <main className="px-4 py-8 sm:px-6 lg:px-8">
           <div className="text-center py-12">
             <p className="text-gray-600 mb-4">
               No projects found in: <code className="bg-gray-100 px-2 py-1 rounded">{settings.projectsDirectory}</code>
@@ -95,7 +95,7 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
             <p className="text-sm text-gray-600 mt-1">
@@ -120,7 +120,7 @@ export function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-8 sm:px-6 lg:px-8">
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="text-gray-600">Loading projects...</div>
