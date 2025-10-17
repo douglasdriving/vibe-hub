@@ -9,6 +9,7 @@ import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
+import { isSetupStatus } from '../../utils/prompts';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -224,7 +225,8 @@ export function ProjectDetail() {
           </Button>
         </div>
 
-        {/* Feedback Section */}
+        {/* Feedback Section - only show for projects past setup stages */}
+        {!isSetupStatus(currentProject.status) && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Feedback & Improvements</h2>
@@ -348,6 +350,7 @@ export function ProjectDetail() {
             </div>
           )}
         </div>
+        )}
       </main>
 
       <FeedbackModal
