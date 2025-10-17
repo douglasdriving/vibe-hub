@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, ChevronDown, Sparkles } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { Dropdown } from '../common/Dropdown';
@@ -9,6 +9,8 @@ import { EditProjectModal } from './EditProjectModal';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
+import { createMetadataTemplate, generateMetadataPrompt, launchClaudeCode } from '../../services/tauri';
+import { copyToClipboard } from '../../services/clipboard';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -126,6 +128,26 @@ export function ProjectDetail() {
     }
   };
 
+  const handleGenerateMetadata = async () => {
+    if (!currentProject) return;
+
+    try {
+      // Create template file if it doesn't exist
+      await createMetadataTemplate(currentProject.path);
+
+      // Generate the Claude prompt
+      const prompt = await generateMetadataPrompt(currentProject.path, currentProject.name);
+
+      // Copy prompt to clipboard
+      await copyToClipboard(prompt);
+
+      // Launch Claude Code in the project directory
+      await launchClaudeCode(currentProject.path, prompt);
+    } catch (error) {
+      console.error('Failed to generate metadata with Claude:', error);
+    }
+  };
+
   if (!currentProject) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -197,10 +219,16 @@ export function ProjectDetail() {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-900">Project Information</h2>
-            <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
-              <Settings size={16} className="inline mr-2" />
-              Edit Info
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={handleGenerateMetadata}>
+                <Sparkles size={16} className="inline mr-2" />
+                Generate with Claude
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
+                <Settings size={16} className="inline mr-2" />
+                Edit Info
+              </Button>
+            </div>
           </div>
 
           {currentProject.description ? (
