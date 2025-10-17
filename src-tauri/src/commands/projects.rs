@@ -223,7 +223,10 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 display_name,
                 path: path.to_string_lossy().to_string(),
                 description,
-                tech_stack,
+                platform: None, // TODO: Parse from JSON metadata
+                is_local_first: None,
+                is_open_source: None,
+                has_backend: None,
                 deployment_url,
                 status,
                 last_modified: get_last_modified(&path),
@@ -264,7 +267,10 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         display_name,
         path: project_path.clone(),
         description,
-        tech_stack,
+        platform: None, // TODO: Parse from JSON metadata
+        is_local_first: None,
+        is_open_source: None,
+        has_backend: None,
         deployment_url,
         status,
         last_modified: get_last_modified(path),

@@ -235,17 +235,25 @@ export function ProjectDetail() {
             <p className="text-gray-500 text-sm mb-4 italic">No description yet. Click "Edit Info" to add one.</p>
           )}
 
-          {currentProject.techStack && currentProject.techStack.length > 0 ? (
+          {/* Platform & Architecture */}
+          {(currentProject.platform || currentProject.isLocalFirst || currentProject.isOpenSource || currentProject.hasBackend) ? (
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-sm font-medium text-gray-700">Tech Stack:</span>
-              {currentProject.techStack.map((tech) => (
-                <span key={tech} className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded">
-                  {tech}
-                </span>
-              ))}
+              <span className="text-sm font-medium text-gray-700">Platform & Architecture:</span>
+              {currentProject.platform && (
+                <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded">{currentProject.platform}</span>
+              )}
+              {currentProject.isLocalFirst && (
+                <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded">Local-First</span>
+              )}
+              {currentProject.isOpenSource && (
+                <span className="bg-purple-100 text-purple-700 text-sm px-3 py-1 rounded">Open Source</span>
+              )}
+              {currentProject.hasBackend && (
+                <span className="bg-orange-100 text-orange-700 text-sm px-3 py-1 rounded">Has Backend</span>
+              )}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm mb-4 italic">No tech stack specified yet.</p>
+            <p className="text-gray-500 text-sm mb-4 italic">No platform info specified yet.</p>
           )}
 
           <Button variant="secondary" size="sm" onClick={handleOpenExplorer}>
