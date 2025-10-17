@@ -3,7 +3,7 @@ Status: in-progress
 
 ## Description
 
-A local-first desktop companion for managing personal vibe-coding projects, with integrated feedback tracking and Claude Code workflow support.
+A local-first desktop companion app for managing personal coding projects with integrated feedback tracking and seamless Claude Code integration for AI-assisted development workflows.
 
 ## Tech Stack
 

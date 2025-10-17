@@ -19,6 +19,7 @@ pub struct Project {
     pub has_uncommitted_changes: bool,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectMetadata {

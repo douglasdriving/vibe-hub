@@ -12,6 +12,7 @@ pub struct FeedbackItem {
     pub completed_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct NewFeedbackItem {
     pub text: String,

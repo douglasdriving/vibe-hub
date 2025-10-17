@@ -105,7 +105,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     (name, description, deployment_url, tech_stack, status)
 }
 
-fn auto_detect_status(project_path: &Path, has_git: bool, deployment_url: &Option<String>) -> String {
+fn auto_detect_status(_project_path: &Path, has_git: bool, deployment_url: &Option<String>) -> String {
     if deployment_url.is_some() {
         "deployed".to_string()
     } else if has_git {
