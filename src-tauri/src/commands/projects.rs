@@ -470,6 +470,141 @@ pub async fn check_metadata_exists(project_path: String) -> Result<bool, String>
 }
 
 #[tauri::command]
+pub async fn create_new_project(projects_dir: String, project_name: String) -> Result<String, String> {
+    use std::process::Command;
+
+    // Convert project name to folder name (lowercase with dashes)
+    let folder_name = project_name.to_lowercase().replace(" ", "-");
+    let project_path = Path::new(&projects_dir).join(&folder_name);
+
+    // Check if project already exists
+    if project_path.exists() {
+        return Err(format!("Project '{}' already exists", folder_name));
+    }
+
+    // Create project directory
+    fs::create_dir_all(&project_path)
+        .map_err(|e| format!("Failed to create project directory: {}", e))?;
+
+    // Create .vibe directory
+    let vibe_dir = project_path.join(VIBE_DIR);
+    fs::create_dir(&vibe_dir)
+        .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+
+    // Create metadata.md with initialized status
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+    let metadata_template = format!(r#"Name: {}
+Status: initialized
+
+## Description
+
+[Project description will be filled after writing the project pitch]
+
+## Tech Stack
+
+- [Technologies will be determined during technical spec phase]
+
+## Deployment
+
+[Deployment info will be added after MVP is deployed]
+"#, project_name);
+
+    fs::write(&metadata_path, metadata_template)
+        .map_err(|e| format!("Failed to create metadata file: {}", e))?;
+
+    // Create idea.md template
+    let idea_path = vibe_dir.join(IDEA_FILE);
+    let idea_template = r#"# Project Idea
+
+## Summary
+
+[One-sentence summary of the project]
+
+## Problem
+
+[Description of the core problem this project solves]
+
+## Core Features
+
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+## Value Proposition
+
+[What value does this provide to users?]
+
+## Additional Requirements
+
+[Any additional requirements or constraints]
+"#;
+
+    fs::write(&idea_path, idea_template)
+        .map_err(|e| format!("Failed to create idea file: {}", e))?;
+
+    // Create design-spec.md template
+    let design_spec_path = vibe_dir.join(DESIGN_SPEC_FILE);
+    let design_spec_template = r#"# MVP Design Specification
+
+[This file will be generated with Claude after writing the project idea]
+
+## Core Features
+
+## User Flows
+
+## Design Decisions
+
+## Out of Scope
+"#;
+
+    fs::write(&design_spec_path, design_spec_template)
+        .map_err(|e| format!("Failed to create design spec file: {}", e))?;
+
+    // Create technical-spec.md template
+    let tech_spec_path = vibe_dir.join(TECHNICAL_SPEC_FILE);
+    let tech_spec_template = r#"# Technical Specification
+
+[This file will be generated with Claude after the design spec is complete]
+
+## Architecture
+
+## Tech Stack
+
+## Data Models
+
+## Key Technical Decisions
+"#;
+
+    fs::write(&tech_spec_path, tech_spec_template)
+        .map_err(|e| format!("Failed to create technical spec file: {}", e))?;
+
+    // Create empty feedback.json
+    let feedback_path = vibe_dir.join(FEEDBACK_FILE);
+    let feedback_template = r#"{
+  "feedback": []
+}"#;
+
+    fs::write(&feedback_path, feedback_template)
+        .map_err(|e| format!("Failed to create feedback file: {}", e))?;
+
+    // Initialize git repository
+    let output = Command::new("git")
+        .arg("init")
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| format!("Failed to initialize git repository: {}", e))?;
+
+    if !output.status.success() {
+        return Err(format!("Git init failed: {}", String::from_utf8_lossy(&output.stderr)));
+    }
+
+    // Add .vibe to .gitignore
+    let _ = ensure_vibe_in_gitignore(&project_path);
+
+    Ok(project_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 pub async fn generate_metadata_prompt(_project_path: String, project_name: String) -> Result<String, String> {
     let prompt = format!(
         r#"Please analyze this project and fill out the vibe-hub.md metadata file with accurate information.

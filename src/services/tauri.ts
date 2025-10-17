@@ -10,6 +10,10 @@ export async function getProjectDetail(projectPath: string): Promise<Project> {
   return await invoke('get_project_detail', { projectPath });
 }
 
+export async function createNewProject(projectsDir: string, projectName: string): Promise<string> {
+  return await invoke('create_new_project', { projectsDir, projectName });
+}
+
 export async function updateProjectMetadata(
   projectPath: string,
   metadata: { description: string; techStack: string[]; deploymentUrl?: string }

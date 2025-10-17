@@ -17,6 +17,7 @@ pub fn run() {
             // Project commands
             projects::scan_projects,
             projects::get_project_detail,
+            projects::create_new_project,
             projects::update_project_metadata,
             projects::create_metadata_template,
             projects::check_metadata_exists,
