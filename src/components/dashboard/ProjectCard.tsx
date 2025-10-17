@@ -30,7 +30,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div
       onClick={handleOpenProject}
-      className="bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 rounded-lg shadow-md p-6 hover:shadow-lg transition-all hover:scale-105 cursor-pointer border-2 border-purple-200"
+      className="bg-gradient-to-br from-purple-300 via-pink-300 to-orange-300 rounded-lg shadow-md p-6 hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-4 border-purple-500 hover:border-pink-500"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
