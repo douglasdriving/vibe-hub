@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+body {
+  font-family: 'VT323', monospace;
+  background-color: #BFFF00 !important; /* Lime green background */
+}
+
+#root {
+  min-height: 100vh;
+  background-color: #BFFF00;
+}

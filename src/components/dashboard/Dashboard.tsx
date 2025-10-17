@@ -48,7 +48,7 @@ export function Dashboard() {
   // Empty state - no projects directory configured
   if (!settings?.projectsDirectory) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{APP_NAME}</h1>
           <p className="text-gray-600 mb-6">
@@ -66,7 +66,7 @@ export function Dashboard() {
   // Empty state - no projects found
   if (!isLoading && projects.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <header className="bg-white shadow-sm">
           <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
@@ -109,7 +109,7 @@ export function Dashboard() {
 
   // Main dashboard
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <header className="bg-white shadow-sm">
         <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div>

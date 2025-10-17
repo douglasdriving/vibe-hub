@@ -30,18 +30,18 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div
       onClick={handleOpenProject}
-      className="bg-gradient-to-br from-purple-300 via-pink-300 to-orange-300 rounded-lg shadow-md p-6 hover:shadow-xl transition-all hover:scale-105 cursor-pointer border-4 border-purple-500 hover:border-pink-500"
+      className="bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 rounded-lg shadow-2xl p-6 hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all hover:scale-105 cursor-pointer border-4 border-black"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">{project.displayName || project.name}</h3>
+          <h3 className="text-xl font-bold text-white">{project.displayName || project.name}</h3>
           <span className={`${STATUS_COLORS[project.status]} text-white text-xs px-2 py-1 rounded mt-1 inline-block`}>
             {STATUS_LABELS[project.status]}
           </span>
         </div>
         {project.feedbackCount > 0 && (
-          <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
+          <span className="bg-yellow-300 text-black text-sm font-bold px-2.5 py-0.5 rounded">
             {project.feedbackCount}
           </span>
         )}
@@ -49,7 +49,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Description */}
       {project.description && (
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p className="text-white text-sm mb-4 line-clamp-2">
           {project.description}
         </p>
       )}
@@ -81,11 +81,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+      <div className="flex items-center justify-between pt-4 border-t border-white/30">
+        <div className="flex items-center gap-4 text-sm text-white">
           {project.lastModified && <span>{formatRelativeTime(project.lastModified)}</span>}
           {project.deploymentUrl && (
-            <span className="flex items-center gap-1 text-green-600">
+            <span className="flex items-center gap-1 text-yellow-300">
               <ExternalLink size={14} />
               Deployed
             </span>
@@ -96,14 +96,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={handleOpenExplorer}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+            className="p-2 text-white hover:bg-white/20 rounded transition-colors"
             title="Open in Explorer"
           >
             <Folder size={18} />
           </button>
           <button
             onClick={handleLaunchClaude}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+            className="p-2 text-white hover:bg-white/20 rounded transition-colors"
             title="Open Claude Code"
           >
             <Terminal size={18} />
