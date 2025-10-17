@@ -58,6 +58,11 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.ctrlKey && e.key === 'Enter') {
+                handleSubmit(e as any);
+              }
+            }}
             className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={5}
             placeholder="Describe the issue or improvement..."
