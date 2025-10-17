@@ -14,7 +14,7 @@ function App() {
   }, [loadSettings]);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
+    <div className="px-16 sm:px-24 lg:px-32">
       <HashRouter>
         <Routes>
           <Route path="/" element={<Dashboard />} />
