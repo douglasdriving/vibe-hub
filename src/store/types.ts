@@ -10,7 +10,7 @@ export interface Project {
   isOpenSource?: boolean;        // Is open source
   hasBackend?: boolean;          // Has backend server
   deploymentUrl?: string;        // Optional
-  status: 'draft' | 'in-progress' | 'deployed'; // Project status
+  status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'mvp-implemented' | 'in-progress' | 'deployed'; // Project status
   lastModified?: string;         // From git or filesystem (ISO 8601)
   feedbackCount: number;         // Calculated
   hasUncommittedChanges: boolean; // Git status
@@ -67,15 +67,23 @@ export const PRIORITY_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
 };
 
 // Status Labels
-export const STATUS_LABELS: Record<'draft' | 'in-progress' | 'deployed', string> = {
-  'draft': 'Draft',
+export const STATUS_LABELS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'mvp-implemented' | 'in-progress' | 'deployed', string> = {
+  'initialized': 'Initialized',
+  'idea': 'Idea',
+  'designed': 'Designed',
+  'tech-spec-ready': 'Tech Spec Ready',
+  'mvp-implemented': 'MVP Implemented',
   'in-progress': 'In Progress',
   'deployed': 'Deployed',
 };
 
 // Status Colors (Tailwind classes)
-export const STATUS_COLORS: Record<'draft' | 'in-progress' | 'deployed', string> = {
-  'draft': 'bg-gray-400',
+export const STATUS_COLORS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'mvp-implemented' | 'in-progress' | 'deployed', string> = {
+  'initialized': 'bg-purple-400',
+  'idea': 'bg-pink-400',
+  'designed': 'bg-orange-400',
+  'tech-spec-ready': 'bg-yellow-400',
+  'mvp-implemented': 'bg-blue-400',
   'in-progress': 'bg-blue-500',
   'deployed': 'bg-green-500',
 };

@@ -7,6 +7,11 @@ const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
 const METADATA_FILE: &str = "metadata.md";
 
+// Project pipeline documents
+const IDEA_FILE: &str = "idea.md";
+const DESIGN_SPEC_FILE: &str = "design-spec.md";
+const TECHNICAL_SPEC_FILE: &str = "technical-spec.md";
+
 // Legacy file names for migration
 const LEGACY_FEEDBACK_FILE: &str = "vibe-hub-feedback.json";
 const LEGACY_METADATA_FILE: &str = "vibe-hub.md";
@@ -175,9 +180,11 @@ fn auto_detect_status(_project_path: &Path, has_git: bool, deployment_url: &Opti
     if deployment_url.is_some() {
         "deployed".to_string()
     } else if has_git {
-        "in-progress".to_string()
+        // Existing projects with git are assumed to be MVP implemented
+        "mvp-implemented".to_string()
     } else {
-        "draft".to_string()
+        // New projects without git start as initialized
+        "initialized".to_string()
     }
 }
 
