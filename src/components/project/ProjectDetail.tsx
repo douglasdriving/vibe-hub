@@ -206,18 +206,15 @@ export function ProjectDetail() {
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Project Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">Project Information</h2>
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={handleGenerateMetadata}>
-                <Sparkles size={16} className="inline mr-2" />
-                Generate with Claude
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
-                <Settings size={16} className="inline mr-2" />
-                Edit Info
-              </Button>
-            </div>
+          <div className="flex items-center justify-end gap-2 mb-3">
+            <Button variant="secondary" size="sm" onClick={handleGenerateMetadata}>
+              <Sparkles size={16} className="inline mr-2" />
+              Generate with Claude
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
+              <Settings size={16} className="inline mr-2" />
+              Edit Info
+            </Button>
           </div>
 
           {currentProject.description ? (
