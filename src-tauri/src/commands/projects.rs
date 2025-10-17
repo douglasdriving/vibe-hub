@@ -15,6 +15,34 @@ fn is_git_repo(path: &Path) -> bool {
     path.join(".git").exists()
 }
 
+fn ensure_vibe_in_gitignore(project_path: &Path) -> Result<(), String> {
+    let gitignore_path = project_path.join(".gitignore");
+
+    // Read existing gitignore or create empty string
+    let mut contents = if gitignore_path.exists() {
+        fs::read_to_string(&gitignore_path)
+            .map_err(|e| format!("Failed to read .gitignore: {}", e))?
+    } else {
+        String::new()
+    };
+
+    // Check if .vibe is already in gitignore
+    if contents.lines().any(|line| line.trim() == ".vibe" || line.trim() == ".vibe/") {
+        return Ok(()); // Already present
+    }
+
+    // Add .vibe to gitignore
+    if !contents.is_empty() && !contents.ends_with('\n') {
+        contents.push('\n');
+    }
+    contents.push_str(".vibe/\n");
+
+    fs::write(&gitignore_path, contents)
+        .map_err(|e| format!("Failed to write .gitignore: {}", e))?;
+
+    Ok(())
+}
+
 fn migrate_to_vibe_folder(project_path: &Path) -> Result<(), String> {
     let vibe_dir = project_path.join(VIBE_DIR);
 
@@ -38,6 +66,11 @@ fn migrate_to_vibe_folder(project_path: &Path) -> Result<(), String> {
     if old_metadata.exists() && !new_metadata.exists() {
         fs::rename(&old_metadata, &new_metadata)
             .map_err(|e| format!("Failed to migrate metadata file: {}", e))?;
+    }
+
+    // Add .vibe to .gitignore if this is a git repo
+    if is_git_repo(project_path) {
+        let _ = ensure_vibe_in_gitignore(project_path);
     }
 
     Ok(())
