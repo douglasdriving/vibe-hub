@@ -9,7 +9,7 @@ import {
   isSetupStatus,
 } from '../../utils/prompts';
 import type { Project } from '../../store/types';
-import { checkSpecFilesExist, updateProjectStatus } from '../../services/tauri';
+import { checkSpecFilesExist, updateProjectStatus, checkMetadataExists } from '../../services/tauri';
 
 interface ProjectSetupCardProps {
   project: Project;
@@ -20,9 +20,38 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
   const [draftIdeaData, setDraftIdeaData] = useState<IdeaFormData | null>(null);
 
-  // Poll for spec file changes when in idea, designed, or tech-spec-ready status
+  // Auto-copy prompt on mount for setup statuses
   useEffect(() => {
-    if (project.status !== 'idea' && project.status !== 'designed' && project.status !== 'tech-spec-ready') {
+    const autoCopyPrompt = async () => {
+      // Only auto-copy for non-initialized setup stages
+      if (project.status === 'initialized' || !isSetupStatus(project.status)) {
+        return;
+      }
+
+      const stageInfo = getStageAdvancementInfo(project.status);
+      if (!stageInfo) return;
+
+      const prompt = stageInfo.promptGenerator(project.name, project.path);
+
+      try {
+        await navigator.clipboard.writeText(prompt);
+        console.log('Auto-copied prompt for stage:', project.status);
+      } catch (error) {
+        console.error('Failed to auto-copy prompt:', error);
+      }
+    };
+
+    autoCopyPrompt();
+  }, []); // Only run once on mount
+
+  // Poll for spec file changes when in idea, designed, tech-spec-ready, or metadata-ready status
+  useEffect(() => {
+    if (
+      project.status !== 'idea' &&
+      project.status !== 'designed' &&
+      project.status !== 'tech-spec-ready' &&
+      project.status !== 'metadata-ready'
+    ) {
       return;
     }
 
@@ -38,7 +67,16 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
           await updateProjectStatus(project.path, 'tech-spec-ready');
           await refreshProject(project.id);
         } else if (project.status === 'tech-spec-ready') {
-          // Could add logic here to detect implementation start
+          // Check if metadata has meaningful content
+          const metadataExists = await checkMetadataExists(project.path);
+          if (metadataExists) {
+            await updateProjectStatus(project.path, 'metadata-ready');
+            await refreshProject(project.id);
+          }
+        } else if (project.status === 'metadata-ready') {
+          // Check if implementation has started (look for src/ or similar folders)
+          // For now, we'll assume users manually mark this as mvp-implemented
+          // Future enhancement: detect src/, package.json, or other implementation indicators
         }
       } catch (error) {
         console.error('Failed to check spec files:', error);
@@ -121,10 +159,15 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
           )}
 
           {project.status !== 'initialized' && (
-            <p className="text-sm text-gray-600 mt-3">
-              💡 Tip: The prompt has been copied to your clipboard. Open Claude Code in this project
-              directory and paste it to get started!
-            </p>
+            <>
+              <p className="text-sm text-gray-600 mt-3">
+                💡 Tip: The prompt has been copied to your clipboard. Open Claude Code in this project
+                directory and paste it to get started!
+              </p>
+              <p className="text-sm text-blue-600 mt-2 font-medium">
+                ⏱️ This stage will progress automatically when Claude creates the required documents
+              </p>
+            </>
           )}
         </div>
       </div>
@@ -139,6 +182,8 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
           <StageIndicator label="Design" status={project.status} stage="designed" />
           <Arrow />
           <StageIndicator label="Tech Spec" status={project.status} stage="tech-spec-ready" />
+          <Arrow />
+          <StageIndicator label="Metadata" status={project.status} stage="metadata-ready" />
           <Arrow />
           <StageIndicator label="MVP" status={project.status} stage="mvp-implemented" />
         </div>
@@ -194,9 +239,9 @@ function getStageOrder(status: string): number {
     'idea': 2,
     'designed': 3,
     'tech-spec-ready': 4,
-    'mvp-implemented': 5,
-    'in-progress': 5,
-    'deployed': 5,
+    'metadata-ready': 5,
+    'mvp-implemented': 6,
+    'deployed': 7,
   };
   return order[status] || 0;
 }
