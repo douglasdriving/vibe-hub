@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, Sparkles, Wrench, Copy } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
-import { EditProjectModal } from './EditProjectModal';
 import { ProjectSetupCard } from './ProjectSetupCard';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
-import { createMetadataTemplate, generateMetadataPrompt, launchClaudeCode as launchClaudeTauri } from '../../services/tauri';
 import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
 
 export function ProjectDetail() {
@@ -23,7 +21,6 @@ export function ProjectDetail() {
     updateFeedback,
     deleteFeedback,
     toggleFeedbackComplete,
-    updateProjectMetadata,
     launchClaudeCode,
     openInExplorer,
     openDeploymentUrl,
@@ -31,7 +28,6 @@ export function ProjectDetail() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
-  const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -136,33 +132,6 @@ export function ProjectDetail() {
     openDeploymentUrl(currentProject.deploymentUrl);
   };
 
-  const handleSaveProjectMetadata = async (data: { description: string; techStack: string[]; deploymentUrl?: string }) => {
-    if (!currentProject) return;
-
-    try {
-      await updateProjectMetadata(currentProject.path, data);
-    } catch (error) {
-      console.error('Failed to update project metadata:', error);
-    }
-  };
-
-  const handleGenerateMetadata = async () => {
-    if (!currentProject) return;
-
-    try {
-      // Create template file if it doesn't exist
-      await createMetadataTemplate(currentProject.path);
-
-      // Generate the Claude prompt
-      const prompt = await generateMetadataPrompt(currentProject.path, currentProject.name);
-
-      // Copy prompt to clipboard and launch Claude Code directly (not through store)
-      await copyToClipboard(prompt);
-      await launchClaudeTauri(currentProject.path, prompt);
-    } catch (error) {
-      console.error('Failed to generate metadata with Claude:', error);
-    }
-  };
 
   if (!currentProject) {
     return (
@@ -222,21 +191,10 @@ export function ProjectDetail() {
 
         {/* Project Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-center justify-end gap-2 mb-3">
-            <Button variant="secondary" size="sm" onClick={handleGenerateMetadata}>
-              <Sparkles size={16} className="inline mr-2" />
-              Generate
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => setIsEditProjectModalOpen(true)}>
-              <Settings size={16} className="inline mr-2" />
-              Edit
-            </Button>
-          </div>
-
           {currentProject.description ? (
             <p className="text-gray-700 mb-4">{currentProject.description}</p>
           ) : (
-            <p className="text-gray-500 text-sm mb-4 italic">No description yet. Click "Edit Info" to add one.</p>
+            <p className="text-gray-500 text-sm mb-4 italic">No description yet. Complete the project setup to add one.</p>
           )}
 
           {/* Platform & Architecture */}
@@ -397,13 +355,6 @@ export function ProjectDetail() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveFeedback}
         initialData={editingFeedback}
-      />
-
-      <EditProjectModal
-        isOpen={isEditProjectModalOpen}
-        onClose={() => setIsEditProjectModalOpen(false)}
-        onSave={handleSaveProjectMetadata}
-        project={currentProject}
       />
     </div>
   );
