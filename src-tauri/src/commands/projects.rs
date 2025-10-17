@@ -718,3 +718,60 @@ pub async fn save_project_idea(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn check_spec_files_exist(project_path: String) -> Result<(bool, bool), String> {
+    let path = Path::new(&project_path);
+    let vibe_dir = path.join(VIBE_DIR);
+
+    let design_spec_exists = vibe_dir.join(DESIGN_SPEC_FILE).exists();
+    let tech_spec_exists = vibe_dir.join(TECHNICAL_SPEC_FILE).exists();
+
+    // Check if files have actual content (not just templates)
+    let design_has_content = if design_spec_exists {
+        let contents = fs::read_to_string(vibe_dir.join(DESIGN_SPEC_FILE)).unwrap_or_default();
+        !contents.contains("[This file will be generated") && contents.len() > 100
+    } else {
+        false
+    };
+
+    let tech_has_content = if tech_spec_exists {
+        let contents = fs::read_to_string(vibe_dir.join(TECHNICAL_SPEC_FILE)).unwrap_or_default();
+        !contents.contains("[This file will be generated") && contents.len() > 100
+    } else {
+        false
+    };
+
+    Ok((design_has_content, tech_has_content))
+}
+
+#[tauri::command]
+pub async fn update_project_status(project_path: String, new_status: String) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(VIBE_DIR).join(METADATA_FILE);
+
+    if !metadata_path.exists() {
+        return Err("Metadata file does not exist".to_string());
+    }
+
+    let metadata_contents = fs::read_to_string(&metadata_path)
+        .map_err(|e| format!("Failed to read metadata file: {}", e))?;
+
+    // Replace the status line
+    let updated_metadata = metadata_contents
+        .lines()
+        .map(|line| {
+            if line.starts_with("Status:") {
+                format!("Status: {}", new_status)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    fs::write(&metadata_path, updated_metadata)
+        .map_err(|e| format!("Failed to update metadata file: {}", e))?;
+
+    Ok(())
+}

@@ -111,3 +111,12 @@ export async function updateSettings(settings: Settings): Promise<void> {
 export async function selectDirectory(): Promise<string | null> {
   return await invoke('select_directory');
 }
+
+// Spec file detection commands
+export async function checkSpecFilesExist(projectPath: string): Promise<[boolean, boolean]> {
+  return await invoke('check_spec_files_exist', { projectPath });
+}
+
+export async function updateProjectStatus(projectPath: string, newStatus: string): Promise<void> {
+  return await invoke('update_project_status', { projectPath, newStatus });
+}

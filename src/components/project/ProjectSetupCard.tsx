@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../common/Button';
 import { IdeaEditorModal, IdeaFormData } from './IdeaEditorModal';
 import { useProjectStore } from '../../store/projectStore';
@@ -9,15 +9,50 @@ import {
   isSetupStatus,
 } from '../../utils/prompts';
 import type { Project } from '../../store/types';
+import { checkSpecFilesExist, updateProjectStatus } from '../../services/tauri';
 
 interface ProjectSetupCardProps {
   project: Project;
 }
 
 export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
-  const { saveProjectIdea } = useProjectStore();
+  const { saveProjectIdea, refreshProject } = useProjectStore();
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
   const [draftIdeaData, setDraftIdeaData] = useState<IdeaFormData | null>(null);
+
+  // Poll for spec file changes when in idea, designed, or tech-spec-ready status
+  useEffect(() => {
+    if (project.status !== 'idea' && project.status !== 'designed' && project.status !== 'tech-spec-ready') {
+      return;
+    }
+
+    const checkFiles = async () => {
+      try {
+        const [designSpecExists, techSpecExists] = await checkSpecFilesExist(project.path);
+
+        // Update status based on detected files
+        if (project.status === 'idea' && designSpecExists) {
+          await updateProjectStatus(project.path, 'designed');
+          await refreshProject(project.id);
+        } else if (project.status === 'designed' && techSpecExists) {
+          await updateProjectStatus(project.path, 'tech-spec-ready');
+          await refreshProject(project.id);
+        } else if (project.status === 'tech-spec-ready') {
+          // Could add logic here to detect implementation start
+        }
+      } catch (error) {
+        console.error('Failed to check spec files:', error);
+      }
+    };
+
+    // Check immediately
+    checkFiles();
+
+    // Poll every 3 seconds
+    const interval = setInterval(checkFiles, 3000);
+
+    return () => clearInterval(interval);
+  }, [project.status, project.path, project.id, refreshProject]);
 
   // Only show this card for projects in setup stages
   if (!isSetupStatus(project.status)) {
