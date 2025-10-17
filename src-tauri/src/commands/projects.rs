@@ -91,21 +91,41 @@ fn parse_metadata_file(project_path: &Path) -> (String, Option<String>, Vec<Stri
     (description, deployment_url, tech_stack)
 }
 
-fn get_last_modified(project_path: &Path) -> String {
-    // Try to get last modified from filesystem
+fn get_last_modified(project_path: &Path) -> Option<String> {
+    use std::process::Command;
+
+    // Try to get last commit date from git
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(project_path)
+        .arg("log")
+        .arg("-1")
+        .arg("--format=%aI")
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let date_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !date_str.is_empty() {
+                return Some(date_str);
+            }
+        }
+    }
+
+    // Fallback to filesystem metadata
     if let Ok(metadata) = fs::metadata(project_path) {
         if let Ok(modified) = metadata.modified() {
             if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
                 let secs = duration.as_secs() as i64;
                 let nsecs = duration.subsec_nanos();
                 if let Some(dt) = chrono::DateTime::from_timestamp(secs, nsecs) {
-                    return dt.to_rfc3339();
+                    return Some(dt.to_rfc3339());
                 }
             }
         }
     }
-    // Fallback to current time
-    chrono::Utc::now().to_rfc3339()
+
+    None
 }
 
 #[tauri::command]

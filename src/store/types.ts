@@ -6,7 +6,7 @@ export interface Project {
   description: string;           // From vibe-hub.md or manual
   techStack: string[];           // Tags
   deploymentUrl?: string;        // Optional
-  lastModified: Date;            // From git or filesystem
+  lastModified?: string;         // From git or filesystem (ISO 8601)
   feedbackCount: number;         // Calculated
   hasUncommittedChanges: boolean; // Git status
 }
