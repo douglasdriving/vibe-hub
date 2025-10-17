@@ -102,11 +102,11 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None, None);
+        return (None, String::new(), None, Vec::new(), None, None, None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -118,6 +118,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut tech_stack = Vec::new();
     let mut status: Option<String> = None;
     let mut color: Option<String> = None;
+    let mut text_color: Option<String> = None;
     let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
@@ -147,6 +148,12 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         // Parse Color: field
         if trimmed.starts_with("Color:") {
             color = Some(trimmed.trim_start_matches("Color:").trim().to_string());
+            continue;
+        }
+
+        // Parse TextColor: field
+        if trimmed.starts_with("TextColor:") {
+            text_color = Some(trimmed.trim_start_matches("TextColor:").trim().to_string());
             continue;
         }
 
@@ -203,7 +210,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         let _ = fs::write(&metadata_path, updated_contents);
     }
 
-    (name, description, deployment_url, tech_stack, status, color)
+    (name, description, deployment_url, tech_stack, status, color, text_color)
 }
 
 fn assign_project_color(project_name: &str) -> String {
@@ -231,6 +238,27 @@ fn assign_project_color(project_name: &str) -> String {
     // Map hash to color index
     let index = (hash % COLORS.len() as u64) as usize;
     COLORS[index].to_string()
+}
+
+fn calculate_text_color(background_hex: &str) -> String {
+    // Remove # if present
+    let hex = background_hex.trim_start_matches('#');
+
+    // Parse RGB values
+    let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0) as f32;
+    let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0) as f32;
+    let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0) as f32;
+
+    // Calculate relative luminance using WCAG formula
+    // https://www.w3.org/TR/WCAG20/#relativeluminancedef
+    let luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
+
+    // Use white text for dark backgrounds, black for light backgrounds
+    if luminance > 0.5 {
+        "#000000".to_string() // Black text for light backgrounds
+    } else {
+        "#FFFFFF".to_string() // White text for dark backgrounds
+    }
 }
 
 fn auto_detect_status(_project_path: &Path, has_git: bool, deployment_url: &Option<String>) -> String {
@@ -261,10 +289,12 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
 
     let folder_name = get_project_name(project_path);
     let color = assign_project_color(&folder_name);
+    let text_color = calculate_text_color(&color);
 
     let template = format!(r#"Name: {}
 Status: draft
 Color: {}
+TextColor: {}
 
 ## Description
 
@@ -279,7 +309,7 @@ Color: {}
 ## Deployment
 
 [Add deployment URL if applicable, or remove this section]
-"#, folder_name, color);
+"#, folder_name, color, text_color);
 
     fs::write(&metadata_path, template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
@@ -351,13 +381,16 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
 
             // Use metadata color if provided, otherwise generate one
             let color = metadata_color.unwrap_or_else(|| assign_project_color(&folder_name));
+
+            // Calculate text color if not provided
+            let text_color = metadata_text_color.unwrap_or_else(|| calculate_text_color(&color));
 
             let feedback_file = read_feedback_file(&path).unwrap_or_default();
             let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
@@ -375,6 +408,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 deployment_url,
                 status,
                 color: Some(color),
+                text_color: Some(text_color),
                 last_modified: get_last_modified(&path),
                 feedback_count,
                 has_uncommitted_changes: false, // Simplified for now
@@ -414,12 +448,15 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
 
     // Use metadata color if provided, otherwise generate one
     let color = metadata_color.unwrap_or_else(|| assign_project_color(&folder_name));
+
+    // Calculate text color if not provided
+    let text_color = metadata_text_color.unwrap_or_else(|| calculate_text_color(&color));
 
     let feedback_file = read_feedback_file(path).unwrap_or_default();
     let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
@@ -437,6 +474,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         deployment_url,
         status,
         color: Some(color),
+        text_color: Some(text_color),
         last_modified: get_last_modified(path),
         feedback_count,
         has_uncommitted_changes: false,
@@ -575,9 +613,11 @@ pub async fn create_new_project(projects_dir: String, project_name: String) -> R
     // Create metadata.md with initialized status
     let metadata_path = vibe_dir.join(METADATA_FILE);
     let color = assign_project_color(&project_name);
+    let text_color = calculate_text_color(&color);
     let metadata_template = format!(r#"Name: {}
 Status: initialized
 Color: {}
+TextColor: {}
 
 ## Description
 
@@ -590,7 +630,7 @@ Color: {}
 ## Deployment
 
 [Deployment info will be added after MVP is deployed]
-"#, project_name, color);
+"#, project_name, color, text_color);
 
     fs::write(&metadata_path, metadata_template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
@@ -884,19 +924,21 @@ pub async fn assign_color_if_missing(project_path: String) -> Result<String, Str
         }
     }
 
-    // Generate a new color
+    // Generate a new color and calculate text color
     let folder_name = get_project_name(path);
     let color = assign_project_color(&folder_name);
+    let text_color = calculate_text_color(&color);
 
-    // Insert color after Status: line
+    // Insert color and text color after Status: line
     let mut new_lines = Vec::new();
-    let mut color_added = false;
+    let mut colors_added = false;
 
     for line in metadata_contents.lines() {
         new_lines.push(line.to_string());
-        if line.starts_with("Status:") && !color_added {
+        if line.starts_with("Status:") && !colors_added {
             new_lines.push(format!("Color: {}", color));
-            color_added = true;
+            new_lines.push(format!("TextColor: {}", text_color));
+            colors_added = true;
         }
     }
 

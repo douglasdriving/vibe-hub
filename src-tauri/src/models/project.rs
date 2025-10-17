@@ -15,6 +15,7 @@ pub struct Project {
     pub deployment_url: Option<String>,
     pub status: String, // "initialized", "idea", "designed", "tech-spec-ready", "metadata-ready", "mvp-implemented", "deployed"
     pub color: Option<String>, // Project color for UI
+    pub text_color: Option<String>, // Text color for contrast with background
     pub last_modified: Option<String>,
     pub feedback_count: usize,
     pub has_uncommitted_changes: bool,

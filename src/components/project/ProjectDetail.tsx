@@ -146,7 +146,7 @@ export function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: currentProject.color }}>
+    <div className="min-h-screen" style={{ backgroundColor: currentProject.color, color: currentProject.textColor || '#FFFFFF' }}>
       {/* Header */}
       <header className="shadow-sm" style={{ backgroundColor: currentProject.color }}>
         <div className="px-4 py-4 sm:px-6 lg:px-8">
@@ -154,19 +154,20 @@ export function ProjectDetail() {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className="text-gray-600 hover:text-gray-900"
+                className="hover:opacity-75"
+                style={{ color: currentProject.textColor || '#FFFFFF' }}
               >
                 <ArrowLeft size={24} />
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-6xl uppercase text-gray-900">{currentProject.displayName || currentProject.name}</h1>
-                  <span className={`${STATUS_COLORS[currentProject.status]} text-white text-sm px-3 py-1 rounded`}>
+                  <h1 className="text-6xl uppercase" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.displayName || currentProject.name}</h1>
+                  <span className={`${STATUS_COLORS[currentProject.status]} text-sm px-3 py-1 rounded`} style={{ color: currentProject.textColor || '#FFFFFF' }}>
                     {STATUS_LABELS[currentProject.status]}
                   </span>
                 </div>
                 {currentProject.lastModified && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="mt-1" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.8 }}>
                     Last modified: {formatDate(currentProject.lastModified)}
                   </p>
                 )}
@@ -175,12 +176,23 @@ export function ProjectDetail() {
 
             <div className="flex gap-2">
               {currentProject.deploymentUrl && (
-                <Button variant="secondary" size="sm" onClick={handleOpenDeployment}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleOpenDeployment}
+                  invertedBgColor={currentProject.textColor}
+                  invertedTextColor={currentProject.color}
+                >
                   <ExternalLink size={16} className="inline mr-2" />
                   Open App
                 </Button>
               )}
-              <Button size="sm" onClick={handleLaunchWithoutContext}>
+              <Button
+                size="sm"
+                onClick={handleLaunchWithoutContext}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
                 <Terminal size={16} className="inline mr-2" />
                 Claude
               </Button>
@@ -196,15 +208,15 @@ export function ProjectDetail() {
         {/* Project Info */}
         <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
           {currentProject.description ? (
-            <p className="text-gray-700 mb-4">{currentProject.description}</p>
+            <p className="mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.description}</p>
           ) : (
-            <p className="text-gray-500 text-sm mb-4 italic">No description yet. Complete the project setup to add one.</p>
+            <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No description yet. Complete the project setup to add one.</p>
           )}
 
           {/* Platform & Architecture */}
           {(currentProject.platform || currentProject.isLocalFirst || currentProject.isOpenSource || currentProject.hasBackend) ? (
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-sm text-gray-700">Platform & Architecture:</span>
+              <span style={{ color: currentProject.textColor || '#FFFFFF' }}>Platform & Architecture:</span>
               {currentProject.platform && (
                 <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded">{currentProject.platform}</span>
               )}
@@ -219,10 +231,16 @@ export function ProjectDetail() {
               )}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm mb-4 italic">No platform info specified yet.</p>
+            <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No platform info specified yet.</p>
           )}
 
-          <Button variant="secondary" size="sm" onClick={handleOpenExplorer}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleOpenExplorer}
+            invertedBgColor={currentProject.textColor}
+            invertedTextColor={currentProject.color}
+          >
             <Folder size={16} className="inline mr-2" />
             {currentProject.path}
           </Button>
@@ -232,21 +250,35 @@ export function ProjectDetail() {
         {!isSetupStatus(currentProject.status) && (
         <div className="rounded-lg shadow p-6" style={{ backgroundColor: currentProject.color }}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg text-gray-900">Feedback & Improvements</h2>
+            <h2 className="text-lg" style={{ color: currentProject.textColor || '#FFFFFF' }}>Feedback & Improvements</h2>
             <div className="flex gap-2">
               {feedback.filter(f => f.status === 'pending').length > 0 && (
                 <>
-                  <Button variant="secondary" onClick={handleCopyFixPrompt}>
+                  <Button
+                    variant="secondary"
+                    onClick={handleCopyFixPrompt}
+                    invertedBgColor={currentProject.textColor}
+                    invertedTextColor={currentProject.color}
+                  >
                     <Copy size={18} className="inline mr-2" />
                      Prompt
                   </Button>
-                  <Button variant="secondary" onClick={handleLaunchWithAllPending}>
+                  <Button
+                    variant="secondary"
+                    onClick={handleLaunchWithAllPending}
+                    invertedBgColor={currentProject.textColor}
+                    invertedTextColor={currentProject.color}
+                  >
                     <Wrench size={18} className="inline mr-2" />
                     Fix
                   </Button>
                 </>
               )}
-              <Button onClick={handleAddFeedback}>
+              <Button
+                onClick={handleAddFeedback}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
                 <Plus size={18} className="inline mr-2" />
                 Add
               </Button>
@@ -254,9 +286,9 @@ export function ProjectDetail() {
           </div>
 
           {feedback.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
               <p>No feedback items yet.</p>
-              <p className="text-sm mt-2">Click "Add Feedback" to create one.</p>
+              <p className="mt-2">Click "Add Feedback" to create one.</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -284,14 +316,14 @@ export function ProjectDetail() {
                             </div>
                             <div className="flex items-center gap-4 mt-2">
                               {formatDate(item.createdAt) && (
-                                <span className="text-xs text-white/80">{formatDate(item.createdAt)}</span>
+                                <span className="text-white/80">{formatDate(item.createdAt)}</span>
                               )}
                               <div className="flex gap-2">
-                                <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100 text-sm">
+                                <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
                                   <Edit size={14} className="inline mr-1" />
                                   Edit
                                 </button>
-                                <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100 text-sm">
+                                <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100">
                                   <Trash2 size={14} className="inline mr-1" />
                                   Delete
                                 </button>
@@ -307,7 +339,7 @@ export function ProjectDetail() {
               {/* Completed Items */}
               {feedback.filter(f => f.status === 'completed').length > 0 && (
                 <div>
-                  <h3 className="text-md text-gray-700 mb-3">Implemented</h3>
+                  <h3 className="text-md mb-3" style={{ color: currentProject.textColor || '#FFFFFF' }}>Implemented</h3>
                   <div className="space-y-3">
                     {feedback
                       .filter(f => f.status === 'completed')
@@ -330,14 +362,14 @@ export function ProjectDetail() {
                               </div>
                               <div className="flex items-center gap-4 mt-2">
                                 {formatDate(item.createdAt) && (
-                                  <span className="text-xs text-white/80">{formatDate(item.createdAt)}</span>
+                                  <span className="text-white/80">{formatDate(item.createdAt)}</span>
                                 )}
                                 <div className="flex gap-2">
-                                  <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100 text-sm">
+                                  <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
                                     <Edit size={14} className="inline mr-1" />
                                     Edit
                                   </button>
-                                  <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100 text-sm">
+                                  <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100">
                                     <Trash2 size={14} className="inline mr-1" />
                                     Delete
                                   </button>
