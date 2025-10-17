@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Settings, Sparkles, Wrench } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
-import { Dropdown } from '../common/Dropdown';
 import { FeedbackModal } from '../feedback/FeedbackModal';
 import { EditProjectModal } from './EditProjectModal';
 import type { FeedbackItem } from '../../store/types';
@@ -190,25 +189,10 @@ export function ProjectDetail() {
                   Open App
                 </Button>
               )}
-              <Dropdown
-                trigger={
-                  <Button size="sm">
-                    <Terminal size={16} className="inline mr-2" />
-                    Claude Code
-                    <ChevronDown size={16} className="inline ml-2" />
-                  </Button>
-                }
-                items={[
-                  {
-                    label: 'Open with All Pending Feedback',
-                    onClick: handleLaunchWithAllPending,
-                  },
-                  {
-                    label: 'Open without Context',
-                    onClick: handleLaunchWithoutContext,
-                  },
-                ]}
-              />
+              <Button size="sm" onClick={handleLaunchWithoutContext}>
+                <Terminal size={16} className="inline mr-2" />
+                Claude
+              </Button>
             </div>
           </div>
         </div>
@@ -260,10 +244,18 @@ export function ProjectDetail() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Feedback & Improvements</h2>
-            <Button onClick={handleAddFeedback}>
-              <Plus size={18} className="inline mr-2" />
-              Add Feedback
-            </Button>
+            <div className="flex gap-2">
+              {feedback.filter(f => f.status === 'pending').length > 0 && (
+                <Button variant="secondary" onClick={handleLaunchWithAllPending}>
+                  <Wrench size={18} className="inline mr-2" />
+                  Fix
+                </Button>
+              )}
+              <Button onClick={handleAddFeedback}>
+                <Plus size={18} className="inline mr-2" />
+                Add Feedback
+              </Button>
+            </div>
           </div>
 
           {feedback.length === 0 ? (
