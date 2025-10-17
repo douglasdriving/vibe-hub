@@ -62,7 +62,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isTextareaFocused, onClose]);
+  }, [isOpen, isTextareaFocused, onClose, text, priority]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
