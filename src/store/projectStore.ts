@@ -175,12 +175,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const newFeedback = await tauri.addFeedback(projectPath, feedbackData);
       const { feedback } = get();
       set({ feedback: [...feedback, newFeedback].sort((a, b) => a.priority - b.priority) });
-
-      // Refresh project to update feedback count
-      const { currentProject } = get();
-      if (currentProject) {
-        await get().refreshProject(currentProject.id);
-      }
     } catch (error) {
       console.error('Failed to add feedback:', error);
       throw error;
@@ -197,14 +191,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       ).sort((a, b) => a.priority - b.priority);
 
       set({ feedback: updatedFeedback });
-
-      // Refresh project to update feedback count if status changed
-      if (updates.status) {
-        const { currentProject } = get();
-        if (currentProject) {
-          await get().refreshProject(currentProject.id);
-        }
-      }
     } catch (error) {
       console.error('Failed to update feedback:', error);
       throw error;
@@ -217,12 +203,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       await tauri.deleteFeedback(projectPath, feedbackId);
       const { feedback } = get();
       set({ feedback: feedback.filter(f => f.id !== feedbackId) });
-
-      // Refresh project to update feedback count
-      const { currentProject } = get();
-      if (currentProject) {
-        await get().refreshProject(currentProject.id);
-      }
     } catch (error) {
       console.error('Failed to delete feedback:', error);
       throw error;

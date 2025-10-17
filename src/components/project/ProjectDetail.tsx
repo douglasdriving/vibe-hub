@@ -29,10 +29,13 @@ export function ProjectDetail() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    // Only load project if we haven't loaded it yet, or if the ID changed
+    if (id && (!currentProject || currentProject.id !== id || !hasLoaded)) {
       setCurrentProject(id);
+      setHasLoaded(true);
     }
   }, [id]);
 
