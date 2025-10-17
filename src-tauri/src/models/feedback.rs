@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct FeedbackItem {
     pub id: String,
     pub text: String,
     pub priority: u8,
     pub status: String,
+    #[serde(alias = "created_at", rename = "createdAt")]
     pub created_at: String,
+    #[serde(alias = "completed_at", rename = "completedAt")]
     pub completed_at: Option<String>,
 }
 
