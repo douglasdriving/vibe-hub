@@ -118,6 +118,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut tech_stack = Vec::new();
     let mut status: Option<String> = None;
     let mut color: Option<String> = None;
+    let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
     let mut in_description = false;
@@ -132,9 +133,14 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
             continue;
         }
 
-        // Parse Status: field
+        // Parse Status: field and migrate "in-progress" to "mvp-implemented"
         if trimmed.starts_with("Status:") {
-            status = Some(trimmed.trim_start_matches("Status:").trim().to_string());
+            let mut parsed_status = trimmed.trim_start_matches("Status:").trim().to_string();
+            if parsed_status == "in-progress" {
+                parsed_status = "mvp-implemented".to_string();
+                needs_migration = true;
+            }
+            status = Some(parsed_status);
             continue;
         }
 
@@ -178,6 +184,23 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
                 deployment_url = Some(trimmed.to_string());
             }
         }
+    }
+
+    // If migration occurred, write back the updated status
+    if needs_migration && status.is_some() {
+        let updated_contents = contents
+            .lines()
+            .map(|line| {
+                if line.trim().starts_with("Status:") && line.contains("in-progress") {
+                    line.replace("in-progress", "mvp-implemented")
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        let _ = fs::write(&metadata_path, updated_contents);
     }
 
     (name, description, deployment_url, tech_stack, status, color)
