@@ -27,21 +27,29 @@ export function ProjectCard({ project }: ProjectCardProps) {
     launchClaudeCode(project.path);
   };
 
+  const cardStyle = project.color
+    ? {
+        background: `linear-gradient(135deg, ${project.color}dd 0%, ${project.color}aa 100%)`,
+        boxShadow: `0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)`,
+      }
+    : {};
+
   return (
     <div
       onClick={handleOpenProject}
-      className="bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 rounded-lg shadow-2xl p-6 hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all hover:scale-105 cursor-pointer border-4 border-black"
+      style={cardStyle}
+      className="rounded-lg shadow-2xl p-6 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all hover:scale-105 cursor-pointer border-4 border-black"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="text-xl font-bold text-white">{project.displayName || project.name}</h3>
-          <span className={`${STATUS_COLORS[project.status]} text-white text-xs px-2 py-1 rounded mt-1 inline-block`}>
+          <h3 className="text-3xl font-bold text-white">{project.displayName || project.name}</h3>
+          <span className={`${STATUS_COLORS[project.status]} text-white text-base px-2 py-1 rounded mt-1 inline-block`}>
             {STATUS_LABELS[project.status]}
           </span>
         </div>
         {project.feedbackCount > 0 && (
-          <span className="bg-yellow-300 text-black text-sm font-bold px-2.5 py-0.5 rounded">
+          <span className="bg-yellow-300 text-black text-lg font-bold px-2.5 py-0.5 rounded">
             {project.feedbackCount}
           </span>
         )}
@@ -49,7 +57,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Description */}
       {project.description && (
-        <p className="text-white text-sm mb-4 line-clamp-2">
+        <p className="text-white text-lg mb-4 line-clamp-2">
           {project.description}
         </p>
       )}
@@ -58,22 +66,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {(project.platform || project.isLocalFirst !== undefined || project.isOpenSource !== undefined || project.hasBackend !== undefined) && (
         <div className="flex flex-wrap gap-2 mb-4">
           {project.platform && (
-            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">
+            <span className="bg-blue-100 text-blue-700 text-sm px-2 py-1 rounded">
               {project.platform}
             </span>
           )}
           {project.isLocalFirst && (
-            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">
+            <span className="bg-green-100 text-green-700 text-sm px-2 py-1 rounded">
               Local-First
             </span>
           )}
           {project.isOpenSource && (
-            <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">
+            <span className="bg-purple-100 text-purple-700 text-sm px-2 py-1 rounded">
               Open Source
             </span>
           )}
           {project.hasBackend && (
-            <span className="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded">
+            <span className="bg-orange-100 text-orange-700 text-sm px-2 py-1 rounded">
               Has Backend
             </span>
           )}
@@ -82,11 +90,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-white/30">
-        <div className="flex items-center gap-4 text-sm text-white">
+        <div className="flex items-center gap-4 text-base text-white">
           {project.lastModified && <span>{formatRelativeTime(project.lastModified)}</span>}
           {project.deploymentUrl && (
             <span className="flex items-center gap-1 text-yellow-300">
-              <ExternalLink size={14} />
+              <ExternalLink size={16} />
               Deployed
             </span>
           )}

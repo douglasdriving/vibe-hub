@@ -57,6 +57,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       }
 
       const projects = await tauri.scanProjects(settings.projectsDirectory);
+
+      // Auto-assign colors to projects that don't have one
+      for (const project of projects) {
+        if (!project.color) {
+          try {
+            const color = await tauri.assignColorIfMissing(project.path);
+            project.color = color;
+          } catch (error) {
+            console.error(`Failed to assign color to ${project.name}:`, error);
+          }
+        }
+      }
+
       set({ projects, isLoading: false });
     } catch (error) {
       console.error('Failed to load projects:', error);
