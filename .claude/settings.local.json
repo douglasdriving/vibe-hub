@@ -25,7 +25,9 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(powershell -Command \"Stop-Process -Id 38444 -Force\")",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(cargo clean:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

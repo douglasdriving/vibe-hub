@@ -1,0 +1,44 @@
+{
+  "feedback": [
+    {
+      "id": "5290ce3e-8647-41b2-aa6a-db05c537473d",
+      "text": "In the project information section, you have to manually enter a bunch of details. For already existing repos, this could easily be done by claude. Instead add a button that lets you generate this automatically by having claude scan the project files etc. You can add a metadata file (json or md or whatever) inside of the project repo as a template, and then claude just need to fill this document out with the right information. On the page for a project, please add a button that creates this metadata doc if it does not already exists, copies a claude command for filling it out to clipboard, and opens claude in the repo folder for pasting the command.",
+      "priority": 3,
+      "status": "pending",
+      "created_at": "2025-10-17T01:21:06.777954200+00:00",
+      "completed_at": null
+    },
+    {
+      "id": "a0ba3adb-58b7-4e3b-9fdd-e3739c8098eb",
+      "text": "In the feedback and improvements list, there is a field that right now just says \"unknown\" for all feedback items. I am guessing this MIGHT be for when the feedback was added, but I am not totatally sure. If it is for that, then look into why this is not properly generated for new feedback items, and fix that bug so that it is correct. If the data is actually unknown, dont print \"unknown\" under the feedback item itself - that is not very helpful. Instead, just remove that text alltogether. Only show it if there is actual data.",
+      "priority": 4,
+      "status": "pending",
+      "created_at": "2025-10-17T01:23:29.665732300+00:00",
+      "completed_at": null
+    },
+    {
+      "id": "5f5a4e60-bc51-4613-9f1c-73ded09119bb",
+      "text": "\"Last modified: unknown\" under all projects. If this data is actually unknown, it would be better to just hide this field entirely. Furthermore, please figure out WHY this is actually unknown, and how it is supposed to be generated. It should probably be contained within some metadata file for vibe hub within the project folder, but maybe it is not properly being generated now.",
+      "priority": 4,
+      "status": "pending",
+      "created_at": "2025-10-17T01:24:54.681546300+00:00",
+      "completed_at": null
+    },
+    {
+      "id": "177dafd2-62a7-4af3-92b5-7ad08939b78b",
+      "text": "Every box and piece of content within the app is stretched all the way to the right and left edges of the screen. This looks quite wierd. Please add padding around the entire app, especially on the left and right side.",
+      "priority": 4,
+      "status": "pending",
+      "created_at": "2025-10-17T01:25:52.984695400+00:00",
+      "completed_at": null
+    },
+    {
+      "id": "c41c9595-54fa-4005-a722-0fc3840cfe4b",
+      "text": "It is a bit strange that the way to fix feedback is to press the \"claude code\" button at the top. Instead, please make the button on top simply say \"claude\", remove the dropdown menu from that button, and just make it open claude for the repo. Then, add a button at the top of the feedback list that says \"fix\". If the user presses the \"fix\" button, you should copy the feedback fix command with all the feedback and open claude code in the repo folder",
+      "priority": 4,
+      "status": "pending",
+      "created_at": "2025-10-17T01:28:05.897482100+00:00",
+      "completed_at": null
+    }
+  ]
+}

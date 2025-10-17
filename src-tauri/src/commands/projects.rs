@@ -219,3 +219,56 @@ pub async fn update_project_metadata(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn create_metadata_template(project_path: String) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(METADATA_FILE);
+
+    // Only create if it doesn't exist
+    if metadata_path.exists() {
+        return Ok(());
+    }
+
+    let template = r#"# Project Metadata
+
+## Description
+
+[Add a brief description of what this project does and its purpose]
+
+## Tech Stack
+
+- [Technology 1]
+- [Technology 2]
+- [Technology 3]
+
+## Deployment
+
+[Add deployment URL if applicable, or remove this section]
+"#;
+
+    fs::write(&metadata_path, template)
+        .map_err(|e| format!("Failed to create metadata template: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn check_metadata_exists(project_path: String) -> Result<bool, String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(METADATA_FILE);
+
+    if !metadata_path.exists() {
+        return Ok(false);
+    }
+
+    // Check if it has meaningful content (not just the template)
+    let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
+
+    // Consider it empty if it contains template placeholders
+    let has_content = !contents.contains("[Add a brief description")
+        && !contents.contains("[Technology 1]")
+        && contents.len() > 50; // Has some actual content
+
+    Ok(has_content)
+}

@@ -16,7 +16,7 @@ export function generateClaudePrompt(
     )
     .join('\n');
 
-  const footer = '\n\nPlease review these items and suggest how to approach them.';
+  const footer = '\n\nPlease review these items one by one. For each item, write down one or several todos that you need to do in order to fix it. Then, in case you have clarification that you need, please ask me for them. If you dont need clarifications, or if I have given them to you, then start implementing all the todos. For each thing you implement, commit with a very short message about what you changed to git. After all changes have been made, run through all the test that you can yourself (such as attempting a build), and fix any errors that might have occured. When all that is done, let me know so that I can test the app with your changes.';
 
   return header + items + footer;
 }
