@@ -4,8 +4,11 @@ export interface Project {
   name: string;                  // From folder name
   displayName?: string;          // Nice name from metadata
   path: string;                  // Absolute path
-  description: string;           // From vibe-hub.md or manual
-  techStack: string[];           // Tags
+  description: string;           // From vibe-hub.json or manual
+  platform?: string;             // Windows/macOS/Linux/Web/Mobile/Cross-platform
+  isLocalFirst?: boolean;        // Is local-first architecture
+  isOpenSource?: boolean;        // Is open source
+  hasBackend?: boolean;          // Has backend server
   deploymentUrl?: string;        // Optional
   status: 'draft' | 'in-progress' | 'deployed'; // Project status
   lastModified?: string;         // From git or filesystem (ISO 8601)
@@ -23,11 +26,16 @@ export interface FeedbackItem {
   completedAt?: string;          // ISO 8601 timestamp
 }
 
-// Project Metadata (from vibe-hub.md)
+// Project Metadata (from vibe-hub.json)
 export interface ProjectMetadata {
-  description: string;
+  name?: string;
+  description?: string;
+  platform?: string;
+  isLocalFirst?: boolean;
+  isOpenSource?: boolean;
+  hasBackend?: boolean;
   deploymentUrl?: string;
-  techStack?: string[];
+  status?: string;
 }
 
 // Feedback File Structure
