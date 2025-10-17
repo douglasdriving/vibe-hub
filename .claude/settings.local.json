@@ -28,7 +28,8 @@
       "Bash(timeout:*)",
       "Bash(cargo clean:*)",
       "Bash(rm:*)",
-      "Bash(powershell -Command \"Stop-Process -Id 11984 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 11984 -Force\")",
+      "Bash(powershell -Command \"Get-Process | Where-Object {$_ProcessName -like ''*vibe*''}\")"
     ],
     "deny": [],
     "ask": []

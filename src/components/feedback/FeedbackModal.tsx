@@ -90,6 +90,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
             Feedback
           </label>
           <textarea
+            autoFocus
             value={text}
             onChange={(e) => setText(e.target.value)}
             onFocus={() => setIsTextareaFocused(true)}
