@@ -67,6 +67,11 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Don't submit if textarea is focused - let it blur first
+    if (isTextareaFocused) {
+      return;
+    }
+
     if (!text.trim()) {
       setError('Feedback text is required');
       return;
