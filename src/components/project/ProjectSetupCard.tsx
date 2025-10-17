@@ -31,6 +31,12 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
   const handleSaveIdea = async (ideaData: IdeaFormData) => {
     await saveProjectIdea(project.path, ideaData);
     setDraftIdeaData(null); // Clear draft after successful save
+
+    // Copy the design spec prompt to clipboard immediately
+    const designPrompt = getStageAdvancementInfo('idea')?.promptGenerator(project.name, project.path);
+    if (designPrompt) {
+      await navigator.clipboard.writeText(designPrompt);
+    }
   };
 
   const handleUpdateDraft = (ideaData: IdeaFormData) => {
