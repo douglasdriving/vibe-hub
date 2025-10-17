@@ -3,6 +3,7 @@
 
 body {
   font-family: 'VT323', monospace;
+  font-size: 1.4em; /* Increased from default by 1.4x */
   background-color: #BFFF00 !important; /* Lime green background */
 }
 
