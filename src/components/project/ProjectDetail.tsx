@@ -8,7 +8,7 @@ import { EditProjectModal } from './EditProjectModal';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
-import { createMetadataTemplate, generateMetadataPrompt } from '../../services/tauri';
+import { createMetadataTemplate, generateMetadataPrompt, launchClaudeCode as launchClaudeTauri } from '../../services/tauri';
 import { copyToClipboard } from '../../services/clipboard';
 
 export function ProjectDetail() {
@@ -137,9 +137,9 @@ export function ProjectDetail() {
       // Generate the Claude prompt
       const prompt = await generateMetadataPrompt(currentProject.path, currentProject.name);
 
-      // Copy prompt to clipboard and launch Claude Code
+      // Copy prompt to clipboard and launch Claude Code directly (not through store)
       await copyToClipboard(prompt);
-      await launchClaudeCode(currentProject.path, []);
+      await launchClaudeTauri(currentProject.path, prompt);
     } catch (error) {
       console.error('Failed to generate metadata with Claude:', error);
     }
