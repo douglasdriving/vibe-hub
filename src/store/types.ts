@@ -10,7 +10,8 @@ export interface Project {
   isOpenSource?: boolean;        // Is open source
   hasBackend?: boolean;          // Has backend server
   deploymentUrl?: string;        // Optional
-  status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'mvp-implemented' | 'in-progress' | 'deployed'; // Project status
+  status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'deployed'; // Project status
+  color?: string;                // Project color for UI (synth-wave palette)
   lastModified?: string;         // From git or filesystem (ISO 8601)
   feedbackCount: number;         // Calculated
   hasUncommittedChanges: boolean; // Git status
@@ -67,23 +68,37 @@ export const PRIORITY_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
 };
 
 // Status Labels
-export const STATUS_LABELS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'mvp-implemented' | 'in-progress' | 'deployed', string> = {
+export const STATUS_LABELS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'deployed', string> = {
   'initialized': 'Initialized',
   'idea': 'Idea',
   'designed': 'Designed',
   'tech-spec-ready': 'Tech Spec Ready',
+  'metadata-ready': 'Metadata Ready',
   'mvp-implemented': 'MVP Implemented',
-  'in-progress': 'In Progress',
   'deployed': 'Deployed',
 };
 
 // Status Colors (Tailwind classes)
-export const STATUS_COLORS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'mvp-implemented' | 'in-progress' | 'deployed', string> = {
+export const STATUS_COLORS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'deployed', string> = {
   'initialized': 'bg-purple-400',
   'idea': 'bg-pink-400',
   'designed': 'bg-orange-400',
   'tech-spec-ready': 'bg-yellow-400',
+  'metadata-ready': 'bg-cyan-400',
   'mvp-implemented': 'bg-blue-400',
-  'in-progress': 'bg-blue-500',
   'deployed': 'bg-green-500',
 };
+
+// Synth-wave color palette for project cards
+export const SYNTHWAVE_COLORS = [
+  '#FF006E', // Hot pink
+  '#8338EC', // Purple
+  '#3A86FF', // Blue
+  '#FB5607', // Orange
+  '#FFBE0B', // Yellow
+  '#FF006E', // Magenta
+  '#06FFA5', // Cyan
+  '#FF1654', // Red-pink
+  '#7209B7', // Deep purple
+  '#F72585', // Pink
+];
