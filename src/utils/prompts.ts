@@ -72,6 +72,32 @@ export function generateTechnicalSpecPrompt(projectName: string, projectPath: st
 Please start by reading the design spec and proposing your initial technical architecture!`;
 }
 
+export function generateMetadataPrompt(projectName: string, projectPath: string): string {
+  return `I need help filling out the project metadata for: ${projectName}
+
+**Instructions:**
+
+1. **Read all specification documents** - Please scan these files to understand the project:
+   - ${projectPath}/.vibe/idea.md (project concept)
+   - ${projectPath}/.vibe/design-spec.md (MVP features)
+   - ${projectPath}/.vibe/technical-spec.md (architecture and tech stack)
+
+2. **Fill out metadata.md** - Please update the metadata file at ${projectPath}/.vibe/metadata.md with:
+   - **Name**: A nice human-readable project name (not just the folder name)
+   - **Status**: Keep as "metadata-ready" for now
+   - **Description**: A clear 1-2 sentence description of what this project does
+   - **Tech Stack**: List the main technologies from the technical spec
+   - **Deployment**: Leave empty for now (will be filled after deployment)
+
+3. **Format requirements**:
+   - Keep the existing Name, Status, and Color lines at the top
+   - Update the Description section with your summary
+   - List technologies as bullet points under Tech Stack
+   - Keep the markdown structure intact
+
+Please read the specs and update the metadata file!`;
+}
+
 export function generateImplementationPrompt(projectName: string, projectPath: string): string {
   return `I'm ready to start implementing the MVP for my project: ${projectName}
 
@@ -149,13 +175,19 @@ export function getStageAdvancementInfo(currentStatus: string): {
 
     case 'tech-spec-ready':
       return {
+        nextStatus: 'metadata-ready',
+        actionLabel: 'Fill Project Metadata with Claude',
+        promptGenerator: generateMetadataPrompt,
+      };
+
+    case 'metadata-ready':
+      return {
         nextStatus: 'mvp-implemented',
         actionLabel: 'Start Implementation with Claude',
         promptGenerator: generateImplementationPrompt,
       };
 
     case 'mvp-implemented':
-    case 'in-progress':
     case 'deployed':
       // These statuses don't have a "next stage" in the pipeline
       return null;
@@ -169,7 +201,7 @@ export function getStageAdvancementInfo(currentStatus: string): {
  * Check if a status is in the project setup pipeline
  */
 export function isSetupStatus(status: string): boolean {
-  return ['initialized', 'idea', 'designed', 'tech-spec-ready'].includes(status);
+  return ['initialized', 'idea', 'designed', 'tech-spec-ready', 'metadata-ready'].includes(status);
 }
 
 /**
@@ -187,6 +219,9 @@ export function getStageDescription(status: string): string {
       return 'Generate a technical specification with Claude to plan the architecture and tech stack.';
 
     case 'tech-spec-ready':
+      return 'Have Claude fill out the project metadata based on your specifications.';
+
+    case 'metadata-ready':
       return 'Start implementing the MVP with Claude using the design and technical specs.';
 
     default:
@@ -209,13 +244,13 @@ export function getStageIcon(status: string): string {
       return '🔧';
 
     case 'tech-spec-ready':
+      return '📝';
+
+    case 'metadata-ready':
       return '⚡';
 
     case 'mvp-implemented':
       return '✅';
-
-    case 'in-progress':
-      return '🚧';
 
     case 'deployed':
       return '🚀';

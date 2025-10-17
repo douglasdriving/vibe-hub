@@ -120,3 +120,7 @@ export async function checkSpecFilesExist(projectPath: string): Promise<[boolean
 export async function updateProjectStatus(projectPath: string, newStatus: string): Promise<void> {
   return await invoke('update_project_status', { projectPath, newStatus });
 }
+
+export async function assignColorIfMissing(projectPath: string): Promise<string> {
+  return await invoke('assign_color_if_missing', { projectPath });
+}
