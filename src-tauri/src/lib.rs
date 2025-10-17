@@ -18,6 +18,9 @@ pub fn run() {
             projects::scan_projects,
             projects::get_project_detail,
             projects::update_project_metadata,
+            projects::create_metadata_template,
+            projects::check_metadata_exists,
+            projects::generate_metadata_prompt,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,

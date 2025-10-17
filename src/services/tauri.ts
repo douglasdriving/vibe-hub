@@ -22,6 +22,18 @@ export async function updateProjectMetadata(
   });
 }
 
+export async function createMetadataTemplate(projectPath: string): Promise<void> {
+  return await invoke('create_metadata_template', { projectPath });
+}
+
+export async function checkMetadataExists(projectPath: string): Promise<boolean> {
+  return await invoke('check_metadata_exists', { projectPath });
+}
+
+export async function generateMetadataPrompt(projectPath: string, projectName: string): Promise<string> {
+  return await invoke('generate_metadata_prompt', { projectPath, projectName });
+}
+
 // Feedback commands
 export async function getFeedback(projectPath: string): Promise<FeedbackItem[]> {
   return await invoke('get_feedback', { projectPath });

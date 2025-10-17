@@ -292,3 +292,41 @@ pub async fn check_metadata_exists(project_path: String) -> Result<bool, String>
 
     Ok(has_content)
 }
+
+#[tauri::command]
+pub async fn generate_metadata_prompt(project_path: String, project_name: String) -> Result<String, String> {
+    let prompt = format!(
+        r#"Please analyze this project and fill out the vibe-hub.md metadata file with accurate information.
+
+Project: {}
+
+Instructions:
+1. Scan key files in the project (package.json, README.md, source files, etc.)
+2. Identify the project's purpose and write a clear description
+3. List all major technologies in the tech stack
+4. Look for deployment configuration or URLs if present
+
+The vibe-hub.md file should have this format:
+
+# Project Metadata
+
+## Description
+
+[Write a 1-2 sentence description of what this project does]
+
+## Tech Stack
+
+- [Technology 1]
+- [Technology 2]
+- [Technology 3]
+
+## Deployment
+
+[Add deployment URL if found, otherwise remove this section]
+
+Please update the vibe-hub.md file now with accurate information based on your analysis of the codebase."#,
+        project_name
+    );
+
+    Ok(prompt)
+}
