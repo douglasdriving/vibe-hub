@@ -143,9 +143,9 @@ export function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: `${currentProject.color}22` }}>
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="shadow-sm" style={{ backgroundColor: `${currentProject.color}11` }}>
         <div className="px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -157,7 +157,7 @@ export function ProjectDetail() {
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-gray-900">{currentProject.displayName || currentProject.name}</h1>
+                  <h1 className="text-6xl uppercase text-gray-900">{currentProject.displayName || currentProject.name}</h1>
                   <span className={`${STATUS_COLORS[currentProject.status]} text-white text-sm px-3 py-1 rounded`}>
                     {STATUS_LABELS[currentProject.status]}
                   </span>
@@ -191,7 +191,7 @@ export function ProjectDetail() {
         <ProjectSetupCard project={currentProject} />
 
         {/* Project Info */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: `${currentProject.color}11` }}>
           {currentProject.description ? (
             <p className="text-gray-700 mb-4">{currentProject.description}</p>
           ) : (
@@ -201,7 +201,7 @@ export function ProjectDetail() {
           {/* Platform & Architecture */}
           {(currentProject.platform || currentProject.isLocalFirst || currentProject.isOpenSource || currentProject.hasBackend) ? (
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-sm font-medium text-gray-700">Platform & Architecture:</span>
+              <span className="text-sm text-gray-700">Platform & Architecture:</span>
               {currentProject.platform && (
                 <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded">{currentProject.platform}</span>
               )}
@@ -227,9 +227,9 @@ export function ProjectDetail() {
 
         {/* Feedback Section - only show for projects past setup stages */}
         {!isSetupStatus(currentProject.status) && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="rounded-lg shadow p-6" style={{ backgroundColor: `${currentProject.color}11` }}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Feedback & Improvements</h2>
+            <h2 className="text-lg text-gray-900">Feedback & Improvements</h2>
             <div className="flex gap-2">
               {feedback.filter(f => f.status === 'pending').length > 0 && (
                 <>
@@ -274,8 +274,8 @@ export function ProjectDetail() {
                           />
                           <div className="flex-1">
                             <div className="flex items-start justify-between gap-4">
-                              <p className="text-white font-bold">{item.text}</p>
-                              <span className={`${PRIORITY_COLORS[item.priority]} text-white text-xs px-2 py-1 rounded whitespace-nowrap`}>
+                              <p className="text-white">{item.text}</p>
+                              <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
                                 {PRIORITY_LABELS[item.priority]}
                               </span>
                             </div>
@@ -284,11 +284,11 @@ export function ProjectDetail() {
                                 <span className="text-xs text-white/80">{formatDate(item.createdAt)}</span>
                               )}
                               <div className="flex gap-2">
-                                <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100 text-sm font-bold">
+                                <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100 text-sm">
                                   <Edit size={14} className="inline mr-1" />
                                   Edit
                                 </button>
-                                <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100 text-sm font-bold">
+                                <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100 text-sm">
                                   <Trash2 size={14} className="inline mr-1" />
                                   Delete
                                 </button>
@@ -304,7 +304,7 @@ export function ProjectDetail() {
               {/* Completed Items */}
               {feedback.filter(f => f.status === 'completed').length > 0 && (
                 <div>
-                  <h3 className="text-md font-semibold text-gray-700 mb-3">Implemented</h3>
+                  <h3 className="text-md text-gray-700 mb-3">Implemented</h3>
                   <div className="space-y-3">
                     {feedback
                       .filter(f => f.status === 'completed')
@@ -320,8 +320,8 @@ export function ProjectDetail() {
                             />
                             <div className="flex-1">
                               <div className="flex items-start justify-between gap-4">
-                                <p className="text-white font-bold line-through">{item.text}</p>
-                                <span className={`${PRIORITY_COLORS[item.priority]} text-white text-xs px-2 py-1 rounded whitespace-nowrap`}>
+                                <p className="text-white line-through">{item.text}</p>
+                                <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
                                   {PRIORITY_LABELS[item.priority]}
                                 </span>
                               </div>
@@ -330,11 +330,11 @@ export function ProjectDetail() {
                                   <span className="text-xs text-white/80">{formatDate(item.createdAt)}</span>
                                 )}
                                 <div className="flex gap-2">
-                                  <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100 text-sm font-bold">
+                                  <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100 text-sm">
                                     <Edit size={14} className="inline mr-1" />
                                     Edit
                                   </button>
-                                  <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100 text-sm font-bold">
+                                  <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100 text-sm">
                                     <Trash2 size={14} className="inline mr-1" />
                                     Delete
                                   </button>
