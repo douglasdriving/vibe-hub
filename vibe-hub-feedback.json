@@ -26,8 +26,8 @@
     },
     {
       "id": "177dafd2-62a7-4af3-92b5-7ad08939b78b",
-      "text": "Every box and piece of content within the app is stretched all the way to the right and left edges of the screen. This looks quite wierd. Please add padding around the entire app, especially on the left and right side. Edit: a tiiiiny bit of padding was added, but it is still way too small. Please make the padding like 4 times what it currently is",
-      "priority": 4,
+      "text": "Every box and piece of content within the app is stretched all the way to the right and left edges of the screen. This looks quite wierd. Please add padding around the entire app, especially on the left and right side. Edit: a tiiiiny bit of padding was added, but it is still way too small. Please make the padding like 4 times what it currently is. Edit 2: I dont think this fix really works. Now, I am thinking specifically about the projects page. When I change the classname numbers in APP.tsx, it doesnt seem to change the padding on this page, it is still stretched all the way to the sides",
+      "priority": 3,
       "status": "pending",
       "createdAt": "2025-10-17T01:25:52.984695400+00:00",
       "completedAt": null
@@ -44,7 +44,7 @@
       "id": "c456738a-40e2-410c-8022-8208aaf8542d",
       "text": "Next to the \"fix\" button for feedback items, please add a \"copy fix prompt\" button, that doesnt launch claude code but simply copies the prompt to fix all feedback items to clipboard. This is so that it is possible to use this in case the user already has claude code open for the respective app, and dont need to open another window.",
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:22:14.637946700+00:00",
       "completedAt": null
     },
@@ -52,7 +52,7 @@
       "id": "51d0afb5-2f79-4d48-99d1-679626353e75",
       "text": "Please move all \"checked\" feedback items to the bottom of the project page, so that you first only see the pending ones that have not been finished yet",
       "priority": 3,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:23:01.213813100+00:00",
       "completedAt": null
     },
@@ -60,14 +60,14 @@
       "id": "04ea9634-1fd6-4766-b0a4-4a67439a2e10",
       "text": "When adding a feedback item, add a keyboard command ctrl+enter to add it (so that you dont need to physically press the \"add\" button with a mouse click)",
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:23:39.212096900+00:00",
       "completedAt": null
     },
     {
       "id": "79bd6a96-c934-4779-a6b4-ddaada87fbd7",
-      "text": "The tech stack is displayed in a really strange way. Each library or language is listed right after another in a long string with no spaces. This makes it hard to read. Instead, make a little box for each, and separate them clearly with a space.",
-      "priority": 4,
+      "text": "The tech stack is displayed in a really strange way. Each library or language is listed right after another in a long string with no spaces. This makes it hard to read. Instead, make a little box for each, and separate them clearly with a space. EDIT: This is still not fixed. And to be honest, the entire app looks pretty weird to me at the moment, as if there is no tailwind or CSS styling applied at all. Everything is black and white and with the default font, as though it is only rendering plain html. I am starting to wonder if the styling is applied at all? Since there is also the problem with no padding being added. Please look into this! Also, note that I am testing it with npm run tauri dev, and I dont know if it might be because the styling is only applied on builds (it really should work in dev run, but still, just wanted to add that detail.",
+      "priority": 1,
       "status": "pending",
       "createdAt": "2025-10-17T02:24:50.644067700+00:00",
       "completedAt": null
@@ -76,7 +76,7 @@
       "id": "14d08494-7db5-4331-aaea-5871a084316d",
       "text": "You can remove the \"project information\" heading. It is pretty clear that the info right under the title of the project is about that project.",
       "priority": 5,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:25:28.452662300+00:00",
       "completedAt": null
     },
@@ -84,13 +84,13 @@
       "id": "1a82b9b1-da3b-494e-8ecd-f8e43dde0460",
       "text": "Instead of an \"explorer\" button at the top, make it so that the \"path\" info field becomes a button that simply shows the path. left of the path text it can have the folder icon. if you click the button, it opens the folder in explorer.",
       "priority": 5,
-      "status": "pending",
+      "status": "completed",
       "createdAt": "2025-10-17T02:26:48.204204300+00:00",
       "completedAt": null
     },
     {
       "id": "3c675ecc-47a8-4c2b-a82f-e72fbc7ba357",
-      "text": "When setting the priority of a feedback item, instead of having a dropdown, simply line the 5 priority scales from left to right, so that you can select with one click. Also, add a keyboard command to set the prio level by pressing 1-5 on the keyboard.",
+      "text": "When setting the priority of a feedback item, instead of having a dropdown, simply line the 5 priority scales from left to right, so that you can select with one click. Also, add a keyboard command to set the prio level by pressing 1-5 on the keyboard. Edit: In the feedback add view, I cannot see which of the 5 values I have selected. This might also be connected with CSS styling not being properly added.",
       "priority": 5,
       "status": "pending",
       "createdAt": "2025-10-17T02:27:42.805759300+00:00",
