@@ -15,6 +15,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [error, setError] = useState('');
+  const [isTextareaFocused, setIsTextareaFocused] = useState(false);
 
   console.log('FeedbackModal render - isOpen:', isOpen);
 
@@ -32,17 +33,36 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        const num = parseInt(e.key);
-        if (num >= 1 && num <= 5) {
-          setPriority(num as 1 | 2 | 3 | 4 | 5);
+      if (!isOpen) return;
+
+      // ESC to close
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      // Only handle these keys when textarea is NOT focused
+      if (!isTextareaFocused) {
+        // Enter to submit
+        if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+          e.preventDefault();
+          handleSubmit(e as any);
+          return;
+        }
+
+        // 1-5 number keys to select priority
+        if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+          const num = parseInt(e.key);
+          if (num >= 1 && num <= 5) {
+            setPriority(num as 1 | 2 | 3 | 4 | 5);
+          }
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, isTextareaFocused, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,9 +92,12 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onFocus={() => setIsTextareaFocused(true)}
+            onBlur={() => setIsTextareaFocused(false)}
             onKeyDown={(e) => {
-              if (e.ctrlKey && e.key === 'Enter') {
-                handleSubmit(e as any);
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.blur();
               }
             }}
             className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -86,7 +109,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Priority (or press 1-5)
+            Priority (press Enter to exit text, then 1-5 to select, Enter again to submit)
           </label>
           <div className="flex gap-2">
             {([1, 2, 3, 4, 5] as const).map((p) => (
