@@ -18,7 +18,7 @@ export async function saveProjectIdea(
   projectPath: string,
   summary: string,
   problem: string,
-  coreFeatures: string[],
+  coreFunctionality: string,
   valueProposition: string,
   additionalRequirements: string
 ): Promise<void> {
@@ -26,7 +26,7 @@ export async function saveProjectIdea(
     projectPath,
     summary,
     problem,
-    coreFeatures,
+    coreFunctionality,
     valueProposition,
     additionalRequirements
   });

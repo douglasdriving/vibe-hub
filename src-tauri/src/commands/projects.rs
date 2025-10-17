@@ -650,7 +650,7 @@ pub async fn save_project_idea(
     project_path: String,
     summary: String,
     problem: String,
-    core_features: Vec<String>,
+    core_functionality: String,
     value_proposition: String,
     additional_requirements: String,
 ) -> Result<(), String> {
@@ -676,11 +676,9 @@ pub async fn save_project_idea(
     content.push_str(&problem);
     content.push_str("\n\n");
 
-    content.push_str("## Core Features\n\n");
-    for feature in &core_features {
-        content.push_str(&format!("- {}\n", feature));
-    }
-    content.push_str("\n");
+    content.push_str("## Core Functionality\n\n");
+    content.push_str(&core_functionality);
+    content.push_str("\n\n");
 
     content.push_str("## Value Proposition\n\n");
     content.push_str(&value_proposition);

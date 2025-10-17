@@ -17,7 +17,7 @@ interface ProjectStore {
   saveProjectIdea: (projectPath: string, idea: {
     summary: string;
     problem: string;
-    coreFeatures: string[];
+    coreFunctionality: string;
     valueProposition: string;
     additionalRequirements: string;
   }) => Promise<void>;
@@ -91,7 +91,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         projectPath,
         idea.summary,
         idea.problem,
-        idea.coreFeatures,
+        idea.coreFunctionality,
         idea.valueProposition,
         idea.additionalRequirements
       );

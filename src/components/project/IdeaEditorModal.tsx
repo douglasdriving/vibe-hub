@@ -14,7 +14,7 @@ interface IdeaEditorModalProps {
 export interface IdeaFormData {
   summary: string;
   problem: string;
-  coreFeatures: string[];
+  coreFunctionality: string;
   valueProposition: string;
   additionalRequirements: string;
 }
@@ -22,7 +22,7 @@ export interface IdeaFormData {
 export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projectName, draftData }: IdeaEditorModalProps) {
   const [summary, setSummary] = useState(draftData?.summary || '');
   const [problem, setProblem] = useState(draftData?.problem || '');
-  const [features, setFeatures] = useState(draftData?.coreFeatures || ['', '', '']);
+  const [coreFunctionality, setCoreFunctionality] = useState(draftData?.coreFunctionality || '');
   const [valueProposition, setValueProposition] = useState(draftData?.valueProposition || '');
   const [additionalRequirements, setAdditionalRequirements] = useState(draftData?.additionalRequirements || '');
   const [error, setError] = useState('');
@@ -33,27 +33,11 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
     if (isOpen && draftData) {
       setSummary(draftData.summary || '');
       setProblem(draftData.problem || '');
-      setFeatures(draftData.coreFeatures || ['', '', '']);
+      setCoreFunctionality(draftData.coreFunctionality || '');
       setValueProposition(draftData.valueProposition || '');
       setAdditionalRequirements(draftData.additionalRequirements || '');
     }
   }, [isOpen, draftData]);
-
-  const updateFeature = (index: number, value: string) => {
-    const newFeatures = [...features];
-    newFeatures[index] = value;
-    setFeatures(newFeatures);
-  };
-
-  const addFeature = () => {
-    setFeatures([...features, '']);
-  };
-
-  const removeFeature = (index: number) => {
-    if (features.length > 1) {
-      setFeatures(features.filter((_, i) => i !== index));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +53,8 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
       return;
     }
 
-    const filledFeatures = features.filter(f => f.trim());
-    if (filledFeatures.length === 0) {
-      setError('At least one core feature is required');
+    if (!coreFunctionality.trim()) {
+      setError('Core functionality description is required');
       return;
     }
 
@@ -87,7 +70,7 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
       await onSave({
         summary: summary.trim(),
         problem: problem.trim(),
-        coreFeatures: filledFeatures,
+        coreFunctionality: coreFunctionality.trim(),
         valueProposition: valueProposition.trim(),
         additionalRequirements: additionalRequirements.trim(),
       });
@@ -95,13 +78,13 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
       // Reset form and clear draft
       setSummary('');
       setProblem('');
-      setFeatures(['', '', '']);
+      setCoreFunctionality('');
       setValueProposition('');
       setAdditionalRequirements('');
       onUpdateDraft({
         summary: '',
         problem: '',
-        coreFeatures: ['', '', ''],
+        coreFunctionality: '',
         valueProposition: '',
         additionalRequirements: '',
       });
@@ -116,11 +99,10 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
   const handleClose = () => {
     if (!isSaving) {
       // Save current form state as draft before closing
-      const filledFeatures = features.filter(f => f.trim());
       onUpdateDraft({
         summary: summary.trim(),
         problem: problem.trim(),
-        coreFeatures: filledFeatures.length > 0 ? filledFeatures : features,
+        coreFunctionality: coreFunctionality.trim(),
         valueProposition: valueProposition.trim(),
         additionalRequirements: additionalRequirements.trim(),
       });
@@ -163,45 +145,19 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
           />
         </div>
 
-        {/* Core Features */}
+        {/* Core Functionality */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-semibold text-gray-900">
-              Core Features *
-            </label>
-            <button
-              type="button"
-              onClick={addFeature}
-              disabled={isSaving}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
-            >
-              + Add Feature
-            </button>
-          </div>
-          <div className="space-y-3">
-            {features.map((feature, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
-                  value={feature}
-                  onChange={(e) => updateFeature(index, e.target.value)}
-                  disabled={isSaving}
-                  className="flex-1 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  placeholder={`Feature ${index + 1}`}
-                />
-                {features.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeFeature(index)}
-                    disabled={isSaving}
-                    className="px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium disabled:opacity-50"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Core Functionality *
+          </label>
+          <textarea
+            value={coreFunctionality}
+            onChange={(e) => setCoreFunctionality(e.target.value)}
+            disabled={isSaving}
+            rows={8}
+            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            placeholder="Describe how the app should work and what the core functionality is..."
+          />
         </div>
 
         {/* Value Proposition */}
