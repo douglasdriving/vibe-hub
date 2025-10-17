@@ -294,7 +294,7 @@ pub async fn check_metadata_exists(project_path: String) -> Result<bool, String>
 }
 
 #[tauri::command]
-pub async fn generate_metadata_prompt(project_path: String, project_name: String) -> Result<String, String> {
+pub async fn generate_metadata_prompt(_project_path: String, project_name: String) -> Result<String, String> {
     let prompt = format!(
         r#"Please analyze this project and fill out the vibe-hub.md metadata file with accurate information.
 

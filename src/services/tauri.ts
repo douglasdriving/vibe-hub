@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Project, FeedbackItem, Settings, ProjectMetadata } from '../store/types';
+import type { Project, FeedbackItem, Settings } from '../store/types';
 
 // Project commands
 export async function scanProjects(projectsDir: string): Promise<Project[]> {
