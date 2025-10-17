@@ -39,7 +39,7 @@ Double-click `build.bat` or run:
 build.bat
 ```
 
-The installer will be generated at: `src-tauri\target\release\bundle\msi\`
+The installer will be generated at: `src-tauri\target\release\bundle\nsis\` (NSIS .exe installer)
 
 #### Manual Build
 

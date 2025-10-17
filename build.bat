@@ -33,6 +33,7 @@ echo Build complete!
 echo ========================================
 echo.
 echo The installer can be found at:
-echo src-tauri\target\release\bundle\msi\
+echo src-tauri\target\release\bundle\nsis\
+echo (NSIS .exe installer for Windows)
 echo.
 pause
