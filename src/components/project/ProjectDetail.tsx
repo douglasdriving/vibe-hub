@@ -149,9 +149,11 @@ export function ProjectDetail() {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{currentProject.name}</h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Last modified: {formatDate(currentProject.lastModified)}
-                </p>
+                {currentProject.lastModified && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Last modified: {formatDate(currentProject.lastModified)}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -269,9 +271,11 @@ export function ProjectDetail() {
                       </div>
 
                       <div className="flex items-center gap-4 mt-2">
-                        <span className="text-xs text-gray-500">
-                          {formatDate(item.createdAt)}
-                        </span>
+                        {formatDate(item.createdAt) && (
+                          <span className="text-xs text-gray-500">
+                            {formatDate(item.createdAt)}
+                          </span>
+                        )}
 
                         <div className="flex gap-2">
                           <button

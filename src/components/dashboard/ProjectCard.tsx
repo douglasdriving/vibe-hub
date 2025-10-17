@@ -70,7 +70,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">
         <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span>{formatRelativeTime(project.lastModified)}</span>
+          {project.lastModified && <span>{formatRelativeTime(project.lastModified)}</span>}
           {project.deploymentUrl && (
             <span className="flex items-center gap-1 text-green-600">
               <ExternalLink size={14} />
