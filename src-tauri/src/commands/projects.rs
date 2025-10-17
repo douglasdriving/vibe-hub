@@ -102,11 +102,11 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None);
+        return (None, String::new(), None, Vec::new(), None, None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -117,6 +117,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut deployment_url: Option<String> = None;
     let mut tech_stack = Vec::new();
     let mut status: Option<String> = None;
+    let mut color: Option<String> = None;
 
     let lines: Vec<&str> = contents.lines().collect();
     let mut in_description = false;
@@ -134,6 +135,12 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         // Parse Status: field
         if trimmed.starts_with("Status:") {
             status = Some(trimmed.trim_start_matches("Status:").trim().to_string());
+            continue;
+        }
+
+        // Parse Color: field
+        if trimmed.starts_with("Color:") {
+            color = Some(trimmed.trim_start_matches("Color:").trim().to_string());
             continue;
         }
 
@@ -173,7 +180,34 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         }
     }
 
-    (name, description, deployment_url, tech_stack, status)
+    (name, description, deployment_url, tech_stack, status, color)
+}
+
+fn assign_project_color(project_name: &str) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    // Synth-wave palette
+    const COLORS: &[&str] = &[
+        "#FF006E", // Hot pink
+        "#8338EC", // Purple
+        "#3A86FF", // Blue
+        "#FB5607", // Orange
+        "#FFBE0B", // Yellow
+        "#06FFA5", // Cyan
+        "#FF1654", // Red-pink
+        "#7209B7", // Deep purple
+        "#F72585", // Pink
+    ];
+
+    // Hash the project name to get a stable color index
+    let mut hasher = DefaultHasher::new();
+    project_name.hash(&mut hasher);
+    let hash = hasher.finish();
+
+    // Map hash to color index
+    let index = (hash % COLORS.len() as u64) as usize;
+    COLORS[index].to_string()
 }
 
 fn auto_detect_status(_project_path: &Path, has_git: bool, deployment_url: &Option<String>) -> String {
@@ -203,9 +237,11 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
     }
 
     let folder_name = get_project_name(project_path);
+    let color = assign_project_color(&folder_name);
 
     let template = format!(r#"Name: {}
 Status: draft
+Color: {}
 
 ## Description
 
@@ -220,7 +256,7 @@ Status: draft
 ## Deployment
 
 [Add deployment URL if applicable, or remove this section]
-"#, folder_name);
+"#, folder_name, color);
 
     fs::write(&metadata_path, template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
@@ -292,10 +328,13 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, tech_stack, metadata_status) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
+
+            // Use metadata color if provided, otherwise generate one
+            let color = metadata_color.unwrap_or_else(|| assign_project_color(&folder_name));
 
             let feedback_file = read_feedback_file(&path).unwrap_or_default();
             let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
@@ -312,6 +351,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 has_backend: None,
                 deployment_url,
                 status,
+                color: Some(color),
                 last_modified: get_last_modified(&path),
                 feedback_count,
                 has_uncommitted_changes: false, // Simplified for now
@@ -321,8 +361,22 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
         }
     }
 
-    // Sort by last modified (newest first)
-    projects.sort_by(|a, b| b.last_modified.cmp(&a.last_modified));
+    // Sort by status (deployed highest, initialized lowest)
+    projects.sort_by(|a, b| {
+        let status_order = |s: &str| -> i32 {
+            match s {
+                "deployed" => 0,
+                "mvp-implemented" => 1,
+                "metadata-ready" => 2,
+                "tech-spec-ready" => 3,
+                "designed" => 4,
+                "idea" => 5,
+                "initialized" => 6,
+                _ => 7, // Unknown statuses go last
+            }
+        };
+        status_order(&a.status).cmp(&status_order(&b.status))
+    });
 
     Ok(projects)
 }
@@ -337,9 +391,12 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, tech_stack, metadata_status) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
+
+    // Use metadata color if provided, otherwise generate one
+    let color = metadata_color.unwrap_or_else(|| assign_project_color(&folder_name));
 
     let feedback_file = read_feedback_file(path).unwrap_or_default();
     let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
@@ -356,6 +413,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         has_backend: None,
         deployment_url,
         status,
+        color: Some(color),
         last_modified: get_last_modified(path),
         feedback_count,
         has_uncommitted_changes: false,
@@ -493,8 +551,10 @@ pub async fn create_new_project(projects_dir: String, project_name: String) -> R
 
     // Create metadata.md with initialized status
     let metadata_path = vibe_dir.join(METADATA_FILE);
+    let color = assign_project_color(&project_name);
     let metadata_template = format!(r#"Name: {}
 Status: initialized
+Color: {}
 
 ## Description
 
@@ -507,7 +567,7 @@ Status: initialized
 ## Deployment
 
 [Deployment info will be added after MVP is deployed]
-"#, project_name);
+"#, project_name, color);
 
     fs::write(&metadata_path, metadata_template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
@@ -774,4 +834,53 @@ pub async fn update_project_status(project_path: String, new_status: String) -> 
         .map_err(|e| format!("Failed to update metadata file: {}", e))?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn assign_color_if_missing(project_path: String) -> Result<String, String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(VIBE_DIR).join(METADATA_FILE);
+
+    if !metadata_path.exists() {
+        return Err("Metadata file does not exist".to_string());
+    }
+
+    let metadata_contents = fs::read_to_string(&metadata_path)
+        .map_err(|e| format!("Failed to read metadata file: {}", e))?;
+
+    // Check if color already exists
+    let has_color = metadata_contents.lines().any(|line| line.trim().starts_with("Color:"));
+
+    if has_color {
+        // Extract and return existing color
+        for line in metadata_contents.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("Color:") {
+                return Ok(trimmed.trim_start_matches("Color:").trim().to_string());
+            }
+        }
+    }
+
+    // Generate a new color
+    let folder_name = get_project_name(path);
+    let color = assign_project_color(&folder_name);
+
+    // Insert color after Status: line
+    let mut new_lines = Vec::new();
+    let mut color_added = false;
+
+    for line in metadata_contents.lines() {
+        new_lines.push(line.to_string());
+        if line.starts_with("Status:") && !color_added {
+            new_lines.push(format!("Color: {}", color));
+            color_added = true;
+        }
+    }
+
+    // Write updated metadata
+    let updated_metadata = new_lines.join("\n");
+    fs::write(&metadata_path, updated_metadata)
+        .map_err(|e| format!("Failed to write metadata file: {}", e))?;
+
+    Ok(color)
 }

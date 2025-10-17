@@ -13,7 +13,8 @@ pub struct Project {
     pub is_open_source: Option<bool>,
     pub has_backend: Option<bool>,
     pub deployment_url: Option<String>,
-    pub status: String, // "draft", "in-progress", "deployed"
+    pub status: String, // "initialized", "idea", "designed", "tech-spec-ready", "metadata-ready", "mvp-implemented", "deployed"
+    pub color: Option<String>, // Project color for UI
     pub last_modified: Option<String>,
     pub feedback_count: usize,
     pub has_uncommitted_changes: bool,
