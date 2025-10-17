@@ -50,7 +50,7 @@ export function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{APP_NAME}</h1>
+          <h1 className="text-6xl uppercase text-gray-900 mb-4">{APP_NAME}</h1>
           <p className="text-gray-600 mb-6">
             Welcome! Please configure your projects directory to get started.
           </p>
@@ -67,9 +67,9 @@ export function Dashboard() {
   if (!isLoading && projects.length === 0) {
     return (
       <div className="min-h-screen">
-        <header className="bg-white shadow-sm">
+        <header className="shadow-sm">
           <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
+            <h1 className="text-6xl uppercase text-gray-900">{APP_NAME}</h1>
             <div className="flex gap-2">
               <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
                 <Plus size={16} className="inline mr-2" />
@@ -110,10 +110,10 @@ export function Dashboard() {
   // Main dashboard
   return (
     <div className="min-h-screen">
-      <header className="bg-white shadow-sm">
+      <header className="shadow-sm">
         <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
+            <h1 className="text-6xl uppercase text-gray-900">{APP_NAME}</h1>
             <p className="text-sm text-gray-600 mt-1">
               {projects.length} project{projects.length !== 1 ? 's' : ''}
             </p>
