@@ -10,7 +10,7 @@ export interface Project {
   isOpenSource?: boolean;        // Is open source
   hasBackend?: boolean;          // Has backend server
   deploymentUrl?: string;        // Optional
-  status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'deployed'; // Project status
+  status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'technical-testing' | 'design-testing' | 'deployment' | 'deployed'; // Project status
   color?: string;                // Project color for UI (synth-wave palette)
   textColor?: string;            // Text color for contrast with background (#000000 or #FFFFFF)
   lastModified?: string;         // From git or filesystem (ISO 8601)
@@ -69,24 +69,30 @@ export const PRIORITY_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
 };
 
 // Status Labels
-export const STATUS_LABELS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'deployed', string> = {
+export const STATUS_LABELS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'technical-testing' | 'design-testing' | 'deployment' | 'deployed', string> = {
   'initialized': 'Initialized',
   'idea': 'Idea',
   'designed': 'Designed',
   'tech-spec-ready': 'Tech Spec Ready',
   'metadata-ready': 'Metadata Ready',
   'mvp-implemented': 'MVP Implemented',
+  'technical-testing': 'Technical Testing',
+  'design-testing': 'Design Testing',
+  'deployment': 'Deployment',
   'deployed': 'Deployed',
 };
 
 // Status Colors (Tailwind classes)
-export const STATUS_COLORS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'deployed', string> = {
+export const STATUS_COLORS: Record<'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'technical-testing' | 'design-testing' | 'deployment' | 'deployed', string> = {
   'initialized': 'bg-purple-400',
   'idea': 'bg-pink-400',
   'designed': 'bg-orange-400',
   'tech-spec-ready': 'bg-yellow-400',
   'metadata-ready': 'bg-cyan-400',
   'mvp-implemented': 'bg-blue-400',
+  'technical-testing': 'bg-indigo-400',
+  'design-testing': 'bg-violet-400',
+  'deployment': 'bg-teal-400',
   'deployed': 'bg-green-500',
 };
 

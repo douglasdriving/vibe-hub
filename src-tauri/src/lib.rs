@@ -26,6 +26,7 @@ pub fn run() {
             projects::check_spec_files_exist,
             projects::update_project_status,
             projects::assign_color_if_missing,
+            projects::create_design_feedback_file,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,

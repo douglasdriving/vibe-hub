@@ -9,7 +9,7 @@ import {
   isSetupStatus,
 } from '../../utils/prompts';
 import type { Project } from '../../store/types';
-import { checkSpecFilesExist, updateProjectStatus, checkMetadataExists } from '../../services/tauri';
+import { updateProjectStatus, createDesignFeedbackFile } from '../../services/tauri';
 
 interface ProjectSetupCardProps {
   project: Project;
@@ -20,77 +20,20 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
   const [draftIdeaData, setDraftIdeaData] = useState<IdeaFormData | null>(null);
 
-  // Auto-copy prompt on mount for setup statuses
+  // Auto-create design feedback file when entering design-testing stage
   useEffect(() => {
-    const autoCopyPrompt = async () => {
-      // Only auto-copy for non-initialized setup stages
-      if (project.status === 'initialized' || !isSetupStatus(project.status)) {
-        return;
-      }
-
-      const stageInfo = getStageAdvancementInfo(project.status);
-      if (!stageInfo) return;
-
-      const prompt = stageInfo.promptGenerator(project.name, project.path);
-
-      try {
-        await navigator.clipboard.writeText(prompt);
-        console.log('Auto-copied prompt for stage:', project.status);
-      } catch (error) {
-        console.error('Failed to auto-copy prompt:', error);
-      }
-    };
-
-    autoCopyPrompt();
-  }, []); // Only run once on mount
-
-  // Poll for spec file changes when in idea, designed, tech-spec-ready, or metadata-ready status
-  useEffect(() => {
-    if (
-      project.status !== 'idea' &&
-      project.status !== 'designed' &&
-      project.status !== 'tech-spec-ready' &&
-      project.status !== 'metadata-ready'
-    ) {
-      return;
-    }
-
-    const checkFiles = async () => {
-      try {
-        const [designSpecExists, techSpecExists] = await checkSpecFilesExist(project.path);
-
-        // Update status based on detected files
-        if (project.status === 'idea' && designSpecExists) {
-          await updateProjectStatus(project.path, 'designed');
-          await refreshProject(project.id);
-        } else if (project.status === 'designed' && techSpecExists) {
-          await updateProjectStatus(project.path, 'tech-spec-ready');
-          await refreshProject(project.id);
-        } else if (project.status === 'tech-spec-ready') {
-          // Check if metadata has meaningful content
-          const metadataExists = await checkMetadataExists(project.path);
-          if (metadataExists) {
-            await updateProjectStatus(project.path, 'metadata-ready');
-            await refreshProject(project.id);
-          }
-        } else if (project.status === 'metadata-ready') {
-          // Check if implementation has started (look for src/ or similar folders)
-          // For now, we'll assume users manually mark this as mvp-implemented
-          // Future enhancement: detect src/, package.json, or other implementation indicators
+    const createFeedbackFile = async () => {
+      if (project.status === 'design-testing') {
+        try {
+          await createDesignFeedbackFile(project.path);
+        } catch (error) {
+          console.error('Failed to create design feedback file:', error);
         }
-      } catch (error) {
-        console.error('Failed to check spec files:', error);
       }
     };
 
-    // Check immediately
-    checkFiles();
-
-    // Poll every 3 seconds
-    const interval = setInterval(checkFiles, 3000);
-
-    return () => clearInterval(interval);
-  }, [project.status, project.path, project.id, refreshProject]);
+    createFeedbackFile();
+  }, [project.status, project.path]);
 
   // Only show this card for projects in setup stages
   if (!isSetupStatus(project.status)) {
@@ -105,10 +48,10 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
     await saveProjectIdea(project.path, ideaData);
     setDraftIdeaData(null); // Clear draft after successful save
 
-    // Copy the design spec prompt to clipboard immediately
-    const designPrompt = getStageAdvancementInfo('idea')?.promptGenerator(project.name, project.path);
-    if (designPrompt) {
-      await navigator.clipboard.writeText(designPrompt);
+    // Copy the idea refinement prompt to clipboard immediately
+    const ideaPrompt = getStageAdvancementInfo('idea')?.promptGenerator(project.name, project.path);
+    if (ideaPrompt) {
+      await navigator.clipboard.writeText(ideaPrompt);
     }
   };
 
@@ -123,9 +66,19 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
 
     // Copy prompt to clipboard
     navigator.clipboard.writeText(prompt).then(() => {
-      // Show a success message (you could add a toast notification here)
       console.log('Prompt copied to clipboard!');
     });
+  };
+
+  const handleAdvanceStage = async () => {
+    if (!stageInfo) return;
+
+    try {
+      await updateProjectStatus(project.path, stageInfo.nextStatus);
+      await refreshProject(project.id);
+    } catch (error) {
+      console.error('Failed to advance stage:', error);
+    }
   };
 
   return (
@@ -147,45 +100,86 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
                 >
                   {stageInfo.actionLabel}
                 </Button>
-              ) : (
+              ) : project.status === 'deployment' ? (
+                // Deployment stage - just show complete button
                 <Button
-                  onClick={handleGenerateWithClaude}
+                  onClick={handleAdvanceStage}
                   variant="primary"
                 >
                   {stageInfo.actionLabel}
                 </Button>
+              ) : project.status === 'design-testing' ? (
+                // Design testing stage - show special instructions
+                <>
+                  <Button
+                    onClick={handleAdvanceStage}
+                    variant="primary"
+                  >
+                    Mark Design Review Complete
+                  </Button>
+                </>
+              ) : (
+                // All other stages - show copy prompt and advance buttons
+                <>
+                  <Button
+                    onClick={handleGenerateWithClaude}
+                    variant="primary"
+                  >
+                    Copy Claude Prompt
+                  </Button>
+                  <Button
+                    onClick={handleAdvanceStage}
+                    variant="secondary"
+                  >
+                    Mark as Complete
+                  </Button>
+                </>
               )}
             </div>
           )}
 
-          {project.status !== 'initialized' && (
-            <>
-              <p className="text-sm text-gray-600 mt-3">
-                💡 Tip: The prompt has been copied to your clipboard. Open Claude Code in this project
-                directory and paste it to get started!
-              </p>
-              <p className="text-sm text-blue-600 mt-2 font-medium">
-                ⏱️ This stage will progress automatically when Claude creates the required documents
-              </p>
-            </>
+          {project.status !== 'initialized' && project.status !== 'deployment' && (
+            <p className="text-sm text-gray-600 mt-3">
+              💡 Tip: Click "Copy Claude Prompt" to get started with this stage. When you're done, click "Mark as Complete" to move to the next stage.
+            </p>
+          )}
+
+          {project.status === 'deployment' && (
+            <p className="text-sm text-gray-600 mt-3">
+              💡 Tip: Consider the project deployed when it's live and accessible at a public URL. Update the deployment URL in the project metadata, then mark as deployed.
+            </p>
+          )}
+
+          {project.status === 'design-testing' && (
+            <p className="text-sm text-gray-600 mt-3">
+              📝 A design feedback document has been created at <code>.vibe/design-feedback.md</code>. Fill it out with your feedback, then work with Claude to address all issues. When satisfied, mark this stage complete.
+            </p>
           )}
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-purple-200">
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Pipeline Progress</h3>
-        <div className="flex items-center gap-2">
-          <StageIndicator label="Initialize" status={project.status} stage="initialized" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <StageIndicator label="Init" status={project.status} stage="initialized" />
           <Arrow />
           <StageIndicator label="Idea" status={project.status} stage="idea" />
           <Arrow />
           <StageIndicator label="Design" status={project.status} stage="designed" />
           <Arrow />
-          <StageIndicator label="Tech Spec" status={project.status} stage="tech-spec-ready" />
+          <StageIndicator label="Tech" status={project.status} stage="tech-spec-ready" />
           <Arrow />
-          <StageIndicator label="Metadata" status={project.status} stage="metadata-ready" />
+          <StageIndicator label="Meta" status={project.status} stage="metadata-ready" />
           <Arrow />
           <StageIndicator label="MVP" status={project.status} stage="mvp-implemented" />
+          <Arrow />
+          <StageIndicator label="Test" status={project.status} stage="technical-testing" />
+          <Arrow />
+          <StageIndicator label="UX" status={project.status} stage="design-testing" />
+          <Arrow />
+          <StageIndicator label="Deploy" status={project.status} stage="deployment" />
+          <Arrow />
+          <StageIndicator label="Live" status={project.status} stage="deployed" />
         </div>
       </div>
 
@@ -241,7 +235,10 @@ function getStageOrder(status: string): number {
     'tech-spec-ready': 4,
     'metadata-ready': 5,
     'mvp-implemented': 6,
-    'deployed': 7,
+    'technical-testing': 7,
+    'design-testing': 8,
+    'deployment': 9,
+    'deployed': 10,
   };
   return order[status] || 0;
 }

@@ -124,3 +124,7 @@ export async function updateProjectStatus(projectPath: string, newStatus: string
 export async function assignColorIfMissing(projectPath: string): Promise<string> {
   return await invoke('assign_color_if_missing', { projectPath });
 }
+
+export async function createDesignFeedbackFile(projectPath: string): Promise<void> {
+  return await invoke('create_design_feedback_file', { projectPath });
+}

@@ -11,6 +11,8 @@ const METADATA_FILE: &str = "metadata.md";
 const IDEA_FILE: &str = "idea.md";
 const DESIGN_SPEC_FILE: &str = "design-spec.md";
 const TECHNICAL_SPEC_FILE: &str = "technical-spec.md";
+const TEST_CHECKLIST_FILE: &str = "test-checklist.md";
+const DESIGN_FEEDBACK_FILE: &str = "design-feedback.md";
 
 // Legacy file names for migration
 const LEGACY_FEEDBACK_FILE: &str = "vibe-hub-feedback.json";
@@ -948,4 +950,83 @@ pub async fn assign_color_if_missing(project_path: String) -> Result<String, Str
         .map_err(|e| format!("Failed to write metadata file: {}", e))?;
 
     Ok(color)
+}
+
+#[tauri::command]
+pub async fn create_design_feedback_file(project_path: String) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let vibe_dir = path.join(VIBE_DIR);
+
+    // Ensure .vibe directory exists
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    let feedback_file_path = vibe_dir.join(DESIGN_FEEDBACK_FILE);
+
+    // Don't overwrite if it already exists
+    if feedback_file_path.exists() {
+        return Ok(());
+    }
+
+    let template = r#"# Design & UX Feedback
+
+## Instructions
+
+Go through your implemented MVP and test the user experience. Document everything you want to change, remove, or improve about the design and UX.
+
+**What to look for:**
+- Does the UI look good and feel polished?
+- Are there any visual bugs or inconsistencies?
+- Is the user experience intuitive and smooth?
+- Are there features that don't match your vision?
+- Are there elements that should be removed or redesigned?
+- Does the design match what was specified in design-spec.md?
+
+**How to use this document:**
+1. Go through each feature/page of your app
+2. Write down ALL feedback - no matter how small
+3. Be specific about what you want changed
+4. When done, copy the Claude prompt below and paste it into Claude Code
+
+---
+
+## My Feedback
+
+<!-- Write your design feedback below. Be specific! -->
+
+### Page/Feature: [Name]
+- **Issue:** [Describe what you don't like]
+- **Desired change:** [What you want instead]
+
+### Page/Feature: [Name]
+- **Issue:** [Describe what you don't like]
+- **Desired change:** [What you want instead]
+
+<!-- Add more sections as needed -->
+
+---
+
+## Next Steps
+
+Once you've documented all your feedback above, copy and paste this prompt into Claude Code:
+
+```
+I need to review the design and UX of my MVP.
+
+Please read the design feedback I've documented at:
+.vibe/design-feedback.md
+
+Then read the original design spec at:
+.vibe/design-spec.md
+
+Let's go through my feedback items one by one and fix all the design and UX issues until the MVP matches my vision.
+```
+"#;
+
+    fs::write(&feedback_file_path, template)
+        .map_err(|e| format!("Failed to create design feedback file: {}", e))?;
+
+    Ok(())
 }
