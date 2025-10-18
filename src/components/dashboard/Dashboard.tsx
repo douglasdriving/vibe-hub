@@ -114,7 +114,7 @@ export function Dashboard() {
         <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div>
             <h1 className="text-6xl uppercase text-gray-900">{APP_NAME}</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-base text-gray-600 mt-1">
               {projects.length} project{projects.length !== 1 ? 's' : ''}
             </p>
           </div>
