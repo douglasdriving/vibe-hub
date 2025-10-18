@@ -102,7 +102,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
                 e.currentTarget.blur();
               }
             }}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={5}
             placeholder="Describe the issue or improvement..."
           />
