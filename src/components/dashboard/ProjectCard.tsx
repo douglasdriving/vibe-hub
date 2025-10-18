@@ -67,22 +67,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {(project.platform || project.isLocalFirst !== undefined || project.isOpenSource !== undefined || project.hasBackend !== undefined) && (
         <div className="flex flex-wrap gap-2 mb-4">
           {project.platform && (
-            <span className="bg-blue-100 text-blue-700 text-sm px-2 py-1 rounded">
+            <span className="bg-blue-100 text-blue-700 text-base px-2 py-1 rounded">
               {project.platform}
             </span>
           )}
           {project.isLocalFirst && (
-            <span className="bg-green-100 text-green-700 text-sm px-2 py-1 rounded">
+            <span className="bg-green-100 text-green-700 text-base px-2 py-1 rounded">
               Local-First
             </span>
           )}
           {project.isOpenSource && (
-            <span className="bg-purple-100 text-purple-700 text-sm px-2 py-1 rounded">
+            <span className="bg-purple-100 text-purple-700 text-base px-2 py-1 rounded">
               Open Source
             </span>
           )}
           {project.hasBackend && (
-            <span className="bg-orange-100 text-orange-700 text-sm px-2 py-1 rounded">
+            <span className="bg-orange-100 text-orange-700 text-base px-2 py-1 rounded">
               Has Backend
             </span>
           )}
