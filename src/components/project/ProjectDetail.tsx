@@ -242,7 +242,7 @@ export function ProjectDetail() {
             invertedTextColor={currentProject.color}
           >
             <Folder size={16} className="inline mr-2" />
-            {currentProject.path}
+            Open Folder
           </Button>
         </div>
 
