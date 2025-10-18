@@ -11,7 +11,6 @@ const METADATA_FILE: &str = "metadata.md";
 const IDEA_FILE: &str = "idea.md";
 const DESIGN_SPEC_FILE: &str = "design-spec.md";
 const TECHNICAL_SPEC_FILE: &str = "technical-spec.md";
-const TEST_CHECKLIST_FILE: &str = "test-checklist.md";
 const DESIGN_FEEDBACK_FILE: &str = "design-feedback.md";
 
 // Legacy file names for migration
