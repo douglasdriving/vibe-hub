@@ -86,7 +86,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
     <Modal isOpen={isOpen} onClose={onClose} title={initialData ? 'Edit Feedback' : 'Add Feedback'}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
+          <label className="block text-base font-semibold text-gray-900 mb-2">
             Feedback
           </label>
           <textarea
@@ -110,7 +110,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
+          <label className="block text-base font-semibold text-gray-900 mb-2">
             Priority (press Enter to exit text, then 1-5 to select, Enter again to submit)
           </label>
           <div className="flex gap-2">
@@ -125,8 +125,8 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
                     : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'
                 }`}
               >
-                <div className="text-sm font-medium">{p}</div>
-                <div className="text-xs mt-1">{PRIORITY_LABELS[p]}</div>
+                <div className="text-base font-medium">{p}</div>
+                <div className="text-base mt-1">{PRIORITY_LABELS[p]}</div>
               </button>
             ))}
           </div>
