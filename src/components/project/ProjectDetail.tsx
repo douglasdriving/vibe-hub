@@ -162,7 +162,7 @@ export function ProjectDetail() {
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-6xl uppercase" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.displayName || currentProject.name}</h1>
-                  <span className={`${STATUS_COLORS[currentProject.status]} text-sm px-3 py-1 rounded`} style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  <span className={`${STATUS_COLORS[currentProject.status]} text-base px-3 py-1 rounded`} style={{ color: currentProject.textColor || '#FFFFFF' }}>
                     {STATUS_LABELS[currentProject.status]}
                   </span>
                 </div>
@@ -218,16 +218,16 @@ export function ProjectDetail() {
             <div className="flex flex-wrap gap-2 mb-4">
               <span style={{ color: currentProject.textColor || '#FFFFFF' }}>Platform & Architecture:</span>
               {currentProject.platform && (
-                <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded">{currentProject.platform}</span>
+                <span className="bg-blue-100 text-blue-700 text-base px-3 py-1 rounded">{currentProject.platform}</span>
               )}
               {currentProject.isLocalFirst && (
-                <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded">Local-First</span>
+                <span className="bg-green-100 text-green-700 text-base px-3 py-1 rounded">Local-First</span>
               )}
               {currentProject.isOpenSource && (
-                <span className="bg-purple-100 text-purple-700 text-sm px-3 py-1 rounded">Open Source</span>
+                <span className="bg-purple-100 text-purple-700 text-base px-3 py-1 rounded">Open Source</span>
               )}
               {currentProject.hasBackend && (
-                <span className="bg-orange-100 text-orange-700 text-sm px-3 py-1 rounded">Has Backend</span>
+                <span className="bg-orange-100 text-orange-700 text-base px-3 py-1 rounded">Has Backend</span>
               )}
             </div>
           ) : (
