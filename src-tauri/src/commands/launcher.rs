@@ -74,3 +74,73 @@ pub async fn open_url(url: String) -> Result<(), String> {
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn open_in_vscode(project_path: String) -> Result<(), String> {
+    Command::new("code")
+        .arg(&project_path)
+        .spawn()
+        .map_err(|e| format!("Failed to open VS Code: {}. Make sure VS Code is installed and 'code' is in your PATH.", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn open_in_terminal(project_path: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args(&["/c", "start", "cmd"])
+            .current_dir(&project_path)
+            .spawn()
+            .map_err(|e| format!("Failed to open terminal: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let script = format!("tell application \"Terminal\" to do script \"cd '{}'\"", project_path);
+        Command::new("osascript")
+            .args(&["-e", &script])
+            .spawn()
+            .map_err(|e| format!("Failed to open terminal: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("gnome-terminal")
+            .args(&["--working-directory", &project_path])
+            .spawn()
+            .map_err(|e| format!("Failed to open terminal: {}", e))?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn open_in_fork(project_path: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args(&["/c", "fork", &project_path])
+            .spawn()
+            .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .args(&["-a", "Fork", &project_path])
+            .spawn()
+            .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("fork")
+            .arg(&project_path)
+            .spawn()
+            .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
+    }
+
+    Ok(())
+}

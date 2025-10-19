@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy, Play, Hammer } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy, Play, Hammer, Code, Github, GitBranch } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
@@ -32,6 +32,7 @@ export function ProjectDetail() {
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [hasLoaded, setHasLoaded] = useState(false);
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
+  const [githubUrl, setGithubUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -48,6 +49,13 @@ export function ProjectDetail() {
         setAvailableScripts(scripts);
       }).catch(err => {
         console.error('Failed to detect npm scripts:', err);
+      });
+
+      // Get GitHub URL
+      tauri.getGithubUrl(currentProject.path).then(url => {
+        setGithubUrl(url);
+      }).catch(err => {
+        console.error('Failed to get GitHub URL:', err);
       });
     }
   }, [currentProject]);
@@ -173,6 +181,42 @@ export function ProjectDetail() {
     openDeploymentUrl(currentProject.deploymentUrl);
   };
 
+  const handleOpenVscode = async () => {
+    if (!currentProject) return;
+    try {
+      await tauri.openInVscode(currentProject.path);
+    } catch (error) {
+      console.error('Failed to open VS Code:', error);
+    }
+  };
+
+  const handleOpenTerminal = async () => {
+    if (!currentProject) return;
+    try {
+      await tauri.openInTerminal(currentProject.path);
+    } catch (error) {
+      console.error('Failed to open terminal:', error);
+    }
+  };
+
+  const handleOpenGithub = async () => {
+    if (!githubUrl) return;
+    try {
+      await tauri.openUrl(githubUrl);
+    } catch (error) {
+      console.error('Failed to open GitHub:', error);
+    }
+  };
+
+  const handleOpenFork = async () => {
+    if (!currentProject) return;
+    try {
+      await tauri.openInFork(currentProject.path);
+    } catch (error) {
+      console.error('Failed to open Fork:', error);
+    }
+  };
+
 
   if (!currentProject) {
     return (
@@ -270,7 +314,7 @@ export function ProjectDetail() {
             <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No platform info specified yet.</p>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="secondary"
               size="sm"
@@ -280,6 +324,48 @@ export function ProjectDetail() {
             >
               <Folder size={16} className="inline mr-2" />
               Open Folder
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenVscode}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Code size={16} className="inline mr-2" />
+              VS Code
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenTerminal}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Terminal size={16} className="inline mr-2" />
+              Terminal
+            </Button>
+            {githubUrl && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenGithub}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Github size={16} className="inline mr-2" />
+                GitHub
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenFork}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <GitBranch size={16} className="inline mr-2" />
+              Fork
             </Button>
             {availableScripts?.has_dev && (
               <Button

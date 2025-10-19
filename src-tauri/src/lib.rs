@@ -27,6 +27,7 @@ pub fn run() {
             projects::update_project_status,
             projects::assign_color_if_missing,
             projects::create_design_feedback_file,
+            projects::get_github_url,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,
@@ -36,6 +37,9 @@ pub fn run() {
             launcher::launch_claude_code,
             launcher::open_in_explorer,
             launcher::open_url,
+            launcher::open_in_vscode,
+            launcher::open_in_terminal,
+            launcher::open_in_fork,
             // Prompts commands
             prompts::get_prompt,
             // NPM commands

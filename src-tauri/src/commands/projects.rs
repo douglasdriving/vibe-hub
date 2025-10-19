@@ -1040,3 +1040,40 @@ Let's go through my feedback items one by one and fix all the design and UX issu
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn get_github_url(project_path: String) -> Result<Option<String>, String> {
+    use std::process::Command;
+
+    let output = Command::new("git")
+        .args(&["remote", "get-url", "origin"])
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| format!("Failed to run git command: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(None);
+    }
+
+    let url = String::from_utf8(output.stdout)
+        .map_err(|e| format!("Failed to parse git output: {}", e))?
+        .trim()
+        .to_string();
+
+    if url.is_empty() {
+        return Ok(None);
+    }
+
+    // Convert SSH URLs to HTTPS for browser
+    let https_url = if url.starts_with("git@github.com:") {
+        url.replace("git@github.com:", "https://github.com/")
+            .trim_end_matches(".git")
+            .to_string()
+    } else if url.starts_with("https://github.com/") {
+        url.trim_end_matches(".git").to_string()
+    } else {
+        url
+    };
+
+    Ok(Some(https_url))
+}

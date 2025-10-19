@@ -129,6 +129,10 @@ export async function createDesignFeedbackFile(projectPath: string): Promise<voi
   return await invoke('create_design_feedback_file', { projectPath });
 }
 
+export async function getGithubUrl(projectPath: string): Promise<string | null> {
+  return await invoke('get_github_url', { projectPath });
+}
+
 // Prompts commands
 export async function getPrompt(promptName: string, replacements: Record<string, string>): Promise<string> {
   return await invoke('get_prompt', { promptName, replacements });
@@ -150,4 +154,16 @@ export async function detectNpmScripts(projectPath: string): Promise<AvailableSc
 
 export async function runNpmScript(projectPath: string, scriptName: string, scriptType?: string): Promise<void> {
   return await invoke('run_npm_script', { projectPath, scriptName, scriptType });
+}
+
+export async function openInVscode(projectPath: string): Promise<void> {
+  return await invoke('open_in_vscode', { projectPath });
+}
+
+export async function openInTerminal(projectPath: string): Promise<void> {
+  return await invoke('open_in_terminal', { projectPath });
+}
+
+export async function openInFork(projectPath: string): Promise<void> {
+  return await invoke('open_in_fork', { projectPath });
 }
