@@ -110,6 +110,14 @@ export function Dashboard() {
     );
   }
 
+  // Separate projects into active and in-development
+  const activeProjects = projects.filter(p =>
+    ['mvp-implemented', 'technical-testing', 'design-testing', 'deployment', 'deployed'].includes(p.status)
+  );
+  const developmentProjects = projects.filter(p =>
+    ['initialized', 'idea', 'designed', 'tech-spec-ready', 'metadata-ready'].includes(p.status)
+  );
+
   // Main dashboard
   return (
     <div className="min-h-screen">
@@ -149,10 +157,34 @@ export function Dashboard() {
             <div className="text-gray-600">Loading projects...</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
+          <div className="space-y-12">
+            {/* Active Projects Section */}
+            {activeProjects.length > 0 && (
+              <section>
+                <h2 className="text-3xl font-bold text-gray-900 mb-6 uppercase">
+                  Active Projects ({activeProjects.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activeProjects.map((project) => (
+                    <ProjectCard key={project.id} project={project} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Projects in Development Section */}
+            {developmentProjects.length > 0 && (
+              <section>
+                <h2 className="text-3xl font-bold text-gray-900 mb-6 uppercase">
+                  Projects in Development ({developmentProjects.length})
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {developmentProjects.map((project) => (
+                    <ProjectCard key={project.id} project={project} />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
       </main>
