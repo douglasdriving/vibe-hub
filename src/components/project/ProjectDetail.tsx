@@ -118,7 +118,7 @@ export function ProjectDetail() {
   const handleCopyFixPrompt = async () => {
     if (!currentProject) return;
     const pendingFeedback = feedback.filter(f => f.status === 'pending');
-    const prompt = generateClaudePrompt(currentProject.name, pendingFeedback);
+    const prompt = await generateClaudePrompt(currentProject.name, pendingFeedback);
     await copyToClipboard(prompt);
   };
 

@@ -52,7 +52,7 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
     setDraftIdeaData(null); // Clear draft after successful save
 
     // Copy the idea refinement prompt to clipboard immediately
-    const ideaPrompt = getStageAdvancementInfo('idea')?.promptGenerator(project.name, project.path);
+    const ideaPrompt = await getStageAdvancementInfo('idea')?.promptGenerator(project.name, project.path);
     if (ideaPrompt) {
       await navigator.clipboard.writeText(ideaPrompt);
     }
@@ -62,10 +62,10 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
     setDraftIdeaData(ideaData);
   };
 
-  const handleGenerateWithClaude = () => {
+  const handleGenerateWithClaude = async () => {
     if (!stageInfo) return;
 
-    const prompt = stageInfo.promptGenerator(project.name, project.path);
+    const prompt = await stageInfo.promptGenerator(project.name, project.path);
 
     // Copy prompt to clipboard
     navigator.clipboard.writeText(prompt).then(() => {

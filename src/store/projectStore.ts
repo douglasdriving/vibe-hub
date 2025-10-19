@@ -287,7 +287,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         ? feedback.filter(f => feedbackIds.includes(f.id))
         : feedback.filter(f => f.status === 'pending');
 
-      const prompt = generateClaudePrompt(
+      const prompt = await generateClaudePrompt(
         currentProject?.name || 'Project',
         selectedFeedback
       );
