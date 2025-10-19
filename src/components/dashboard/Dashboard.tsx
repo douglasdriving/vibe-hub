@@ -37,7 +37,10 @@ export function Dashboard() {
   };
 
   const handleCreateProject = async (projectName: string) => {
-    await createProject(projectName);
+    const projectId = await createProject(projectName);
+    if (projectId) {
+      navigate(`/project/${projectId}`);
+    }
   };
 
   // Log settings for debugging

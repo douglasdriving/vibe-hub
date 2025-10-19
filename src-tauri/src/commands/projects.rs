@@ -828,12 +828,12 @@ pub async fn save_project_idea(
             .lines()
             .map(|line| {
                 if line.starts_with("Status:") {
-                    "Status: idea"
+                    "Status: idea".to_string()
                 } else {
-                    line
+                    line.to_string()
                 }
             })
-            .collect::<Vec<&str>>()
+            .collect::<Vec<String>>()
             .join("\n");
 
         fs::write(&metadata_path, updated_metadata)

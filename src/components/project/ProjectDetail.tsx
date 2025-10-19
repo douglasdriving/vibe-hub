@@ -162,7 +162,7 @@ export function ProjectDetail() {
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-6xl uppercase" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.displayName || currentProject.name}</h1>
-                  <span className={`${STATUS_COLORS[currentProject.status]} text-base px-3 py-1 rounded`} style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  <span className={`${STATUS_COLORS[currentProject.status]} text-white text-base px-3 py-1 rounded`}>
                     {STATUS_LABELS[currentProject.status]}
                   </span>
                 </div>

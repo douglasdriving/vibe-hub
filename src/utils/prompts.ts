@@ -317,50 +317,50 @@ export function getStageAdvancementInfo(currentStatus: string): {
     case 'designed':
       return {
         nextStatus: 'tech-spec-ready',
-        actionLabel: 'Generate Tech Spec with Claude',
-        promptGenerator: generateTechnicalSpecPrompt,
+        actionLabel: 'Generate Design Spec with Claude',
+        promptGenerator: generateDesignSpecPrompt,
       };
 
     case 'tech-spec-ready':
       return {
         nextStatus: 'metadata-ready',
-        actionLabel: 'Fill Project Metadata with Claude',
-        promptGenerator: generateMetadataPrompt,
+        actionLabel: 'Generate Tech Spec with Claude',
+        promptGenerator: generateTechnicalSpecPrompt,
       };
 
     case 'metadata-ready':
       return {
         nextStatus: 'mvp-implemented',
-        actionLabel: 'Start Implementation with Claude',
-        promptGenerator: generateImplementationPrompt,
+        actionLabel: 'Fill Project Metadata with Claude',
+        promptGenerator: generateMetadataPrompt,
       };
 
     case 'mvp-implemented':
       return {
         nextStatus: 'technical-testing',
-        actionLabel: 'Create Test Checklist with Claude',
-        promptGenerator: generateTechnicalTestPrompt,
+        actionLabel: 'Start Implementation with Claude',
+        promptGenerator: generateImplementationPrompt,
       };
 
     case 'technical-testing':
       return {
         nextStatus: 'design-testing',
-        actionLabel: 'Review Design & UX with Claude',
-        promptGenerator: generateDesignTestPrompt,
+        actionLabel: 'Create Test Checklist with Claude',
+        promptGenerator: generateTechnicalTestPrompt,
       };
 
     case 'design-testing':
       return {
         nextStatus: 'deployment',
-        actionLabel: 'Deploy with Claude',
-        promptGenerator: generateDeploymentPrompt,
+        actionLabel: 'Review Design & UX with Claude',
+        promptGenerator: generateDesignTestPrompt,
       };
 
     case 'deployment':
       return {
         nextStatus: 'deployed',
         actionLabel: 'Mark as Deployed',
-        promptGenerator: () => '', // Manual completion only
+        promptGenerator: generateDeploymentPrompt,
       };
 
     case 'deployed':
@@ -413,6 +413,46 @@ export function getStageDescription(status: string): string {
 
     default:
       return '';
+  }
+}
+
+/**
+ * Get the name/title for each stage
+ */
+export function getStageName(status: string): string {
+  switch (status) {
+    case 'initialized':
+      return 'Project Initialization';
+
+    case 'idea':
+      return 'Idea Refinement';
+
+    case 'designed':
+      return 'Design Specification';
+
+    case 'tech-spec-ready':
+      return 'Technical Specification';
+
+    case 'metadata-ready':
+      return 'Project Metadata';
+
+    case 'mvp-implemented':
+      return 'MVP Implementation';
+
+    case 'technical-testing':
+      return 'Technical Testing';
+
+    case 'design-testing':
+      return 'Design & UX Review';
+
+    case 'deployment':
+      return 'Deployment';
+
+    case 'deployed':
+      return 'Deployed';
+
+    default:
+      return 'Project Setup';
   }
 }
 

@@ -6,6 +6,7 @@ import {
   getStageAdvancementInfo,
   getStageDescription,
   getStageIcon,
+  getStageName,
   isSetupStatus,
 } from '../../utils/prompts';
 import type { Project } from '../../store/types';
@@ -19,6 +20,7 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
   const { saveProjectIdea, refreshProject } = useProjectStore();
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
   const [draftIdeaData, setDraftIdeaData] = useState<IdeaFormData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Auto-create design feedback file when entering design-testing stage
   useEffect(() => {
@@ -42,6 +44,7 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
 
   const stageInfo = getStageAdvancementInfo(project.status);
   const stageIcon = getStageIcon(project.status);
+  const stageName = getStageName(project.status);
   const stageDescription = getStageDescription(project.status);
 
   const handleSaveIdea = async (ideaData: IdeaFormData) => {
@@ -73,11 +76,26 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
   const handleAdvanceStage = async () => {
     if (!stageInfo) return;
 
+    console.log('🔵 handleAdvanceStage called');
+    console.log('🔵 Current project:', project);
+    console.log('🔵 Project ID:', project.id);
+    console.log('🔵 Project path:', project.path);
+    console.log('🔵 Current status:', project.status);
+    console.log('🔵 Next status:', stageInfo.nextStatus);
+
     try {
+      setError(null);
+      console.log('🟢 Calling updateProjectStatus...');
       await updateProjectStatus(project.path, stageInfo.nextStatus);
+      console.log('🟢 updateProjectStatus completed successfully');
+
+      console.log('🟢 Calling refreshProject with ID:', project.id);
       await refreshProject(project.id);
+      console.log('🟢 refreshProject completed');
     } catch (error) {
-      console.error('Failed to advance stage:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to advance stage';
+      setError(errorMessage);
+      console.error('🔴 Failed to advance stage:', error);
     }
   };
 
@@ -87,9 +105,15 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
         <div className="text-4xl">{stageIcon}</div>
         <div className="flex-1">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            Project Setup Pipeline
+            {stageName}
           </h2>
           <p className="text-gray-700 mb-4">{stageDescription}</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg">
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
+          )}
 
           {stageInfo && (
             <div className="flex gap-3">

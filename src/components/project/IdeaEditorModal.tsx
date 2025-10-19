@@ -125,7 +125,7 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             disabled={isSaving}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="A desktop app for managing personal vibe-coding projects"
           />
         </div>
@@ -140,7 +140,7 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
             onChange={(e) => setProblem(e.target.value)}
             disabled={isSaving}
             rows={4}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
             placeholder="Describe the core problem this project solves..."
           />
         </div>
@@ -155,7 +155,7 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
             onChange={(e) => setCoreFunctionality(e.target.value)}
             disabled={isSaving}
             rows={8}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
             placeholder="Describe how the app should work and what the core functionality is..."
           />
         </div>
@@ -170,7 +170,7 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
             onChange={(e) => setValueProposition(e.target.value)}
             disabled={isSaving}
             rows={3}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
             placeholder="What value does this provide to users?"
           />
         </div>
@@ -186,7 +186,7 @@ export function IdeaEditorModal({ isOpen, onClose, onSave, onUpdateDraft, projec
             onChange={(e) => setAdditionalRequirements(e.target.value)}
             disabled={isSaving}
             rows={3}
-            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            className="w-full px-4 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
             placeholder="Any additional requirements or constraints..."
           />
         </div>

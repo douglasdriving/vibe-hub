@@ -13,7 +13,7 @@ interface ProjectStore {
 
   // Actions
   loadProjects: () => Promise<void>;
-  createProject: (projectName: string) => Promise<void>;
+  createProject: (projectName: string) => Promise<string | undefined>;
   saveProjectIdea: (projectPath: string, idea: {
     summary: string;
     problem: string;
@@ -87,10 +87,15 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         throw new Error('Projects directory not configured');
       }
 
-      await tauri.createNewProject(settings.projectsDirectory, projectName);
+      const projectPath = await tauri.createNewProject(settings.projectsDirectory, projectName);
 
       // Reload projects list to show the new project
       await get().loadProjects();
+
+      // Find the newly created project by path and return its ID
+      const { projects } = get();
+      const newProject = projects.find(p => p.path === projectPath);
+      return newProject?.id;
     } catch (error) {
       console.error('Failed to create project:', error);
       throw error;
@@ -113,10 +118,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       await get().loadProjects();
 
       // If this is the current project, refresh it
-      const { currentProject } = get();
+      const { currentProject, projects } = get();
       if (currentProject?.path === projectPath) {
-        const updatedProject = await tauri.getProjectDetail(projectPath);
-        set({ currentProject: updatedProject });
+        // Find the updated project from the projects array to maintain consistent ID
+        const updatedProject = projects.find(p => p.path === projectPath);
+        if (updatedProject) {
+          const feedback = await tauri.getFeedback(projectPath);
+          set({ currentProject: updatedProject, feedback });
+        }
       }
     } catch (error) {
       console.error('Failed to save project idea:', error);
@@ -145,27 +154,51 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   // Refresh a specific project
   refreshProject: async (projectId: string) => {
+    console.log('🟡 refreshProject called with ID:', projectId);
     try {
       const { projects } = get();
+      console.log('🟡 All projects:', projects.map(p => ({ id: p.id, path: p.path, status: p.status })));
+
       const project = projects.find(p => p.id === projectId);
+      console.log('🟡 Found project by ID:', project);
 
-      if (!project) return;
+      if (!project) {
+        console.log('🔴 Project not found! Returning early.');
+        return;
+      }
 
+      console.log('🟡 Calling getProjectDetail for path:', project.path);
       const updatedProject = await tauri.getProjectDetail(project.path);
-      const updatedProjects = projects.map(p =>
-        p.id === projectId ? updatedProject : p
-      );
+      console.log('🟡 Got updated project:', { status: updatedProject.status, id: updatedProject.id });
 
+      // Preserve the original ID since project IDs are regenerated on each scan
+      console.log('🟡 Preserving original ID:', project.id);
+      updatedProject.id = project.id;
+
+      const updatedProjects = projects.map(p =>
+        p.path === project.path ? updatedProject : p
+      );
+      console.log('🟡 Updated projects array:', updatedProjects.map(p => ({ id: p.id, path: p.path, status: p.status })));
+
+      console.log('🟡 Setting projects in store...');
       set({ projects: updatedProjects });
 
       // If this is the current project, update it and reload feedback
       const { currentProject } = get();
-      if (currentProject?.id === projectId) {
+      console.log('🟡 Current project path:', currentProject?.path);
+      console.log('🟡 Updated project path:', project.path);
+
+      if (currentProject?.path === project.path) {
+        console.log('🟡 This is the current project, updating currentProject and feedback');
         const feedback = await tauri.getFeedback(updatedProject.path);
+        console.log('🟡 Setting currentProject and feedback...');
         set({ currentProject: updatedProject, feedback });
+        console.log('🟢 currentProject updated to status:', updatedProject.status);
+      } else {
+        console.log('🟡 Not the current project, skipping currentProject update');
       }
     } catch (error) {
-      console.error('Failed to refresh project:', error);
+      console.error('🔴 Failed to refresh project:', error);
     }
   },
 
