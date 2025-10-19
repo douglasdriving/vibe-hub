@@ -58,9 +58,60 @@ fn write_completed_feedback(project_path: &Path, feedback_file: &FeedbackFile) -
     write_feedback_file_to_path(&feedback_path, feedback_file)
 }
 
+/// Migrate old feedback.json files that contain both pending and completed items.
+/// This splits them into separate files for backwards compatibility.
+fn migrate_feedback_if_needed(project_path: &Path) -> Result<(), String> {
+    let pending_path = project_path.join(VIBE_DIR).join(FEEDBACK_FILE);
+    let completed_path = project_path.join(VIBE_DIR).join(FEEDBACK_COMPLETED_FILE);
+
+    // Only migrate if:
+    // 1. The pending file exists
+    // 2. The completed file doesn't exist yet
+    // 3. The pending file contains completed items
+    if !pending_path.exists() || completed_path.exists() {
+        return Ok(());
+    }
+
+    let mut pending_file = read_pending_feedback(project_path)?;
+
+    // Check if there are any completed items
+    let has_completed = pending_file.feedback.iter().any(|f| f.status == "completed");
+
+    if !has_completed {
+        return Ok(());
+    }
+
+    // Split the feedback into pending and completed
+    let mut completed_items = Vec::new();
+    let mut pending_items = Vec::new();
+
+    for item in pending_file.feedback {
+        if item.status == "completed" {
+            completed_items.push(item);
+        } else {
+            pending_items.push(item);
+        }
+    }
+
+    // Write the split files
+    pending_file.feedback = pending_items;
+    let completed_file = FeedbackFile {
+        feedback: completed_items,
+    };
+
+    write_pending_feedback(project_path, &pending_file)?;
+    write_completed_feedback(project_path, &completed_file)?;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn get_feedback(project_path: String) -> Result<Vec<FeedbackItem>, String> {
     let path = Path::new(&project_path);
+
+    // Migrate old feedback files if needed (backwards compatibility)
+    migrate_feedback_if_needed(path)?;
+
     let pending_file = read_pending_feedback(path)?;
     let completed_file = read_completed_feedback(path)?;
 
