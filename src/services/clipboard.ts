@@ -16,7 +16,29 @@ export function generateClaudePrompt(
     )
     .join('\n');
 
-  const footer = '\n\nPlease review these items one by one. For each item, write down one or several todos that you need to do in order to fix it. Then, in case you have clarification that you need, please ask me for them. If you dont need clarifications, or if I have given them to you, then start implementing all the todos. For each thing you implement, commit with a very short message about what you changed to git. After all changes have been made, run through all the test that you can yourself (such as attempting a build), and fix any errors that might have occured. When all that is done, let me know so that I can test the app with your changes.';
+  const footer = `\n\nPlease follow this workflow to fix these items:
+
+1. **Create an Implementation Plan**: Review all feedback items and create a structured plan that:
+   - Identifies which issues are related or dependent on each other
+   - Groups related issues that should be fixed together in the same "fix"
+   - Orders fixes by dependency (fix issues that others depend on first)
+   - Numbers each fix in the plan
+
+2. **Work Through Fixes One-by-One**: For each fix in your plan:
+   - Explain what you're about to implement
+   - Ask for any clarifications you need before starting
+   - Implement the fix
+   - Run all tests you can yourself (build, type-check, etc.)
+   - Create a test checklist for me to verify the changes work correctly
+   - Commit with a short message describing the change
+   - **WAIT for me to test and confirm it works before moving to the next fix**
+
+3. **Do NOT push code** until I have tested and confirmed each fix works as intended.
+
+4. **After I confirm a fix works**, push that commit and move on to the next fix in your plan.
+
+This ensures every change is tested and verified before being pushed to the repository.`;
+
 
   return header + items + footer;
 }
