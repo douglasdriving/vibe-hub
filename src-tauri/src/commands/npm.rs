@@ -10,9 +10,10 @@ pub struct PackageJson {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AvailableScripts {
-    pub has_test: bool,
+    pub has_dev: bool,
     pub has_build: bool,
-    pub test_command: Option<String>,
+    pub dev_script_name: Option<String>,
+    pub dev_command: Option<String>,
     pub build_command: Option<String>,
 }
 
@@ -23,9 +24,10 @@ pub async fn detect_npm_scripts(project_path: String) -> Result<AvailableScripts
 
     if !package_json_path.exists() {
         return Ok(AvailableScripts {
-            has_test: false,
+            has_dev: false,
             has_build: false,
-            test_command: None,
+            dev_script_name: None,
+            dev_command: None,
             build_command: None,
         });
     }
@@ -37,17 +39,22 @@ pub async fn detect_npm_scripts(project_path: String) -> Result<AvailableScripts
         .map_err(|e| format!("Failed to parse package.json: {}", e))?;
 
     if let Some(scripts) = package.scripts {
-        let has_test = scripts.contains_key("test");
+        // Check for dev server scripts - prioritize "dev" over "start"
+        let (has_dev, dev_script_name, dev_command) = if scripts.contains_key("dev") {
+            (true, Some("dev".to_string()), Some(scripts.get("dev").unwrap().clone()))
+        } else if scripts.contains_key("start") {
+            (true, Some("start".to_string()), Some(scripts.get("start").unwrap().clone()))
+        } else {
+            (false, None, None)
+        };
+
         let has_build = scripts.contains_key("build");
 
         Ok(AvailableScripts {
-            has_test,
+            has_dev,
             has_build,
-            test_command: if has_test {
-                Some(scripts.get("test").unwrap().clone())
-            } else {
-                None
-            },
+            dev_script_name,
+            dev_command,
             build_command: if has_build {
                 Some(scripts.get("build").unwrap().clone())
             } else {
@@ -56,9 +63,10 @@ pub async fn detect_npm_scripts(project_path: String) -> Result<AvailableScripts
         })
     } else {
         Ok(AvailableScripts {
-            has_test: false,
+            has_dev: false,
             has_build: false,
-            test_command: None,
+            dev_script_name: None,
+            dev_command: None,
             build_command: None,
         })
     }

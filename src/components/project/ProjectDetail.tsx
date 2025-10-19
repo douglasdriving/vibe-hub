@@ -141,12 +141,12 @@ export function ProjectDetail() {
     handleLaunchClaude([]);
   };
 
-  const handleRunTest = async () => {
-    if (!currentProject) return;
+  const handleRunDev = async () => {
+    if (!currentProject || !availableScripts?.dev_script_name) return;
     try {
-      await tauri.runNpmScript(currentProject.path, 'test');
+      await tauri.runNpmScript(currentProject.path, availableScripts.dev_script_name);
     } catch (error) {
-      console.error('Failed to run tests:', error);
+      console.error('Failed to run dev server:', error);
     }
   };
 
@@ -278,16 +278,16 @@ export function ProjectDetail() {
               <Folder size={16} className="inline mr-2" />
               Open Folder
             </Button>
-            {availableScripts?.has_test && (
+            {availableScripts?.has_dev && (
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={handleRunTest}
+                onClick={handleRunDev}
                 invertedBgColor={currentProject.textColor}
                 invertedTextColor={currentProject.color}
               >
                 <Play size={16} className="inline mr-2" />
-                Run Tests
+                Run Dev
               </Button>
             )}
             {availableScripts?.has_build && (

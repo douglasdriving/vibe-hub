@@ -136,9 +136,10 @@ export async function getPrompt(promptName: string, replacements: Record<string,
 
 // NPM commands
 export interface AvailableScripts {
-  has_test: boolean;
+  has_dev: boolean;
   has_build: boolean;
-  test_command: string | null;
+  dev_script_name: string | null;
+  dev_command: string | null;
   build_command: string | null;
 }
 
