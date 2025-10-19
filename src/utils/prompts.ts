@@ -125,12 +125,14 @@ export function generateMetadataPrompt(projectName: string, projectPath: string)
 2. **Fill out metadata.md** - Please update the metadata file at ${projectPath}/.vibe/metadata.md with:
    - **Name**: A nice human-readable project name (not just the folder name)
    - **Status**: Keep as "metadata-ready" for now
+   - **Platform**: Specify the target platform(s) - e.g., "Web", "Desktop", "Tauri Desktop App", "Mobile", etc.
    - **Description**: A clear 1-2 sentence description of what this project does
    - **Tech Stack**: List the main technologies from the technical spec
    - **Deployment**: Leave empty for now (will be filled after deployment)
 
 3. **Format requirements**:
-   - Keep the existing Name, Status, and Color lines at the top
+   - Keep the existing Name, Status, Platform, and Color lines at the top
+   - Update the Platform field based on the technical spec (e.g., if it's a Tauri app, write "Tauri Desktop App")
    - Update the Description section with your summary
    - List technologies as bullet points under Tech Stack
    - Keep the markdown structure intact

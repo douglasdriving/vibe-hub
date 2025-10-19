@@ -103,11 +103,11 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None, None, None);
+        return (None, String::new(), None, Vec::new(), None, None, None, None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -120,6 +120,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut status: Option<String> = None;
     let mut color: Option<String> = None;
     let mut text_color: Option<String> = None;
+    let mut platform: Option<String> = None;
     let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
@@ -143,6 +144,12 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
                 needs_migration = true;
             }
             status = Some(parsed_status);
+            continue;
+        }
+
+        // Parse Platform: field
+        if trimmed.starts_with("Platform:") {
+            platform = Some(trimmed.trim_start_matches("Platform:").trim().to_string());
             continue;
         }
 
@@ -211,7 +218,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         let _ = fs::write(&metadata_path, updated_contents);
     }
 
-    (name, description, deployment_url, tech_stack, status, color, text_color)
+    (name, description, deployment_url, tech_stack, status, color, text_color, platform)
 }
 
 fn assign_project_color(project_name: &str) -> String {
@@ -294,6 +301,7 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
 
     let template = format!(r#"Name: {}
 Status: draft
+Platform: [e.g., Web, Desktop, Mobile, Tauri App, etc.]
 Color: {}
 TextColor: {}
 
@@ -382,7 +390,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
@@ -402,7 +410,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 display_name,
                 path: path.to_string_lossy().to_string(),
                 description,
-                platform: None, // TODO: Parse from JSON metadata
+                platform,
                 is_local_first: None,
                 is_open_source: None,
                 has_backend: None,
@@ -449,7 +457,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
 
@@ -468,7 +476,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         display_name,
         path: project_path.clone(),
         description,
-        platform: None, // TODO: Parse from JSON metadata
+        platform,
         is_local_first: None,
         is_open_source: None,
         has_backend: None,
@@ -617,6 +625,7 @@ pub async fn create_new_project(projects_dir: String, project_name: String) -> R
     let text_color = calculate_text_color(&color);
     let metadata_template = format!(r#"Name: {}
 Status: initialized
+Platform: [Will be determined during project setup]
 Color: {}
 TextColor: {}
 
@@ -731,7 +740,7 @@ TextColor: {}
 #[tauri::command]
 pub async fn generate_metadata_prompt(_project_path: String, project_name: String) -> Result<String, String> {
     let prompt = format!(
-        r#"Please analyze this project and fill out the vibe-hub.md metadata file with accurate information.
+        r#"Please analyze this project and fill out the .vibe/metadata.md file with accurate information.
 
 Project: {}
 
@@ -739,14 +748,16 @@ Instructions:
 1. Scan key files in the project (package.json, README.md, source files, etc.)
 2. Come up with a nice display name for the project (not just the folder name)
 3. Determine the project status (draft/in-progress/deployed)
-4. Identify the project's purpose and write a clear description
-5. List all major technologies in the tech stack
-6. Look for deployment configuration or URLs if present
+4. Identify the target platform (e.g., Web, Desktop, Tauri Desktop App, Mobile, etc.)
+5. Identify the project's purpose and write a clear description
+6. List all major technologies in the tech stack
+7. Look for deployment configuration or URLs if present
 
-The vibe-hub.md file should have this format:
+The .vibe/metadata.md file should have this format:
 
 Name: [A nice human-readable project name]
-Status: [draft OR in-progress OR deployed]
+Status: [draft OR mvp-implemented OR deployed]
+Platform: [e.g., Web, Desktop, Tauri Desktop App, Mobile, etc.]
 
 ## Description
 
@@ -762,7 +773,7 @@ Status: [draft OR in-progress OR deployed]
 
 [Add deployment URL if found, otherwise remove this section]
 
-Please update the vibe-hub.md file now with accurate information based on your analysis of the codebase."#,
+Please update the .vibe/metadata.md file now with accurate information based on your analysis of the codebase."#,
         project_name
     );
 
