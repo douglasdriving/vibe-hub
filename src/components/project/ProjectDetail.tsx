@@ -30,6 +30,7 @@ export function ProjectDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [showPriorityFilter, setShowPriorityFilter] = useState(false);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -42,13 +43,27 @@ export function ProjectDetail() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        navigate('/');
+        if (showPriorityFilter) {
+          setShowPriorityFilter(false);
+        } else {
+          navigate('/');
+        }
+      }
+    };
+
+    const handleClickOutside = () => {
+      if (showPriorityFilter) {
+        setShowPriorityFilter(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+    window.addEventListener('click', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('click', handleClickOutside);
+    };
+  }, [navigate, showPriorityFilter]);
 
   const handleBack = () => {
     navigate('/');
@@ -115,11 +130,19 @@ export function ProjectDetail() {
     handleLaunchClaude(pendingIds);
   };
 
-  const handleCopyFixPrompt = async () => {
+  const handleCopyFixPrompt = async (minPriority?: number) => {
     if (!currentProject) return;
-    const pendingFeedback = feedback.filter(f => f.status === 'pending');
+    let pendingFeedback = feedback.filter(f => f.status === 'pending');
+
+    // Filter by priority if specified (1 = Critical, 5 = Nice to Have)
+    // minPriority means "include priority X and higher (lower number)"
+    if (minPriority !== undefined) {
+      pendingFeedback = pendingFeedback.filter(f => f.priority <= minPriority);
+    }
+
     const prompt = await generateClaudePrompt(currentProject.name, pendingFeedback);
     await copyToClipboard(prompt);
+    setShowPriorityFilter(false); // Close dropdown after copying
   };
 
   const handleLaunchWithoutContext = () => {
@@ -254,15 +277,59 @@ export function ProjectDetail() {
             <div className="flex gap-2">
               {feedback.filter(f => f.status === 'pending').length > 0 && (
                 <>
-                  <Button
-                    variant="secondary"
-                    onClick={handleCopyFixPrompt}
-                    invertedBgColor={currentProject.textColor}
-                    invertedTextColor={currentProject.color}
-                  >
-                    <Copy size={18} className="inline mr-2" />
-                     Prompt
-                  </Button>
+                  {/* Copy Prompt with Priority Filter */}
+                  <div className="relative">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowPriorityFilter(!showPriorityFilter)}
+                      invertedBgColor={currentProject.textColor}
+                      invertedTextColor={currentProject.color}
+                    >
+                      <Copy size={18} className="inline mr-2" />
+                       Prompt ▾
+                    </Button>
+                    {showPriorityFilter && (
+                      <div
+                        className="absolute top-full mt-1 right-0 bg-white border-2 border-black rounded shadow-lg z-10 min-w-[200px]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => handleCopyFixPrompt()}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200"
+                        >
+                          All Pending
+                        </button>
+                        <button
+                          onClick={() => handleCopyFixPrompt(1)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200"
+                        >
+                          <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                          Critical only
+                        </button>
+                        <button
+                          onClick={() => handleCopyFixPrompt(2)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200"
+                        >
+                          <span className="inline-block w-3 h-3 rounded-full bg-orange-500 mr-2"></span>
+                          High Priority & above
+                        </button>
+                        <button
+                          onClick={() => handleCopyFixPrompt(3)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200"
+                        >
+                          <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
+                          Medium & above
+                        </button>
+                        <button
+                          onClick={() => handleCopyFixPrompt(4)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                        >
+                          <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                          Low Priority & above
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <Button
                     variant="secondary"
                     onClick={handleLaunchWithAllPending}
