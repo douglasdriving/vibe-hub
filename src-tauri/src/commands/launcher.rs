@@ -79,30 +79,11 @@ pub async fn open_url(url: String) -> Result<(), String> {
 pub async fn open_in_vscode(project_path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        // On Windows, try common VS Code installation paths
-        let localappdata_path = format!(r"{}\Programs\Microsoft VS Code\bin\code.cmd",
-            std::env::var("LOCALAPPDATA").unwrap_or_default());
-
-        let code_paths = vec![
-            r"C:\Program Files\Microsoft VS Code\bin\code.cmd".to_string(),
-            r"C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd".to_string(),
-            localappdata_path,
-        ];
-
-        // Try each path
-        for code_path in &code_paths {
-            if let Ok(_) = Command::new(code_path)
-                .arg(&project_path)
-                .spawn() {
-                return Ok(());
-            }
-        }
-
-        // If all paths failed, try 'code' command as fallback
-        Command::new("code")
-            .arg(&project_path)
+        // Use cmd to launch code, which will inherit the user's PATH
+        Command::new("cmd")
+            .args(&["/c", "code", &project_path])
             .spawn()
-            .map_err(|e| format!("Failed to open VS Code: {}. Tried common installation paths but VS Code was not found.", e))?;
+            .map_err(|e| format!("Failed to open VS Code: {}. Make sure VS Code is installed.", e))?;
     }
 
     #[cfg(not(target_os = "windows"))]
