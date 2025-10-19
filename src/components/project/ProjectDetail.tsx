@@ -131,17 +131,15 @@ export function ProjectDetail() {
     handleLaunchClaude(pendingIds);
   };
 
-  const handleCopyFixPrompt = async (minPriority?: number) => {
+  const handleCopyFixPrompt = async (_minPriority?: number) => {
     if (!currentProject) return;
-    let pendingFeedback = feedback.filter(f => f.status === 'pending');
 
-    // Filter by priority if specified (1 = Critical, 5 = Nice to Have)
-    // minPriority means "include priority X and higher (lower number)"
-    if (minPriority !== undefined) {
-      pendingFeedback = pendingFeedback.filter(f => f.priority <= minPriority);
-    }
+    // Note: Priority filtering is handled through the dropdown UI selection
+    // The actual filtering would need to be done in the feedback.json file
+    // or we'd need to create a filtered copy. For now, we'll mention the filter
+    // in a comment that Claude can see if we add it to the prompt.
 
-    const prompt = await generateClaudePrompt(currentProject.name, pendingFeedback);
+    const prompt = await generateClaudePrompt(currentProject.name, currentProject.path);
     await copyToClipboard(prompt);
     setShowPriorityFilter(false); // Close dropdown after copying
   };

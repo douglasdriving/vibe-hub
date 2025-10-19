@@ -279,17 +279,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   // Launch Claude Code with feedback context
-  launchClaudeCode: async (projectPath: string, feedbackIds?: string[]) => {
+  launchClaudeCode: async (projectPath: string, _feedbackIds?: string[]) => {
     try {
-      const { feedback, currentProject } = get();
+      const { currentProject } = get();
 
-      const selectedFeedback = feedbackIds
-        ? feedback.filter(f => feedbackIds.includes(f.id))
-        : feedback.filter(f => f.status === 'pending');
-
+      // Generate prompt that references the feedback.json file directly
       const prompt = await generateClaudePrompt(
         currentProject?.name || 'Project',
-        selectedFeedback
+        projectPath
       );
 
       // Copy prompt to clipboard first

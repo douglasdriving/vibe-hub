@@ -1,28 +1,25 @@
 import type { FeedbackItem } from '../store/types';
-import { PRIORITY_LABELS } from '../store/types';
 import * as tauri from './tauri';
 
 /**
- * Generate a Claude Code prompt from feedback items
+ * Generate a Claude Code prompt for feedback workflow
  *
  * Loads the prompt template from prompts.json at the project root.
- * Edit that file to customize the feedback workflow prompt.
+ * The prompt references the feedback.json file directly instead of
+ * embedding all feedback items in the prompt text.
+ *
+ * Edit prompts.json to customize the feedback workflow prompt.
  */
 export async function generateClaudePrompt(
   projectName: string,
-  feedbackItems: FeedbackItem[]
+  projectPath: string,
+  _feedbackItems?: FeedbackItem[] // Kept for backwards compatibility but not used
 ): Promise<string> {
-  // Format feedback items
-  const items = feedbackItems
-    .map((item, index) =>
-      `${index + 1}. [${PRIORITY_LABELS[item.priority]}] ${item.text}`
-    )
-    .join('\n');
-
   // Load prompt from prompts.json
+  // The prompt will instruct Claude to read feedback.json directly
   return await tauri.getPrompt('feedbackWorkflow', {
     PROJECT_NAME: projectName,
-    FEEDBACK_ITEMS: items
+    PROJECT_PATH: projectPath
   });
 }
 
