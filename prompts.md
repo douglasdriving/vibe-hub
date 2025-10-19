@@ -1,18 +1,55 @@
-/**
- * Prompt generation utilities for the project pipeline stages
- *
- * NOTE: For easier editing, all prompts are also documented in prompts.md
- * at the project root. You can reference that file to see all prompts in
- * one place and copy-paste them for customization.
- */
+# Vibe Hub - Claude Prompts
 
-export function generateIdeaRefinementPrompt(projectName: string, projectPath: string): string {
-  return `I have an initial idea for a project called: ${projectName}
+This file contains all the prompts that Vibe Hub uses when interacting with Claude Code. You can edit these prompts to customize how Claude assists with your projects.
+
+---
+
+## Feedback Workflow Prompt
+
+**Used when**: Copying feedback items to Claude for implementation
+
+```
+I need help with the following feedback items for {PROJECT_NAME}:
+
+{FEEDBACK_ITEMS}
+
+Please follow this workflow to fix these items:
+
+1. **Create an Implementation Plan**: Review all feedback items and create a structured plan that:
+   - Identifies which issues are related or dependent on each other
+   - Groups related issues that should be fixed together in the same "fix"
+   - Orders fixes by dependency (fix issues that others depend on first)
+   - Numbers each fix in the plan
+
+2. **Work Through Fixes One-by-One**: For each fix in your plan:
+   - Explain what you're about to implement
+   - Ask for any clarifications you need before starting
+   - Implement the fix
+   - Run all tests you can yourself (build, type-check, etc.)
+   - Create a test checklist for me to verify the changes work correctly
+   - Commit with a short message describing the change
+   - **WAIT for me to test and confirm it works before moving to the next fix**
+
+3. **Do NOT push code** until I have tested and confirmed each fix works as intended.
+
+4. **After I confirm a fix works**, push that commit and move on to the next fix in your plan.
+
+This ensures every change is tested and verified before being pushed to the repository.
+```
+
+---
+
+## Idea Refinement Prompt
+
+**Used when**: Moving from "initialized" to "idea" status
+
+```
+I have an initial idea for a project called: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read the project idea** - First, please read the idea.md file in the .vibe folder at:
-   ${projectPath}/.vibe/idea.md
+   {PROJECT_PATH}/.vibe/idea.md
 
 2. **Research existing alternatives** - Before we proceed, please web search for:
    - Existing apps/projects that solve the same or similar problems
@@ -41,16 +78,22 @@ export function generateIdeaRefinementPrompt(projectName: string, projectPath: s
 
 **Important**: The goal here is to make sure we're building something worthwhile. Be critical and honest about whether this idea makes sense, or if there are better alternatives (including not building it at all).
 
-Please start by reading the idea.md file and then web searching for existing alternatives!`;
-}
+Please start by reading the idea.md file and then web searching for existing alternatives!
+```
 
-export function generateDesignSpecPrompt(projectName: string, projectPath: string): string {
-  return `I need help generating an MVP design specification for my project: ${projectName}
+---
+
+## Design Spec Prompt
+
+**Used when**: Moving from "idea" to "designed" status
+
+```
+I need help generating an MVP design specification for my project: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read the project idea** - First, please read the idea.md file in the .vibe folder at:
-   ${projectPath}/.vibe/idea.md
+   {PROJECT_PATH}/.vibe/idea.md
 
 2. **Take the idea as given** - The core idea has already been validated and refined in the previous stage. Do NOT question or critique the fundamental concept. Instead, focus on how to design and scope the MVP implementation.
 
@@ -72,23 +115,29 @@ export function generateDesignSpecPrompt(projectName: string, projectPath: strin
    - **Out of Scope**: Features explicitly deferred to post-MVP
 
 6. **Write the file** - Save the design spec to:
-   ${projectPath}/.vibe/design-spec.md
+   {PROJECT_PATH}/.vibe/design-spec.md
 
 7. **Iterate** - We'll iterate on the design spec until I approve it. Feel free to suggest improvements or alternatives for HOW to implement the idea, but not WHETHER to implement it.
 
-Please start by reading the idea.md file and asking your first set of clarifying questions!`;
-}
+Please start by reading the idea.md file and asking your first set of clarifying questions!
+```
 
-export function generateTechnicalSpecPrompt(projectName: string, projectPath: string): string {
-  return `I need help generating a technical specification for my project: ${projectName}
+---
+
+## Technical Spec Prompt
+
+**Used when**: Moving from "designed" to "tech-spec-ready" status
+
+```
+I need help generating a technical specification for my project: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read the design spec** - First, please read the design-spec.md file in the .vibe folder at:
-   ${projectPath}/.vibe/design-spec.md
+   {PROJECT_PATH}/.vibe/design-spec.md
 
    Also read the idea.md for additional context:
-   ${projectPath}/.vibe/idea.md
+   {PROJECT_PATH}/.vibe/idea.md
 
 2. **Propose technical architecture** - Based on the design spec, propose:
    - **Tech Stack**: Specific technologies, frameworks, and libraries to use
@@ -111,22 +160,28 @@ export function generateTechnicalSpecPrompt(projectName: string, projectPath: st
    - **Development Setup**: How to set up the development environment
 
 5. **Write the file** - Save the technical spec to:
-   ${projectPath}/.vibe/technical-spec.md
+   {PROJECT_PATH}/.vibe/technical-spec.md
 
-Please start by reading the design spec and proposing your initial technical architecture!`;
-}
+Please start by reading the design spec and proposing your initial technical architecture!
+```
 
-export function generateMetadataPrompt(projectName: string, projectPath: string): string {
-  return `I need help filling out the project metadata for: ${projectName}
+---
+
+## Metadata Prompt
+
+**Used when**: Moving from "tech-spec-ready" to "metadata-ready" status
+
+```
+I need help filling out the project metadata for: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read all specification documents** - Please scan these files to understand the project:
-   - ${projectPath}/.vibe/idea.md (project concept)
-   - ${projectPath}/.vibe/design-spec.md (MVP features)
-   - ${projectPath}/.vibe/technical-spec.md (architecture and tech stack)
+   - {PROJECT_PATH}/.vibe/idea.md (project concept)
+   - {PROJECT_PATH}/.vibe/design-spec.md (MVP features)
+   - {PROJECT_PATH}/.vibe/technical-spec.md (architecture and tech stack)
 
-2. **Fill out metadata.md** - Please update the metadata file at ${projectPath}/.vibe/metadata.md with:
+2. **Fill out metadata.md** - Please update the metadata file at {PROJECT_PATH}/.vibe/metadata.md with:
    - **Name**: A nice human-readable project name (not just the folder name)
    - **Status**: Keep as "metadata-ready" for now
    - **Platform**: Specify the target platform(s) - e.g., "Web", "Desktop", "Tauri Desktop App", "Mobile", etc.
@@ -141,18 +196,24 @@ export function generateMetadataPrompt(projectName: string, projectPath: string)
    - List technologies as bullet points under Tech Stack
    - Keep the markdown structure intact
 
-Please read the specs and update the metadata file!`;
-}
+Please read the specs and update the metadata file!
+```
 
-export function generateImplementationPrompt(projectName: string, projectPath: string): string {
-  return `I'm ready to start implementing the MVP for my project: ${projectName}
+---
+
+## Implementation Prompt
+
+**Used when**: Moving from "metadata-ready" to "mvp-implemented" status
+
+```
+I'm ready to start implementing the MVP for my project: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read all specification documents** - Please read these files to understand the full context:
-   - ${projectPath}/.vibe/idea.md (project concept)
-   - ${projectPath}/.vibe/design-spec.md (MVP features and user flows)
-   - ${projectPath}/.vibe/technical-spec.md (architecture and tech stack)
+   - {PROJECT_PATH}/.vibe/idea.md (project concept)
+   - {PROJECT_PATH}/.vibe/design-spec.md (MVP features and user flows)
+   - {PROJECT_PATH}/.vibe/technical-spec.md (architecture and tech stack)
 
 2. **Create implementation plan** - Based on the specs, create a plan that:
    - Breaks down the MVP into logical implementation phases
@@ -185,21 +246,27 @@ export function generateImplementationPrompt(projectName: string, projectPath: s
 - Skip features marked as "out of scope" in design-spec.md
 - Focus on getting a working prototype that demonstrates value
 
-Please start by reading the spec files and proposing your implementation plan!`;
-}
+Please start by reading the spec files and proposing your implementation plan!
+```
 
-export function generateTechnicalTestPrompt(projectName: string, projectPath: string): string {
-  return `I need help creating a comprehensive test checklist for my project: ${projectName}
+---
+
+## Technical Testing Prompt
+
+**Used when**: Moving from "mvp-implemented" to "technical-testing" status
+
+```
+I need help creating a comprehensive test checklist for my project: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read all specification and implementation files** - Please scan:
-   - ${projectPath}/.vibe/design-spec.md (to understand features)
-   - ${projectPath}/.vibe/technical-spec.md (to understand architecture)
+   - {PROJECT_PATH}/.vibe/design-spec.md (to understand features)
+   - {PROJECT_PATH}/.vibe/technical-spec.md (to understand architecture)
    - The actual source code (to see what was implemented)
 
 2. **Create test checklist** - Generate a test-checklist.md file at:
-   ${projectPath}/.vibe/test-checklist.md
+   {PROJECT_PATH}/.vibe/test-checklist.md
 
 The checklist should include:
 
@@ -229,19 +296,25 @@ The checklist should include:
    - What to write in "Test outcome" (PASS/FAIL + comments)
    - That we'll iterate on fixes until all tests pass
 
-Please create the comprehensive test checklist now!`;
-}
+Please create the comprehensive test checklist now!
+```
 
-export function generateDesignTestPrompt(projectName: string, projectPath: string): string {
-  return `I need to review the design and UX of my MVP for: ${projectName}
+---
+
+## Design Testing Prompt
+
+**Used when**: Moving from "technical-testing" to "design-testing" status
+
+```
+I need to review the design and UX of my MVP for: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read the design specification** - First, review what was intended:
-   ${projectPath}/.vibe/design-spec.md
+   {PROJECT_PATH}/.vibe/design-spec.md
 
 2. **Review the feedback document** - I've documented my design feedback at:
-   ${projectPath}/.vibe/design-feedback.md
+   {PROJECT_PATH}/.vibe/design-feedback.md
 
 3. **Analyze and fix issues** - Based on my feedback:
    - Address each piece of feedback iteratively
@@ -257,16 +330,22 @@ export function generateDesignTestPrompt(projectName: string, projectPath: strin
    - UI/UX feels right and usable
    - Any unwanted features are removed
 
-Please read my design feedback and let's start addressing the issues one by one!`;
-}
+Please read my design feedback and let's start addressing the issues one by one!
+```
 
-export function generateDeploymentPrompt(projectName: string, projectPath: string): string {
-  return `I'm ready to deploy my project: ${projectName}
+---
+
+## Deployment Prompt
+
+**Used when**: Moving from "design-testing" to "deployment" status
+
+```
+I'm ready to deploy my project: {PROJECT_NAME}
 
 **Instructions:**
 
 1. **Read the technical specification** - Review deployment requirements:
-   ${projectPath}/.vibe/technical-spec.md
+   {PROJECT_PATH}/.vibe/technical-spec.md
 
 2. **Guide me through deployment** - Help me with step-by-step deployment:
    - Choose appropriate hosting platform based on the tech stack
@@ -293,211 +372,56 @@ export function generateDeploymentPrompt(projectName: string, projectPath: strin
    - Fix configuration issues
    - Ensure production environment matches dev expectations
 
-Please help me choose a hosting platform and guide me through the deployment process!`;
-}
+Please help me choose a hosting platform and guide me through the deployment process!
+```
 
-/**
- * Generate a prompt for advancing to the next stage
- * This is used when a stage is completed and the project is ready to move forward
- */
-export function getStageAdvancementInfo(currentStatus: string): {
-  nextStatus: string;
-  actionLabel: string;
-  promptGenerator: (projectName: string, projectPath: string) => string;
-} | null {
-  switch (currentStatus) {
-    case 'initialized':
-      return {
-        nextStatus: 'idea',
-        actionLabel: 'Write Project Pitch',
-        promptGenerator: () => '', // Uses IdeaEditorModal instead
-      };
+---
 
-    case 'idea':
-      return {
-        nextStatus: 'designed',
-        actionLabel: 'Refine Idea with Claude',
-        promptGenerator: generateIdeaRefinementPrompt,
-      };
+## Generate Metadata Prompt (for existing projects)
 
-    case 'designed':
-      return {
-        nextStatus: 'tech-spec-ready',
-        actionLabel: 'Generate Design Spec with Claude',
-        promptGenerator: generateDesignSpecPrompt,
-      };
+**Used when**: Scanning an existing project and generating metadata
 
-    case 'tech-spec-ready':
-      return {
-        nextStatus: 'metadata-ready',
-        actionLabel: 'Generate Tech Spec with Claude',
-        promptGenerator: generateTechnicalSpecPrompt,
-      };
+```
+Please analyze this project and fill out the .vibe/metadata.md file with accurate information.
 
-    case 'metadata-ready':
-      return {
-        nextStatus: 'mvp-implemented',
-        actionLabel: 'Fill Project Metadata with Claude',
-        promptGenerator: generateMetadataPrompt,
-      };
+Project: {PROJECT_NAME}
 
-    case 'mvp-implemented':
-      return {
-        nextStatus: 'technical-testing',
-        actionLabel: 'Start Implementation with Claude',
-        promptGenerator: generateImplementationPrompt,
-      };
+Instructions:
+1. Scan key files in the project (package.json, README.md, source files, etc.)
+2. Come up with a nice display name for the project (not just the folder name)
+3. Determine the project status (draft/mvp-implemented/deployed)
+4. Identify the target platform (e.g., Web, Desktop, Tauri Desktop App, Mobile, etc.)
+5. Identify the project's purpose and write a clear description
+6. List all major technologies in the tech stack
+7. Look for deployment configuration or URLs if present
 
-    case 'technical-testing':
-      return {
-        nextStatus: 'design-testing',
-        actionLabel: 'Create Test Checklist with Claude',
-        promptGenerator: generateTechnicalTestPrompt,
-      };
+The .vibe/metadata.md file should have this format:
 
-    case 'design-testing':
-      return {
-        nextStatus: 'deployment',
-        actionLabel: 'Review Design & UX with Claude',
-        promptGenerator: generateDesignTestPrompt,
-      };
+Name: [A nice human-readable project name]
+Status: [draft OR mvp-implemented OR deployed]
+Platform: [e.g., Web, Desktop, Tauri Desktop App, Mobile, etc.]
 
-    case 'deployment':
-      return {
-        nextStatus: 'deployed',
-        actionLabel: 'Mark as Deployed',
-        promptGenerator: generateDeploymentPrompt,
-      };
+## Description
 
-    case 'deployed':
-      // Final status - no next stage
-      return null;
+[Write a 1-2 sentence description of what this project does]
 
-    default:
-      return null;
-  }
-}
+## Tech Stack
 
-/**
- * Check if a status is in the project setup pipeline
- */
-export function isSetupStatus(status: string): boolean {
-  return ['initialized', 'idea', 'designed', 'tech-spec-ready', 'metadata-ready', 'mvp-implemented', 'technical-testing', 'design-testing', 'deployment'].includes(status);
-}
+- [Technology 1]
+- [Technology 2]
+- [Technology 3]
 
-/**
- * Get user-friendly description for each setup stage
- */
-export function getStageDescription(status: string): string {
-  switch (status) {
-    case 'initialized':
-      return 'Write a clear project pitch describing what you want to build and why.';
+## Deployment
 
-    case 'idea':
-      return 'Refine your idea with Claude - research alternatives, validate the approach, and finalize the concept.';
+[Add deployment URL if found, otherwise remove this section]
 
-    case 'designed':
-      return 'Work with Claude to design the MVP scope, user flows, and core features.';
+Please update the .vibe/metadata.md file now with accurate information based on your analysis of the codebase.
+```
 
-    case 'tech-spec-ready':
-      return 'Generate a technical specification with Claude to plan the architecture and tech stack.';
+---
 
-    case 'metadata-ready':
-      return 'Have Claude fill out the project metadata based on your specifications.';
+## Notes
 
-    case 'mvp-implemented':
-      return 'Start implementing the MVP with Claude using the design and technical specs.';
-
-    case 'technical-testing':
-      return 'Test all functionality with Claude\'s test checklist and fix bugs until everything works.';
-
-    case 'design-testing':
-      return 'Review the design and UX - document feedback and work with Claude to refine the MVP.';
-
-    case 'deployment':
-      return 'Deploy your app to production with Claude\'s guidance and verify it works live.';
-
-    default:
-      return '';
-  }
-}
-
-/**
- * Get the name/title for each stage
- */
-export function getStageName(status: string): string {
-  switch (status) {
-    case 'initialized':
-      return 'Project Initialization';
-
-    case 'idea':
-      return 'Idea Refinement';
-
-    case 'designed':
-      return 'Design Specification';
-
-    case 'tech-spec-ready':
-      return 'Technical Specification';
-
-    case 'metadata-ready':
-      return 'Project Metadata';
-
-    case 'mvp-implemented':
-      return 'MVP Implementation';
-
-    case 'technical-testing':
-      return 'Technical Testing';
-
-    case 'design-testing':
-      return 'Design & UX Review';
-
-    case 'deployment':
-      return 'Deployment';
-
-    case 'deployed':
-      return 'Deployed';
-
-    default:
-      return 'Project Setup';
-  }
-}
-
-/**
- * Get the icon/emoji for each stage
- */
-export function getStageIcon(status: string): string {
-  switch (status) {
-    case 'initialized':
-      return '💡';
-
-    case 'idea':
-      return '🔍';
-
-    case 'designed':
-      return '📐';
-
-    case 'tech-spec-ready':
-      return '🔧';
-
-    case 'metadata-ready':
-      return '📝';
-
-    case 'mvp-implemented':
-      return '⚡';
-
-    case 'technical-testing':
-      return '🧪';
-
-    case 'design-testing':
-      return '🎨';
-
-    case 'deployment':
-      return '🚀';
-
-    case 'deployed':
-      return '✅';
-
-    default:
-      return '📋';
-  }
-}
+- Placeholders like `{PROJECT_NAME}` and `{PROJECT_PATH}` are automatically replaced by the app
+- `{FEEDBACK_ITEMS}` is replaced with the formatted list of feedback items
+- Feel free to customize these prompts to match your workflow and preferences!

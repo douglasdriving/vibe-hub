@@ -3,6 +3,9 @@ import { PRIORITY_LABELS } from '../store/types';
 
 /**
  * Generate a Claude Code prompt from feedback items
+ *
+ * NOTE: This prompt is also documented in prompts.md at the project root.
+ * You can edit prompts.md to customize the feedback workflow prompt.
  */
 export function generateClaudePrompt(
   projectName: string,

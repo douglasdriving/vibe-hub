@@ -1,7 +1,7 @@
 mod models;
 mod commands;
 
-use commands::{settings, projects, feedback, launcher};
+use commands::{settings, projects, feedback, launcher, prompts};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -36,6 +36,8 @@ pub fn run() {
             launcher::launch_claude_code,
             launcher::open_in_explorer,
             launcher::open_url,
+            // Prompts commands
+            prompts::get_prompt,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

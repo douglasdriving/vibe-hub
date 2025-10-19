@@ -6,7 +6,8 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(cargo check:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git checkout src/utils/prompts.ts)"
     ],
     "deny": [],
     "ask": []

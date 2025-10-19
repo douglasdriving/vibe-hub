@@ -128,3 +128,8 @@ export async function assignColorIfMissing(projectPath: string): Promise<string>
 export async function createDesignFeedbackFile(projectPath: string): Promise<void> {
   return await invoke('create_design_feedback_file', { projectPath });
 }
+
+// Prompts commands
+export async function getPrompt(promptName: string, replacements: Record<string, string>): Promise<string> {
+  return await invoke('get_prompt', { promptName, replacements });
+}
