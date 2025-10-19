@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy, Play, Hammer } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
@@ -10,6 +10,7 @@ import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '
 import { formatDate } from '../../utils/formatters';
 import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
 import { isSetupStatus } from '../../utils/prompts';
+import * as tauri from '../../services/tauri';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export function ProjectDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -38,6 +40,17 @@ export function ProjectDetail() {
       setHasLoaded(true);
     }
   }, [id]);
+
+  useEffect(() => {
+    // Detect available npm scripts when project loads
+    if (currentProject) {
+      tauri.detectNpmScripts(currentProject.path).then(scripts => {
+        setAvailableScripts(scripts);
+      }).catch(err => {
+        console.error('Failed to detect npm scripts:', err);
+      });
+    }
+  }, [currentProject]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,6 +139,24 @@ export function ProjectDetail() {
 
   const handleLaunchWithoutContext = () => {
     handleLaunchClaude([]);
+  };
+
+  const handleRunTest = async () => {
+    if (!currentProject) return;
+    try {
+      await tauri.runNpmScript(currentProject.path, 'test');
+    } catch (error) {
+      console.error('Failed to run tests:', error);
+    }
+  };
+
+  const handleRunBuild = async () => {
+    if (!currentProject) return;
+    try {
+      await tauri.runNpmScript(currentProject.path, 'build');
+    } catch (error) {
+      console.error('Failed to run build:', error);
+    }
   };
 
   const handleOpenExplorer = () => {
@@ -236,16 +267,42 @@ export function ProjectDetail() {
             <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No platform info specified yet.</p>
           )}
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleOpenExplorer}
-            invertedBgColor={currentProject.textColor}
-            invertedTextColor={currentProject.color}
-          >
-            <Folder size={16} className="inline mr-2" />
-            Open Folder
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenExplorer}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Folder size={16} className="inline mr-2" />
+              Open Folder
+            </Button>
+            {availableScripts?.has_test && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleRunTest}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Play size={16} className="inline mr-2" />
+                Run Tests
+              </Button>
+            )}
+            {availableScripts?.has_build && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleRunBuild}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Hammer size={16} className="inline mr-2" />
+                Build
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Feedback Section - only show for projects past setup stages */}

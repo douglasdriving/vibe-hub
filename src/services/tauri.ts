@@ -133,3 +133,19 @@ export async function createDesignFeedbackFile(projectPath: string): Promise<voi
 export async function getPrompt(promptName: string, replacements: Record<string, string>): Promise<string> {
   return await invoke('get_prompt', { promptName, replacements });
 }
+
+// NPM commands
+export interface AvailableScripts {
+  has_test: boolean;
+  has_build: boolean;
+  test_command: string | null;
+  build_command: string | null;
+}
+
+export async function detectNpmScripts(projectPath: string): Promise<AvailableScripts> {
+  return await invoke('detect_npm_scripts', { projectPath });
+}
+
+export async function runNpmScript(projectPath: string, scriptName: string): Promise<void> {
+  return await invoke('run_npm_script', { projectPath, scriptName });
+}
