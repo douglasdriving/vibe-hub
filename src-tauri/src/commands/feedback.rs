@@ -5,49 +5,73 @@ use uuid::Uuid;
 
 const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
+const FEEDBACK_COMPLETED_FILE: &str = "feedback-completed.json";
 
-fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
-    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_FILE);
-
+fn read_feedback_file_from_path(feedback_path: &Path) -> Result<FeedbackFile, String> {
     if !feedback_path.exists() {
         return Ok(FeedbackFile::default());
     }
 
-    let contents = fs::read_to_string(&feedback_path)
+    let contents = fs::read_to_string(feedback_path)
         .map_err(|e| format!("Failed to read feedback file: {}", e))?;
 
     serde_json::from_str(&contents)
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
 }
 
-fn write_feedback_file(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
-    let vibe_dir = project_path.join(VIBE_DIR);
-    let feedback_path = vibe_dir.join(FEEDBACK_FILE);
+fn read_pending_feedback(project_path: &Path) -> Result<FeedbackFile, String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_FILE);
+    read_feedback_file_from_path(&feedback_path)
+}
+
+fn read_completed_feedback(project_path: &Path) -> Result<FeedbackFile, String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_COMPLETED_FILE);
+    read_feedback_file_from_path(&feedback_path)
+}
+
+fn write_feedback_file_to_path(feedback_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
+    let vibe_dir = feedback_path.parent()
+        .ok_or("Invalid feedback path")?;
 
     // Create .vibe directory if it doesn't exist
     if !vibe_dir.exists() {
-        fs::create_dir(&vibe_dir)
+        fs::create_dir(vibe_dir)
             .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
     }
 
     let json = serde_json::to_string_pretty(feedback_file)
         .map_err(|e| format!("Failed to serialize feedback: {}", e))?;
 
-    fs::write(&feedback_path, json)
+    fs::write(feedback_path, json)
         .map_err(|e| format!("Failed to write feedback file: {}", e))?;
 
     Ok(())
 }
 
+fn write_pending_feedback(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_FILE);
+    write_feedback_file_to_path(&feedback_path, feedback_file)
+}
+
+fn write_completed_feedback(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_COMPLETED_FILE);
+    write_feedback_file_to_path(&feedback_path, feedback_file)
+}
+
 #[tauri::command]
 pub async fn get_feedback(project_path: String) -> Result<Vec<FeedbackItem>, String> {
     let path = Path::new(&project_path);
-    let mut feedback_file = read_feedback_file(path)?;
+    let pending_file = read_pending_feedback(path)?;
+    let completed_file = read_completed_feedback(path)?;
+
+    // Merge pending and completed feedback
+    let mut all_feedback = pending_file.feedback;
+    all_feedback.extend(completed_file.feedback);
 
     // Sort by priority (1 = highest priority)
-    feedback_file.feedback.sort_by(|a, b| a.priority.cmp(&b.priority));
+    all_feedback.sort_by(|a, b| a.priority.cmp(&b.priority));
 
-    Ok(feedback_file.feedback)
+    Ok(all_feedback)
 }
 
 #[tauri::command]
@@ -56,7 +80,7 @@ pub async fn add_feedback(
     feedback: NewFeedbackItem,
 ) -> Result<FeedbackItem, String> {
     let path = Path::new(&project_path);
-    let mut feedback_file = read_feedback_file(path)?;
+    let mut feedback_file = read_pending_feedback(path)?;
 
     let new_feedback = FeedbackItem {
         id: Uuid::new_v4().to_string(),
@@ -68,7 +92,7 @@ pub async fn add_feedback(
     };
 
     feedback_file.feedback.push(new_feedback.clone());
-    write_feedback_file(path, &feedback_file)?;
+    write_pending_feedback(path, &feedback_file)?;
 
     Ok(new_feedback)
 }
@@ -80,13 +104,22 @@ pub async fn update_feedback(
     updates: UpdateFeedbackItem,
 ) -> Result<(), String> {
     let path = Path::new(&project_path);
-    let mut feedback_file = read_feedback_file(path)?;
+    let mut pending_file = read_pending_feedback(path)?;
+    let mut completed_file = read_completed_feedback(path)?;
 
-    let item = feedback_file
-        .feedback
-        .iter_mut()
-        .find(|f| f.id == feedback_id)
-        .ok_or("Feedback item not found")?;
+    // Find the item in either pending or completed
+    let pending_item = pending_file.feedback.iter_mut().find(|f| f.id == feedback_id);
+    let completed_item = completed_file.feedback.iter_mut().find(|f| f.id == feedback_id);
+
+    let (item, was_pending) = if let Some(item) = pending_item {
+        (item, true)
+    } else if let Some(item) = completed_item {
+        (item, false)
+    } else {
+        return Err("Feedback item not found".to_string());
+    };
+
+    let old_status = item.status.clone();
 
     // Update fields only if provided
     if let Some(text) = updates.text {
@@ -95,14 +128,34 @@ pub async fn update_feedback(
     if let Some(priority) = updates.priority {
         item.priority = priority;
     }
-    if let Some(status) = updates.status {
-        item.status = status;
+    if let Some(status) = &updates.status {
+        item.status = status.clone();
     }
     if let Some(completed_at) = updates.completed_at {
         item.completed_at = Some(completed_at);
     }
 
-    write_feedback_file(path, &feedback_file)?;
+    let new_status = item.status.clone();
+    let status_changed = old_status != new_status;
+
+    // Check if we need to move the item between files
+    if status_changed {
+        let item_clone = item.clone();
+
+        if was_pending && new_status == "completed" {
+            // Move from pending to completed
+            pending_file.feedback.retain(|f| f.id != feedback_id);
+            completed_file.feedback.push(item_clone);
+        } else if !was_pending && new_status == "pending" {
+            // Move from completed to pending
+            completed_file.feedback.retain(|f| f.id != feedback_id);
+            pending_file.feedback.push(item_clone);
+        }
+    }
+
+    // Write both files (in case we moved an item between them)
+    write_pending_feedback(path, &pending_file)?;
+    write_completed_feedback(path, &completed_file)?;
 
     Ok(())
 }
@@ -110,11 +163,15 @@ pub async fn update_feedback(
 #[tauri::command]
 pub async fn delete_feedback(project_path: String, feedback_id: String) -> Result<(), String> {
     let path = Path::new(&project_path);
-    let mut feedback_file = read_feedback_file(path)?;
+    let mut pending_file = read_pending_feedback(path)?;
+    let mut completed_file = read_completed_feedback(path)?;
 
-    feedback_file.feedback.retain(|f| f.id != feedback_id);
+    // Remove from both files (only one will actually have it)
+    pending_file.feedback.retain(|f| f.id != feedback_id);
+    completed_file.feedback.retain(|f| f.id != feedback_id);
 
-    write_feedback_file(path, &feedback_file)?;
+    write_pending_feedback(path, &pending_file)?;
+    write_completed_feedback(path, &completed_file)?;
 
     Ok(())
 }
