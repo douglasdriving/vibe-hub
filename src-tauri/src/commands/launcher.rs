@@ -132,25 +132,18 @@ pub async fn open_in_terminal(project_path: String) -> Result<(), String> {
 pub async fn open_in_fork(project_path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        // Try common Fork installation paths
+        let username = std::env::var("USERNAME").unwrap_or_default();
+
+        // Try common Fork installation paths (with "current" subdirectory)
         let fork_paths = vec![
-            r"C:\Users\{}\AppData\Local\Fork\Fork.exe",
-            r"C:\Program Files\Fork\Fork.exe",
-            r"C:\Program Files (x86)\Fork\Fork.exe",
+            format!(r"C:\Users\{}\AppData\Local\Fork\current\Fork.exe", username),
+            format!(r"C:\Users\{}\AppData\Local\Fork\Fork.exe", username),
+            r"C:\Program Files\Fork\Fork.exe".to_string(),
+            r"C:\Program Files (x86)\Fork\Fork.exe".to_string(),
         ];
 
-        let username = std::env::var("USERNAME").unwrap_or_default();
-        let user_fork_path = format!(r"C:\Users\{}\AppData\Local\Fork\Fork.exe", username);
-
-        // Try user-specific path first
-        if let Ok(_) = Command::new(&user_fork_path)
-            .arg(&project_path)
-            .spawn() {
-            return Ok(());
-        }
-
-        // Try other common paths
-        for fork_path in &fork_paths[1..] {
+        // Try each path
+        for fork_path in &fork_paths {
             if let Ok(_) = Command::new(fork_path)
                 .arg(&project_path)
                 .spawn() {
@@ -158,7 +151,7 @@ pub async fn open_in_fork(project_path: String) -> Result<(), String> {
             }
         }
 
-        Err("Fork not found. Make sure Fork is installed. Fork is typically installed at: C:\\Users\\{username}\\AppData\\Local\\Fork\\Fork.exe".to_string())
+        Err("Fork not found. Make sure Fork is installed. Fork is typically installed at: C:\\Users\\{username}\\AppData\\Local\\Fork\\current\\Fork.exe".to_string())
     }
 
     #[cfg(target_os = "macos")]
