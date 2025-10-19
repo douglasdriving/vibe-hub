@@ -132,12 +132,33 @@ pub async fn open_in_terminal(project_path: String) -> Result<(), String> {
 pub async fn open_in_fork(project_path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        // Fork uses the fork:// URL protocol on Windows
-        let fork_url = format!("fork://open?path={}", project_path.replace("\\", "/"));
-        Command::new("cmd")
-            .args(&["/c", "start", &fork_url])
-            .spawn()
-            .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed and the fork:// protocol is registered.", e))?;
+        // Try common Fork installation paths
+        let fork_paths = vec![
+            r"C:\Users\{}\AppData\Local\Fork\Fork.exe",
+            r"C:\Program Files\Fork\Fork.exe",
+            r"C:\Program Files (x86)\Fork\Fork.exe",
+        ];
+
+        let username = std::env::var("USERNAME").unwrap_or_default();
+        let user_fork_path = format!(r"C:\Users\{}\AppData\Local\Fork\Fork.exe", username);
+
+        // Try user-specific path first
+        if let Ok(_) = Command::new(&user_fork_path)
+            .arg(&project_path)
+            .spawn() {
+            return Ok(());
+        }
+
+        // Try other common paths
+        for fork_path in &fork_paths[1..] {
+            if let Ok(_) = Command::new(fork_path)
+                .arg(&project_path)
+                .spawn() {
+                return Ok(());
+            }
+        }
+
+        Err("Fork not found. Make sure Fork is installed. Fork is typically installed at: C:\\Users\\{username}\\AppData\\Local\\Fork\\Fork.exe".to_string())
     }
 
     #[cfg(target_os = "macos")]
@@ -146,6 +167,8 @@ pub async fn open_in_fork(project_path: String) -> Result<(), String> {
             .args(&["-a", "Fork", &project_path])
             .spawn()
             .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
+
+        Ok(())
     }
 
     #[cfg(target_os = "linux")]
@@ -154,7 +177,7 @@ pub async fn open_in_fork(project_path: String) -> Result<(), String> {
             .arg(&project_path)
             .spawn()
             .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
