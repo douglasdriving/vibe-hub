@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
@@ -31,6 +31,7 @@ export function ProjectDetail() {
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [hasLoaded, setHasLoaded] = useState(false);
   const [showPriorityFilter, setShowPriorityFilter] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -51,17 +52,17 @@ export function ProjectDetail() {
       }
     };
 
-    const handleClickOutside = () => {
-      if (showPriorityFilter) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showPriorityFilter && dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowPriorityFilter(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [navigate, showPriorityFilter]);
 
@@ -278,7 +279,7 @@ export function ProjectDetail() {
               {feedback.filter(f => f.status === 'pending').length > 0 && (
                 <>
                   {/* Copy Prompt with Priority Filter */}
-                  <div className="relative">
+                  <div className="relative" ref={dropdownRef}>
                     <Button
                       variant="secondary"
                       onClick={() => setShowPriorityFilter(!showPriorityFilter)}
@@ -289,10 +290,8 @@ export function ProjectDetail() {
                        Prompt ▾
                     </Button>
                     {showPriorityFilter && (
-                      <div
-                        className="absolute top-full mt-1 right-0 bg-white border-2 border-black rounded shadow-lg z-10 min-w-[200px]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <div className="absolute top-full mt-1 right-0 bg-white border-2 border-black rounded shadow-lg z-10 min-w-[200px]">
+
                         <button
                           onClick={() => handleCopyFixPrompt()}
                           className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200"
