@@ -18,6 +18,7 @@ A local-first desktop companion for managing personal vibe-coding projects, buil
 - Node.js (v18+)
 - Rust (latest stable)
 - npm or yarn
+- claude code
 
 ### Development
 
