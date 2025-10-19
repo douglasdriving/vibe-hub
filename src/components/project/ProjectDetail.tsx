@@ -144,7 +144,11 @@ export function ProjectDetail() {
   const handleRunDev = async () => {
     if (!currentProject || !availableScripts?.dev_script_name) return;
     try {
-      await tauri.runNpmScript(currentProject.path, availableScripts.dev_script_name);
+      await tauri.runNpmScript(
+        currentProject.path,
+        availableScripts.dev_script_name,
+        availableScripts.dev_script_type || undefined
+      );
     } catch (error) {
       console.error('Failed to run dev server:', error);
     }
@@ -249,7 +253,6 @@ export function ProjectDetail() {
           {/* Platform & Architecture */}
           {(currentProject.platform || currentProject.isLocalFirst || currentProject.isOpenSource || currentProject.hasBackend) ? (
             <div className="flex flex-wrap gap-2 mb-4">
-              <span style={{ color: currentProject.textColor || '#FFFFFF' }}>Platform & Architecture:</span>
               {currentProject.platform && (
                 <span className="bg-blue-100 text-blue-700 text-base px-3 py-1 rounded">{currentProject.platform}</span>
               )}

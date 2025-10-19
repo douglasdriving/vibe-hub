@@ -139,6 +139,7 @@ export interface AvailableScripts {
   has_dev: boolean;
   has_build: boolean;
   dev_script_name: string | null;
+  dev_script_type: string | null; // "npm", "bat", or "sh"
   dev_command: string | null;
   build_command: string | null;
 }
@@ -147,6 +148,6 @@ export async function detectNpmScripts(projectPath: string): Promise<AvailableSc
   return await invoke('detect_npm_scripts', { projectPath });
 }
 
-export async function runNpmScript(projectPath: string, scriptName: string): Promise<void> {
-  return await invoke('run_npm_script', { projectPath, scriptName });
+export async function runNpmScript(projectPath: string, scriptName: string, scriptType?: string): Promise<void> {
+  return await invoke('run_npm_script', { projectPath, scriptName, scriptType });
 }
