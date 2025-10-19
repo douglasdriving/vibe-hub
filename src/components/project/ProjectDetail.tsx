@@ -294,34 +294,34 @@ export function ProjectDetail() {
 
                         <button
                           onClick={() => handleCopyFixPrompt()}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200"
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200 text-gray-900"
                         >
                           All Pending
                         </button>
                         <button
                           onClick={() => handleCopyFixPrompt(1)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200"
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900"
                         >
                           <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
                           Critical only
                         </button>
                         <button
                           onClick={() => handleCopyFixPrompt(2)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200"
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900"
                         >
                           <span className="inline-block w-3 h-3 rounded-full bg-orange-500 mr-2"></span>
                           High Priority & above
                         </button>
                         <button
                           onClick={() => handleCopyFixPrompt(3)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200"
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900"
                         >
                           <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
                           Medium & above
                         </button>
                         <button
                           onClick={() => handleCopyFixPrompt(4)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900"
                         >
                           <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
                           Low Priority & above
