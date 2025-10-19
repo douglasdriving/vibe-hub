@@ -120,27 +120,31 @@ pub async fn run_npm_script(project_path: String, script_name: String, script_ty
     {
         let script_type = script_type.unwrap_or_else(|| "npm".to_string());
 
-        let command = if script_type == "bat" {
-            // Run .bat file directly
-            format!("cd /d \"{}\" && {}", project_path, script_name)
+        if script_type == "bat" {
+            // For .bat files, just run them directly with cmd
+            let bat_path = Path::new(&project_path).join(&script_name);
+            Command::new("cmd")
+                .args(&["/c", "start", "cmd", "/k", bat_path.to_str().unwrap()])
+                .current_dir(&project_path)
+                .spawn()
+                .map_err(|e| format!("Failed to launch bat file: {}", e))?;
         } else if script_type == "sh" {
-            // Run .sh file with bash
-            format!("cd /d \"{}\" && bash {}", project_path, script_name)
+            // For .sh files, run with bash
+            let sh_path = Path::new(&project_path).join(&script_name);
+            Command::new("cmd")
+                .args(&["/c", "start", "cmd", "/k", "bash", sh_path.to_str().unwrap()])
+                .current_dir(&project_path)
+                .spawn()
+                .map_err(|e| format!("Failed to launch sh file: {}", e))?;
         } else {
-            // Run npm script
-            format!("cd /d \"{}\" && npm run {}", project_path, script_name)
-        };
-
-        // Use PowerShell to open a new window
-        let ps_command = format!(
-            "Start-Process cmd -ArgumentList '/k','{}'",
-            command.replace("\"", "`\"").replace("'", "''")
-        );
-
-        Command::new("powershell")
-            .args(&["-NoProfile", "-Command", &ps_command])
-            .spawn()
-            .map_err(|e| format!("Failed to launch terminal: {}", e))?;
+            // For npm scripts, use the npm run command
+            let command = format!("npm run {}", script_name);
+            Command::new("cmd")
+                .args(&["/c", "start", "cmd", "/k", &command])
+                .current_dir(&project_path)
+                .spawn()
+                .map_err(|e| format!("Failed to launch npm script: {}", e))?;
+        }
     }
 
     #[cfg(target_os = "macos")]
