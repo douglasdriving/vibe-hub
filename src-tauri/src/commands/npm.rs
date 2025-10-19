@@ -69,14 +69,11 @@ pub async fn detect_npm_scripts(project_path: String) -> Result<AvailableScripts
 pub async fn run_npm_script(project_path: String, script_name: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
+        // Note: The empty quotes "" after 'start' set the window title to nothing
+        // This prevents the path from being interpreted as the title
+        let command = format!("cd /d \"{}\" && npm run {}", project_path, script_name);
         Command::new("cmd")
-            .args(&[
-                "/c",
-                "start",
-                "cmd",
-                "/k",
-                &format!("cd /d \"{}\" && npm run {}", project_path, script_name),
-            ])
+            .args(&["/c", "start", "", "cmd", "/k", &command])
             .spawn()
             .map_err(|e| format!("Failed to launch terminal: {}", e))?;
     }
