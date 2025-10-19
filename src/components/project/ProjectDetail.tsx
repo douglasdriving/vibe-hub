@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
@@ -30,8 +30,6 @@ export function ProjectDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [showPriorityFilter, setShowPriorityFilter] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -44,27 +42,15 @@ export function ProjectDetail() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (showPriorityFilter) {
-          setShowPriorityFilter(false);
-        } else {
-          navigate('/');
-        }
-      }
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (showPriorityFilter && dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowPriorityFilter(false);
+        navigate('/');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [navigate, showPriorityFilter]);
+  }, [navigate]);
 
   const handleBack = () => {
     navigate('/');
@@ -131,17 +117,11 @@ export function ProjectDetail() {
     handleLaunchClaude(pendingIds);
   };
 
-  const handleCopyFixPrompt = async (_minPriority?: number) => {
+  const handleCopyFixPrompt = async () => {
     if (!currentProject) return;
-
-    // Note: Priority filtering is handled through the dropdown UI selection
-    // The actual filtering would need to be done in the feedback.json file
-    // or we'd need to create a filtered copy. For now, we'll mention the filter
-    // in a comment that Claude can see if we add it to the prompt.
 
     const prompt = await generateClaudePrompt(currentProject.name, currentProject.path);
     await copyToClipboard(prompt);
-    setShowPriorityFilter(false); // Close dropdown after copying
   };
 
   const handleLaunchWithoutContext = () => {
@@ -276,118 +256,15 @@ export function ProjectDetail() {
             <div className="flex gap-2">
               {feedback.filter(f => f.status === 'pending').length > 0 && (
                 <>
-                  {/* Copy Prompt with Priority Filter */}
-                  <div className="relative" ref={dropdownRef}>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowPriorityFilter(!showPriorityFilter)}
-                      invertedBgColor={currentProject.textColor}
-                      invertedTextColor={currentProject.color}
-                    >
-                      <Copy size={18} className="inline mr-2" />
-                       Prompt ▾
-                    </Button>
-                    {showPriorityFilter && (() => {
-                      const pendingFeedback = feedback.filter(f => f.status === 'pending');
-                      const totalCount = pendingFeedback.length;
-
-                      // Count items at each priority level
-                      const priorityCounts = {
-                        1: pendingFeedback.filter(f => f.priority <= 1).length,
-                        2: pendingFeedback.filter(f => f.priority <= 2).length,
-                        3: pendingFeedback.filter(f => f.priority <= 3).length,
-                        4: pendingFeedback.filter(f => f.priority <= 4).length,
-                        5: pendingFeedback.filter(f => f.priority <= 5).length,
-                      };
-
-                      // Check which priorities actually exist
-                      const hasPriority = {
-                        1: pendingFeedback.some(f => f.priority === 1),
-                        2: pendingFeedback.some(f => f.priority === 2),
-                        3: pendingFeedback.some(f => f.priority === 3),
-                        4: pendingFeedback.some(f => f.priority === 4),
-                        5: pendingFeedback.some(f => f.priority === 5),
-                      };
-
-                      return (
-                        <div className="absolute top-full mt-1 right-0 bg-white border-2 border-black rounded shadow-lg z-10 min-w-[220px]">
-                          <button
-                            onClick={() => handleCopyFixPrompt()}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200 text-gray-900 flex justify-between items-center"
-                          >
-                            <span>All Pending</span>
-                            <span className="text-gray-500 text-xs">({totalCount})</span>
-                          </button>
-
-                          {hasPriority[1] && (
-                            <button
-                              onClick={() => handleCopyFixPrompt(1)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900 flex justify-between items-center"
-                            >
-                              <span>
-                                <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-                                Critical only
-                              </span>
-                              <span className="text-gray-500 text-xs">({priorityCounts[1]})</span>
-                            </button>
-                          )}
-
-                          {hasPriority[2] && (
-                            <button
-                              onClick={() => handleCopyFixPrompt(2)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900 flex justify-between items-center"
-                            >
-                              <span>
-                                <span className="inline-block w-3 h-3 rounded-full bg-orange-500 mr-2"></span>
-                                High Priority & above
-                              </span>
-                              <span className="text-gray-500 text-xs">({priorityCounts[2]})</span>
-                            </button>
-                          )}
-
-                          {hasPriority[3] && (
-                            <button
-                              onClick={() => handleCopyFixPrompt(3)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900 flex justify-between items-center"
-                            >
-                              <span>
-                                <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
-                                Medium & above
-                              </span>
-                              <span className="text-gray-500 text-xs">({priorityCounts[3]})</span>
-                            </button>
-                          )}
-
-                          {hasPriority[4] && (
-                            <button
-                              onClick={() => handleCopyFixPrompt(4)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900 flex justify-between items-center"
-                              style={{ borderBottom: hasPriority[5] ? '1px solid #e5e7eb' : 'none' }}
-                            >
-                              <span>
-                                <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
-                                Low Priority & above
-                              </span>
-                              <span className="text-gray-500 text-xs">({priorityCounts[4]})</span>
-                            </button>
-                          )}
-
-                          {hasPriority[5] && (
-                            <button
-                              onClick={() => handleCopyFixPrompt(5)}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900 flex justify-between items-center"
-                            >
-                              <span>
-                                <span className="inline-block w-3 h-3 rounded-full bg-gray-500 mr-2"></span>
-                                Nice to Have & above
-                              </span>
-                              <span className="text-gray-500 text-xs">({priorityCounts[5]})</span>
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleCopyFixPrompt()}
+                    invertedBgColor={currentProject.textColor}
+                    invertedTextColor={currentProject.color}
+                  >
+                    <Copy size={18} className="inline mr-2" />
+                    Copy Prompt
+                  </Button>
                   <Button
                     variant="secondary"
                     onClick={handleLaunchWithAllPending}
