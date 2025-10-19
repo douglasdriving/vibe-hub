@@ -289,45 +289,106 @@ export function ProjectDetail() {
                       <Copy size={18} className="inline mr-2" />
                        Prompt ▾
                     </Button>
-                    {showPriorityFilter && (
-                      <div className="absolute top-full mt-1 right-0 bg-white border-2 border-black rounded shadow-lg z-10 min-w-[200px]">
+                    {showPriorityFilter && (() => {
+                      const pendingFeedback = feedback.filter(f => f.status === 'pending');
+                      const totalCount = pendingFeedback.length;
 
-                        <button
-                          onClick={() => handleCopyFixPrompt()}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200 text-gray-900"
-                        >
-                          All Pending
-                        </button>
-                        <button
-                          onClick={() => handleCopyFixPrompt(1)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900"
-                        >
-                          <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-                          Critical only
-                        </button>
-                        <button
-                          onClick={() => handleCopyFixPrompt(2)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900"
-                        >
-                          <span className="inline-block w-3 h-3 rounded-full bg-orange-500 mr-2"></span>
-                          High Priority & above
-                        </button>
-                        <button
-                          onClick={() => handleCopyFixPrompt(3)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900"
-                        >
-                          <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
-                          Medium & above
-                        </button>
-                        <button
-                          onClick={() => handleCopyFixPrompt(4)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900"
-                        >
-                          <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
-                          Low Priority & above
-                        </button>
-                      </div>
-                    )}
+                      // Count items at each priority level
+                      const priorityCounts = {
+                        1: pendingFeedback.filter(f => f.priority <= 1).length,
+                        2: pendingFeedback.filter(f => f.priority <= 2).length,
+                        3: pendingFeedback.filter(f => f.priority <= 3).length,
+                        4: pendingFeedback.filter(f => f.priority <= 4).length,
+                        5: pendingFeedback.filter(f => f.priority <= 5).length,
+                      };
+
+                      // Check which priorities actually exist
+                      const hasPriority = {
+                        1: pendingFeedback.some(f => f.priority === 1),
+                        2: pendingFeedback.some(f => f.priority === 2),
+                        3: pendingFeedback.some(f => f.priority === 3),
+                        4: pendingFeedback.some(f => f.priority === 4),
+                        5: pendingFeedback.some(f => f.priority === 5),
+                      };
+
+                      return (
+                        <div className="absolute top-full mt-1 right-0 bg-white border-2 border-black rounded shadow-lg z-10 min-w-[220px]">
+                          <button
+                            onClick={() => handleCopyFixPrompt()}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium border-b border-gray-200 text-gray-900 flex justify-between items-center"
+                          >
+                            <span>All Pending</span>
+                            <span className="text-gray-500 text-xs">({totalCount})</span>
+                          </button>
+
+                          {hasPriority[1] && (
+                            <button
+                              onClick={() => handleCopyFixPrompt(1)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900 flex justify-between items-center"
+                            >
+                              <span>
+                                <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                                Critical only
+                              </span>
+                              <span className="text-gray-500 text-xs">({priorityCounts[1]})</span>
+                            </button>
+                          )}
+
+                          {hasPriority[2] && (
+                            <button
+                              onClick={() => handleCopyFixPrompt(2)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900 flex justify-between items-center"
+                            >
+                              <span>
+                                <span className="inline-block w-3 h-3 rounded-full bg-orange-500 mr-2"></span>
+                                High Priority & above
+                              </span>
+                              <span className="text-gray-500 text-xs">({priorityCounts[2]})</span>
+                            </button>
+                          )}
+
+                          {hasPriority[3] && (
+                            <button
+                              onClick={() => handleCopyFixPrompt(3)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-b border-gray-200 text-gray-900 flex justify-between items-center"
+                            >
+                              <span>
+                                <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
+                                Medium & above
+                              </span>
+                              <span className="text-gray-500 text-xs">({priorityCounts[3]})</span>
+                            </button>
+                          )}
+
+                          {hasPriority[4] && (
+                            <button
+                              onClick={() => handleCopyFixPrompt(4)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900 flex justify-between items-center"
+                              style={{ borderBottom: hasPriority[5] ? '1px solid #e5e7eb' : 'none' }}
+                            >
+                              <span>
+                                <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                                Low Priority & above
+                              </span>
+                              <span className="text-gray-500 text-xs">({priorityCounts[4]})</span>
+                            </button>
+                          )}
+
+                          {hasPriority[5] && (
+                            <button
+                              onClick={() => handleCopyFixPrompt(5)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-900 flex justify-between items-center"
+                            >
+                              <span>
+                                <span className="inline-block w-3 h-3 rounded-full bg-gray-500 mr-2"></span>
+                                Nice to Have & above
+                              </span>
+                              <span className="text-gray-500 text-xs">({priorityCounts[5]})</span>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <Button
                     variant="secondary"
