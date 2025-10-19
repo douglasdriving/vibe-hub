@@ -132,10 +132,12 @@ pub async fn open_in_terminal(project_path: String) -> Result<(), String> {
 pub async fn open_in_fork(project_path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
+        // Fork uses the fork:// URL protocol on Windows
+        let fork_url = format!("fork://open?path={}", project_path.replace("\\", "/"));
         Command::new("cmd")
-            .args(&["/c", "fork", &project_path])
+            .args(&["/c", "start", &fork_url])
             .spawn()
-            .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
+            .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed and the fork:// protocol is registered.", e))?;
     }
 
     #[cfg(target_os = "macos")]
