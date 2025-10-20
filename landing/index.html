@@ -94,6 +94,11 @@
             color: #78350f;
         }
 
+        .download-btn.github {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: #fff;
+        }
+
         .download-btn:hover {
             transform: translateY(-2px);
             filter: drop-shadow(8px 8px 0px rgba(0, 0, 0, 0.8));
@@ -193,11 +198,6 @@
             /Douglas
         </p>
 
-        <div class="screenshots">
-            <img src="screenshot_home.png" alt="Vibe Hub Dashboard" class="screenshot">
-            <img src="screenshot_project.png" alt="Vibe Hub Project View" class="screenshot">
-        </div>
-
         <div class="download-section">
             <div class="download-buttons">
                 <a href="https://github.com/douglasdriving/vibe-hub/releases/latest/download/vibe-hub_windows-x64.msi"
@@ -210,7 +210,18 @@
                     <span class="platform-icon">🐧</span>
                     Download for Linux
                 </a>
+                <a href="https://github.com/douglasdriving/vibe-hub"
+                    class="download-btn github" target="_blank">
+                    <span class="platform-icon">⭐</span>
+                    View on GitHub
+                </a>
             </div>
+        </div>
+
+        <h2>Screenshots</h2>
+        <div class="screenshots">
+            <img src="screenshot_home.png" alt="Vibe Hub Dashboard" class="screenshot">
+            <img src="screenshot_project.png" alt="Vibe Hub Project View" class="screenshot">
         </div>
 
         <h2>The Project</h2>
