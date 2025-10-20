@@ -37,7 +37,7 @@ export function ProjectDetail() {
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
-  const [commitsSinceCleanup, setCommitsSinceCleanup] = useState<number>(0);
+  const [cleanupStats, setCleanupStats] = useState<tauri.CleanupStats | null>(null);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -70,11 +70,11 @@ export function ProjectDetail() {
         console.error('Failed to get project docs:', err);
       });
 
-      // Count commits since last cleanup
-      tauri.countCommitsSinceCleanup(currentProject.path).then(count => {
-        setCommitsSinceCleanup(count);
+      // Get cleanup stats
+      tauri.getCleanupStats(currentProject.path).then(stats => {
+        setCleanupStats(stats);
       }).catch(err => {
-        console.error('Failed to count commits:', err);
+        console.error('Failed to get cleanup stats:', err);
       });
     }
   }, [currentProject]);
@@ -346,7 +346,7 @@ export function ProjectDetail() {
                 <Terminal size={16} className="inline mr-2" />
                 Claude
               </Button>
-              {commitsSinceCleanup >= 30 && (
+              {cleanupStats?.shouldCleanup && (
                 <Button
                   variant="secondary"
                   size="sm"
@@ -354,11 +354,12 @@ export function ProjectDetail() {
                   invertedBgColor={currentProject.textColor}
                   invertedTextColor={currentProject.color}
                   className="relative"
+                  title={`${cleanupStats.commitsSinceCleanup} commits since last cleanup (threshold: ${cleanupStats.cleanupThreshold})`}
                 >
                   <Wrench size={16} className="inline mr-2" />
                   Cleanup
                   <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {commitsSinceCleanup}
+                    {cleanupStats.commitsSinceCleanup}
                   </span>
                 </Button>
               )}

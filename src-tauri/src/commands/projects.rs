@@ -1163,14 +1163,48 @@ pub struct DocumentFile {
     pub modified_timestamp: u64, // Unix timestamp for sorting
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupStats {
+    pub commits_since_cleanup: usize,
+    pub total_commits: usize,
+    pub cleanup_threshold: usize,
+    pub should_cleanup: bool,
+}
+
 #[tauri::command]
-pub async fn count_commits_since_cleanup(project_path: String) -> Result<usize, String> {
+pub async fn get_cleanup_stats(project_path: String) -> Result<CleanupStats, String> {
     use std::process::Command;
 
     const CLEANUP_COMMIT_MESSAGE: &str = "Cleanup and refactor codebase";
 
-    // First, try to find the most recent cleanup commit
-    // Using --grep with ^$ anchors to match the exact subject line only
+    // First, count total commits
+    let count_all = Command::new("git")
+        .args(&["rev-list", "--count", "HEAD"])
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| format!("Failed to count all commits: {}", e))?;
+
+    if !count_all.status.success() {
+        return Ok(CleanupStats {
+            commits_since_cleanup: 0,
+            total_commits: 0,
+            cleanup_threshold: 50,
+            should_cleanup: false,
+        });
+    }
+
+    let total_commits = String::from_utf8(count_all.stdout)
+        .map_err(|e| format!("Failed to parse commit count: {}", e))?
+        .trim()
+        .parse::<usize>()
+        .map_err(|e| format!("Failed to parse commit count: {}", e))?;
+
+    // Calculate threshold: max(50, total_commits * 0.15)
+    // This scales from 50 for small projects to 15% of total for larger ones
+    let cleanup_threshold = std::cmp::max(50, (total_commits as f64 * 0.15) as usize);
+
+    // Find the most recent cleanup commit
     let grep_pattern = format!("^{}$", CLEANUP_COMMIT_MESSAGE);
     let find_cleanup = Command::new("git")
         .args(&["log", "--all", "--grep", &grep_pattern, "--format=%H", "-1"])
@@ -1179,8 +1213,12 @@ pub async fn count_commits_since_cleanup(project_path: String) -> Result<usize, 
         .map_err(|e| format!("Failed to run git command: {}", e))?;
 
     if !find_cleanup.status.success() {
-        // If git command failed, return 0
-        return Ok(0);
+        return Ok(CleanupStats {
+            commits_since_cleanup: total_commits,
+            total_commits,
+            cleanup_threshold,
+            should_cleanup: total_commits >= cleanup_threshold,
+        });
     }
 
     let cleanup_commit_hash = String::from_utf8(find_cleanup.stdout)
@@ -1188,25 +1226,14 @@ pub async fn count_commits_since_cleanup(project_path: String) -> Result<usize, 
         .trim()
         .to_string();
 
-    // If no cleanup commit found, count all commits
+    // If no cleanup commit found, all commits count
     if cleanup_commit_hash.is_empty() {
-        let count_all = Command::new("git")
-            .args(&["rev-list", "--count", "HEAD"])
-            .current_dir(&project_path)
-            .output()
-            .map_err(|e| format!("Failed to count all commits: {}", e))?;
-
-        if !count_all.status.success() {
-            return Ok(0);
-        }
-
-        let count_str = String::from_utf8(count_all.stdout)
-            .map_err(|e| format!("Failed to parse commit count: {}", e))?
-            .trim()
-            .to_string();
-
-        return count_str.parse::<usize>()
-            .map_err(|e| format!("Failed to parse commit count: {}", e));
+        return Ok(CleanupStats {
+            commits_since_cleanup: total_commits,
+            total_commits,
+            cleanup_threshold,
+            should_cleanup: total_commits >= cleanup_threshold,
+        });
     }
 
     // Count commits since the cleanup commit (exclusive)
@@ -1217,16 +1244,26 @@ pub async fn count_commits_since_cleanup(project_path: String) -> Result<usize, 
         .map_err(|e| format!("Failed to count commits since cleanup: {}", e))?;
 
     if !count_since.status.success() {
-        return Ok(0);
+        return Ok(CleanupStats {
+            commits_since_cleanup: 0,
+            total_commits,
+            cleanup_threshold,
+            should_cleanup: false,
+        });
     }
 
-    let count_str = String::from_utf8(count_since.stdout)
+    let commits_since_cleanup = String::from_utf8(count_since.stdout)
         .map_err(|e| format!("Failed to parse commit count: {}", e))?
         .trim()
-        .to_string();
+        .parse::<usize>()
+        .map_err(|e| format!("Failed to parse commit count: {}", e))?;
 
-    count_str.parse::<usize>()
-        .map_err(|e| format!("Failed to parse commit count: {}", e))
+    Ok(CleanupStats {
+        commits_since_cleanup,
+        total_commits,
+        cleanup_threshold,
+        should_cleanup: commits_since_cleanup >= cleanup_threshold,
+    })
 }
 
 #[tauri::command]

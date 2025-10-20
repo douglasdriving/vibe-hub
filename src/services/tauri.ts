@@ -162,8 +162,15 @@ export async function getProjectDocs(projectPath: string): Promise<DocumentFile[
   return await invoke('get_project_docs', { projectPath });
 }
 
-export async function countCommitsSinceCleanup(projectPath: string): Promise<number> {
-  return await invoke('count_commits_since_cleanup', { projectPath });
+export interface CleanupStats {
+  commitsSinceCleanup: number;
+  totalCommits: number;
+  cleanupThreshold: number;
+  shouldCleanup: boolean;
+}
+
+export async function getCleanupStats(projectPath: string): Promise<CleanupStats> {
+  return await invoke('get_cleanup_stats', { projectPath });
 }
 
 // Prompts commands
