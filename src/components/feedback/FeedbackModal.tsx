@@ -3,6 +3,7 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS } from '../../store/types';
+import { soundEffects } from '../../utils/sounds';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -71,6 +72,8 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
       setError('Feedback text is required');
       return;
     }
+
+    soundEffects.playSuccess();
 
     onSave({
       text: text.trim(),

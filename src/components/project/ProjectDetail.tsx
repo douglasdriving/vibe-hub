@@ -12,6 +12,7 @@ import { formatDate } from '../../utils/formatters';
 import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
 import { isSetupStatus, generateCleanupPrompt } from '../../utils/prompts';
 import * as tauri from '../../services/tauri';
+import { soundEffects } from '../../utils/sounds';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -147,6 +148,8 @@ export function ProjectDetail() {
 
   const handleToggleComplete = async (feedbackId: string) => {
     if (!currentProject) return;
+
+    soundEffects.playBlip();
 
     try {
       await toggleFeedbackComplete(currentProject.path, feedbackId);

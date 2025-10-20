@@ -1,4 +1,5 @@
 import React from 'react';
+import { soundEffects } from '../../utils/sounds';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger';
@@ -15,8 +16,13 @@ export function Button({
   className = '',
   invertedBgColor,
   invertedTextColor,
+  onClick,
   ...props
 }: ButtonProps) {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    soundEffects.playClick();
+    onClick?.(e);
+  };
   const baseClasses = 'font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2';
 
   const variantClasses = {
@@ -43,6 +49,7 @@ export function Button({
     <button
       className={`${baseClasses} ${!invertedStyle ? variantClasses[variant] : ''} ${sizeClasses[size]} ${className}`}
       style={invertedStyle}
+      onClick={handleClick}
       {...props}
     >
       {children}

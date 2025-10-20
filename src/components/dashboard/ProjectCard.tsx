@@ -4,6 +4,7 @@ import type { Project } from '../../store/types';
 import { STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatRelativeTime } from '../../utils/formatters';
 import { useProjectStore } from '../../store/projectStore';
+import { soundEffects } from '../../utils/sounds';
 
 interface ProjectCardProps {
   project: Project;
@@ -14,7 +15,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const { openInExplorer, launchClaudeCode } = useProjectStore();
 
   const handleOpenProject = () => {
+    soundEffects.playWhoosh();
     navigate(`/project/${project.id}`);
+  };
+
+  const handleHover = () => {
+    soundEffects.playHover();
   };
 
   const handleOpenExplorer = (e: React.MouseEvent) => {
@@ -38,6 +44,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div
       onClick={handleOpenProject}
+      onMouseEnter={handleHover}
       style={cardStyle}
       className="rounded-lg shadow-2xl p-6 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all hover:scale-105 cursor-pointer border-4 border-black"
     >
