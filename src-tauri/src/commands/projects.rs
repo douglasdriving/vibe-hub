@@ -1272,7 +1272,6 @@ pub struct ProjectStats {
     pub total_commits: usize,
     pub lines_of_code: usize,
     pub feedback_completed: usize,
-    pub feedback_pending: usize,
 }
 
 #[tauri::command]
@@ -1297,13 +1296,11 @@ pub async fn get_project_stats(project_path: String) -> Result<ProjectStats, Str
     let path = Path::new(&project_path);
     let feedback_file = read_feedback_file(path).unwrap_or_default();
     let feedback_completed = feedback_file.feedback.iter().filter(|f| f.status == "completed").count();
-    let feedback_pending = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
 
     Ok(ProjectStats {
         total_commits,
         lines_of_code,
         feedback_completed,
-        feedback_pending,
     })
 }
 

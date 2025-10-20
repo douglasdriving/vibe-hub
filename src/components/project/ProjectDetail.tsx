@@ -332,122 +332,35 @@ export function ProjectDetail() {
               </div>
             </div>
 
-            <div className="flex gap-2 flex-wrap">
-              {currentProject.deploymentUrl && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleOpenDeployment}
-                  invertedBgColor={currentProject.textColor}
-                  invertedTextColor={currentProject.color}
-                >
-                  <ExternalLink size={16} className="inline mr-2" />
-                  Open App
-                </Button>
-              )}
-              <Button
-                size="sm"
-                onClick={handleLaunchWithoutContext}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Terminal size={16} className="inline mr-2" />
-                Claude
-              </Button>
-              {cleanupStats?.shouldCleanup && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleCleanupRefactor}
-                  invertedBgColor={currentProject.textColor}
-                  invertedTextColor={currentProject.color}
-                  className="relative"
-                  title={`${cleanupStats.commitsSinceCleanup} commits since last cleanup (threshold: ${cleanupStats.cleanupThreshold})`}
-                >
-                  <Wrench size={16} className="inline mr-2" />
-                  Cleanup
-                  <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {cleanupStats.commitsSinceCleanup}
-                  </span>
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleOpenExplorer}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Folder size={16} className="inline mr-2" />
-                Open Folder
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleOpenVscode}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Code size={16} className="inline mr-2" />
-                VS Code
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleOpenTerminal}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Terminal size={16} className="inline mr-2" />
-                Terminal
-              </Button>
-              {githubUrl && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleOpenGithub}
-                  invertedBgColor={currentProject.textColor}
-                  invertedTextColor={currentProject.color}
-                >
-                  <Github size={16} className="inline mr-2" />
-                  GitHub
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleOpenFork}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <GitBranch size={16} className="inline mr-2" />
-                Fork
-              </Button>
-              {availableScripts?.has_dev && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleRunDev}
-                  invertedBgColor={currentProject.textColor}
-                  invertedTextColor={currentProject.color}
-                >
-                  <Play size={16} className="inline mr-2" />
-                  Run Dev
-                </Button>
-              )}
-              {availableScripts?.has_build && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleRunBuild}
-                  invertedBgColor={currentProject.textColor}
-                  invertedTextColor={currentProject.color}
-                >
-                  <Hammer size={16} className="inline mr-2" />
-                  Build
-                </Button>
-              )}
-            </div>
+            {/* Project Statistics */}
+            {projectStats && (
+              <div className="flex gap-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                    {projectStats.totalCommits.toLocaleString()}
+                  </div>
+                  <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                    Commits
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                    {projectStats.linesOfCode.toLocaleString()}
+                  </div>
+                  <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                    Lines of Code
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                    {projectStats.feedbackCompleted.toLocaleString()}
+                  </div>
+                  <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                    Implemented
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -456,16 +369,123 @@ export function ProjectDetail() {
         {/* Project Setup Card - only shown for setup stages */}
         <ProjectSetupCard project={currentProject} />
 
-        {/* Project Info */}
-        <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              {currentProject.description ? (
-                <p style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.description}</p>
-              ) : (
-                <p className="italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No description yet. Complete the project setup to add one.</p>
-              )}
-            </div>
+        {/* Action Buttons */}
+        <div className="mb-6">
+          <div className="flex gap-2 flex-wrap">
+            {currentProject.deploymentUrl && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenDeployment}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <ExternalLink size={16} className="inline mr-2" />
+                Open App
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={handleLaunchWithoutContext}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Terminal size={16} className="inline mr-2" />
+              Claude
+            </Button>
+            {cleanupStats?.shouldCleanup && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCleanupRefactor}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+                className="relative"
+                title={`${cleanupStats.commitsSinceCleanup} commits since last cleanup (threshold: ${cleanupStats.cleanupThreshold})`}
+              >
+                <Wrench size={16} className="inline mr-2" />
+                Cleanup
+                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {cleanupStats.commitsSinceCleanup}
+                </span>
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenExplorer}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Folder size={16} className="inline mr-2" />
+              Open Folder
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenVscode}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Code size={16} className="inline mr-2" />
+              VS Code
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenTerminal}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Terminal size={16} className="inline mr-2" />
+              Terminal
+            </Button>
+            {githubUrl && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenGithub}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Github size={16} className="inline mr-2" />
+                GitHub
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenFork}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <GitBranch size={16} className="inline mr-2" />
+              Fork
+            </Button>
+            {availableScripts?.has_dev && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleRunDev}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Play size={16} className="inline mr-2" />
+                Run Dev
+              </Button>
+            )}
+            {availableScripts?.has_build && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleRunBuild}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Hammer size={16} className="inline mr-2" />
+                Build
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
@@ -477,6 +497,15 @@ export function ProjectDetail() {
               Edit
             </Button>
           </div>
+        </div>
+
+        {/* Project Info */}
+        <div className="mb-6">
+          {currentProject.description ? (
+            <p className="text-base" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.description}</p>
+          ) : (
+            <p className="text-base italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No description yet. Complete the project setup to add one.</p>
+          )}
 
           {/* Platform & Architecture */}
           {(currentProject.platform || currentProject.isLocalFirst || currentProject.isOpenSource || currentProject.hasBackend) ? (
@@ -499,51 +528,10 @@ export function ProjectDetail() {
           )}
         </div>
 
-        {/* Project Statistics */}
-        {projectStats && (
-          <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
-            <h2 className="text-lg mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>Project Statistics</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  {projectStats.totalCommits.toLocaleString()}
-                </div>
-                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  Total Commits
-                </div>
-              </div>
-              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  {projectStats.linesOfCode.toLocaleString()}
-                </div>
-                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  Lines of Code
-                </div>
-              </div>
-              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  {projectStats.feedbackCompleted.toLocaleString()}
-                </div>
-                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  Feedback Implemented
-                </div>
-              </div>
-              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  {projectStats.feedbackPending.toLocaleString()}
-                </div>
-                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                  Feedback Pending
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Documentation Section */}
         {docs.length > 0 && (
-          <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
-            <h2 className="text-lg mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>Documentation</h2>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>Documentation</h2>
             <div className="flex flex-wrap gap-2">
               {docs.map((doc) => {
                 // Format document name: remove .md, replace _ and - with spaces, title case
@@ -591,9 +579,11 @@ export function ProjectDetail() {
 
         {/* Feedback Section - only show for projects past setup stages */}
         {!isSetupStatus(currentProject.status) && (
-        <div className="rounded-lg shadow p-6" style={{ backgroundColor: currentProject.color }}>
+        <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg" style={{ color: currentProject.textColor || '#FFFFFF' }}>Feedback & Improvements</h2>
+            <h2 className="text-2xl font-bold" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+              Feedback & Improvements ({feedback.filter(f => f.status === 'pending').length})
+            </h2>
             <div className="flex gap-2">
               {feedback.filter(f => f.status === 'pending').length > 0 && (
                 <>

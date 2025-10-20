@@ -177,7 +177,6 @@ export interface ProjectStats {
   totalCommits: number;
   linesOfCode: number;
   feedbackCompleted: number;
-  feedbackPending: number;
 }
 
 export async function getProjectStats(projectPath: string): Promise<ProjectStats> {
