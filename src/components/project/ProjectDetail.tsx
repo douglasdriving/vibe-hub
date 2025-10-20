@@ -279,8 +279,8 @@ export function ProjectDetail() {
       const prompt = generateCleanupPrompt(currentProject.displayName || currentProject.name);
       await copyToClipboard(prompt);
 
-      // Launch Claude Code - the counter will reset when the cleanup commit is made
-      handleLaunchClaude([]);
+      // Launch Claude Code directly - the counter will reset when the cleanup commit is made
+      await tauri.launchClaudeCode(currentProject.path, prompt);
     } catch (error) {
       console.error('Failed to launch cleanup:', error);
     }
