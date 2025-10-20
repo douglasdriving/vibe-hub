@@ -71,7 +71,7 @@ export function ProjectDetail() {
       });
 
       // Count commits since last cleanup
-      tauri.countCommitsSinceDate(currentProject.path, currentProject.lastCleanup || null).then(count => {
+      tauri.countCommitsSinceCleanup(currentProject.path).then(count => {
         setCommitsSinceCleanup(count);
       }).catch(err => {
         console.error('Failed to count commits:', err);
@@ -279,13 +279,7 @@ export function ProjectDetail() {
       const prompt = generateCleanupPrompt(currentProject.displayName || currentProject.name);
       await copyToClipboard(prompt);
 
-      // Record the cleanup timestamp
-      await tauri.recordCleanup(currentProject.path);
-
-      // Refresh project to update lastCleanup
-      await refreshProject(currentProject.id);
-
-      // Launch Claude Code
+      // Launch Claude Code - the counter will reset when the cleanup commit is made
       handleLaunchClaude([]);
     } catch (error) {
       console.error('Failed to launch cleanup:', error);

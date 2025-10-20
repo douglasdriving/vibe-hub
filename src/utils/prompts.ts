@@ -63,6 +63,8 @@ export async function generateDeploymentPrompt(projectName: string, projectPath:
   });
 }
 
+export const CLEANUP_COMMIT_MESSAGE = "Cleanup and refactor codebase";
+
 export function generateCleanupPrompt(projectName: string): string {
   return `# Project Cleanup & Refactoring for ${projectName}
 
@@ -107,6 +109,12 @@ It's time for a comprehensive cleanup and refactoring session. Please help me re
 2. We'll go through each area systematically
 3. Make improvements one section at a time
 4. Test after significant changes to ensure nothing breaks
+
+## IMPORTANT - Final Step:
+When we're done with all the cleanup work, create a git commit with EXACTLY this message:
+"${CLEANUP_COMMIT_MESSAGE}"
+
+This standardized commit message helps track when cleanups are performed.
 
 Let's start with a comprehensive scan of the project. What do you find?`;
 }
