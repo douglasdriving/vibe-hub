@@ -11,6 +11,15 @@ A local-first desktop companion for managing personal vibe-coding projects, buil
 - 💾 **Local-First** - All data stored in your project folders (`.vibe/` directory)
 - 🔄 **Auto-Migration** - Automatically organizes and maintains project metadata
 
+## Download
+
+Download the latest release for your platform:
+
+- **Windows**: [Download .msi installer](https://github.com/douglasdriving/vibe-hub/releases/latest)
+- **Linux**: [Download .AppImage](https://github.com/douglasdriving/vibe-hub/releases/latest)
+
+Or visit the [landing page](https://vibe-hub.vercel.app) for more information.
+
 ## Quick Start
 
 ### Prerequisites
@@ -116,6 +125,33 @@ See the `docs/` folder for detailed design specifications:
 - Run tests with `npm test` (frontend) or `cd src-tauri && cargo test` (Rust)
 - Hot reload works for both frontend and Rust code changes
 - Check `docs/technical_spec.md` for architecture details
+
+## Deployment
+
+### Releasing a New Version
+
+1. **Update version**: Bump version in `src-tauri/tauri.conf.json`
+2. **Commit changes**: `git add . && git commit -m "chore: bump version to x.x.x"`
+3. **Create tag**: `git tag vx.x.x` (e.g., `v0.2.0`)
+4. **Push tag**: `git push && git push --tags`
+5. **Wait**: GitHub Actions will automatically build and publish the release
+
+The GitHub Actions workflow will:
+- Build Windows (.msi) and Linux (.AppImage) installers
+- Create a GitHub Release with the version tag
+- Upload the installers as release assets
+- Make them available via the `/releases/latest` URL
+
+### Landing Page
+
+The landing page is hosted on Vercel and automatically deploys from the `landing/` directory on every push to `master`.
+
+To set up Vercel deployment:
+1. Import the project to Vercel
+2. Set the root directory to `landing/`
+3. Vercel will auto-deploy on every push
+
+The landing page download links point to `/releases/latest/download/` which always serves the newest version.
 
 ## License
 
