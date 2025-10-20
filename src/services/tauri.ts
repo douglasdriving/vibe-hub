@@ -173,6 +173,17 @@ export async function getCleanupStats(projectPath: string): Promise<CleanupStats
   return await invoke('get_cleanup_stats', { projectPath });
 }
 
+export interface ProjectStats {
+  totalCommits: number;
+  linesOfCode: number;
+  feedbackCompleted: number;
+  feedbackPending: number;
+}
+
+export async function getProjectStats(projectPath: string): Promise<ProjectStats> {
+  return await invoke('get_project_stats', { projectPath });
+}
+
 // Prompts commands
 export async function getPrompt(promptName: string, replacements: Record<string, string>): Promise<string> {
   return await invoke('get_prompt', { promptName, replacements });

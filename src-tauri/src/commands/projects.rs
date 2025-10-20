@@ -1266,6 +1266,87 @@ pub async fn get_cleanup_stats(project_path: String) -> Result<CleanupStats, Str
     })
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectStats {
+    pub total_commits: usize,
+    pub lines_of_code: usize,
+    pub feedback_completed: usize,
+    pub feedback_pending: usize,
+}
+
+#[tauri::command]
+pub async fn get_project_stats(project_path: String) -> Result<ProjectStats, String> {
+    use std::process::Command;
+
+    // Count total commits
+    let total_commits = Command::new("git")
+        .args(&["rev-list", "--count", "HEAD"])
+        .current_dir(&project_path)
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .and_then(|s| s.trim().parse::<usize>().ok())
+        .unwrap_or(0);
+
+    // Count lines of code using git ls-files and cloc/tokei if available
+    // Fallback to simple line count if tools not available
+    let lines_of_code = count_lines_of_code(&project_path);
+
+    // Get feedback stats
+    let path = Path::new(&project_path);
+    let feedback_file = read_feedback_file(path).unwrap_or_default();
+    let feedback_completed = feedback_file.feedback.iter().filter(|f| f.status == "completed").count();
+    let feedback_pending = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
+
+    Ok(ProjectStats {
+        total_commits,
+        lines_of_code,
+        feedback_completed,
+        feedback_pending,
+    })
+}
+
+fn count_lines_of_code(project_path: &str) -> usize {
+    use std::process::Command;
+
+    // Get list of tracked files from git
+    let git_files = Command::new("git")
+        .args(&["ls-files"])
+        .current_dir(project_path)
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .unwrap_or_default();
+
+    let mut total_lines = 0;
+    let extensions = [
+        "rs", "ts", "tsx", "js", "jsx", "py", "java", "c", "cpp", "h", "hpp",
+        "go", "rb", "php", "swift", "kt", "cs", "vue", "svelte"
+    ];
+
+    for file in git_files.lines() {
+        // Skip certain directories
+        if file.contains("node_modules/") || file.contains("target/") ||
+           file.contains("dist/") || file.contains("build/") ||
+           file.contains(".git/") {
+            continue;
+        }
+
+        // Only count source code files
+        if let Some(ext) = Path::new(file).extension().and_then(|e| e.to_str()) {
+            if extensions.contains(&ext) {
+                let file_path = Path::new(project_path).join(file);
+                if let Ok(contents) = fs::read_to_string(file_path) {
+                    total_lines += contents.lines().count();
+                }
+            }
+        }
+    }
+
+    total_lines
+}
+
 #[tauri::command]
 pub async fn get_project_docs(project_path: String) -> Result<Vec<DocumentFile>, String> {
     let project_root = Path::new(&project_path);

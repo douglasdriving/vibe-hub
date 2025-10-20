@@ -38,6 +38,7 @@ export function ProjectDetail() {
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
   const [cleanupStats, setCleanupStats] = useState<tauri.CleanupStats | null>(null);
+  const [projectStats, setProjectStats] = useState<tauri.ProjectStats | null>(null);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -75,6 +76,13 @@ export function ProjectDetail() {
         setCleanupStats(stats);
       }).catch(err => {
         console.error('Failed to get cleanup stats:', err);
+      });
+
+      // Get project statistics
+      tauri.getProjectStats(currentProject.path).then(stats => {
+        setProjectStats(stats);
+      }).catch(err => {
+        console.error('Failed to get project stats:', err);
       });
     }
   }, [currentProject]);
@@ -490,6 +498,47 @@ export function ProjectDetail() {
             <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No platform info specified yet.</p>
           )}
         </div>
+
+        {/* Project Statistics */}
+        {projectStats && (
+          <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
+            <h2 className="text-lg mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>Project Statistics</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  {projectStats.totalCommits.toLocaleString()}
+                </div>
+                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  Total Commits
+                </div>
+              </div>
+              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  {projectStats.linesOfCode.toLocaleString()}
+                </div>
+                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  Lines of Code
+                </div>
+              </div>
+              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  {projectStats.feedbackCompleted.toLocaleString()}
+                </div>
+                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  Feedback Implemented
+                </div>
+              </div>
+              <div className="text-center p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="text-3xl font-bold mb-1" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  {projectStats.feedbackPending.toLocaleString()}
+                </div>
+                <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
+                  Feedback Pending
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Documentation Section */}
         {docs.length > 0 && (

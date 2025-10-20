@@ -31,6 +31,7 @@ pub fn run() {
             projects::get_github_url,
             projects::get_project_docs,
             projects::get_cleanup_stats,
+            projects::get_project_stats,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,
