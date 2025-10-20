@@ -255,7 +255,7 @@ export function ProjectDetail() {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {currentProject.deploymentUrl && (
                 <Button
                   variant="secondary"
@@ -277,6 +277,82 @@ export function ProjectDetail() {
                 <Terminal size={16} className="inline mr-2" />
                 Claude
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenExplorer}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Folder size={16} className="inline mr-2" />
+                Open Folder
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenVscode}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Code size={16} className="inline mr-2" />
+                VS Code
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenTerminal}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <Terminal size={16} className="inline mr-2" />
+                Terminal
+              </Button>
+              {githubUrl && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleOpenGithub}
+                  invertedBgColor={currentProject.textColor}
+                  invertedTextColor={currentProject.color}
+                >
+                  <Github size={16} className="inline mr-2" />
+                  GitHub
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenFork}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <GitBranch size={16} className="inline mr-2" />
+                Fork
+              </Button>
+              {availableScripts?.has_dev && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleRunDev}
+                  invertedBgColor={currentProject.textColor}
+                  invertedTextColor={currentProject.color}
+                >
+                  <Play size={16} className="inline mr-2" />
+                  Run Dev
+                </Button>
+              )}
+              {availableScripts?.has_build && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleRunBuild}
+                  invertedBgColor={currentProject.textColor}
+                  invertedTextColor={currentProject.color}
+                >
+                  <Hammer size={16} className="inline mr-2" />
+                  Build
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -313,85 +389,6 @@ export function ProjectDetail() {
           ) : (
             <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No platform info specified yet.</p>
           )}
-
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenExplorer}
-              invertedBgColor={currentProject.textColor}
-              invertedTextColor={currentProject.color}
-            >
-              <Folder size={16} className="inline mr-2" />
-              Open Folder
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenVscode}
-              invertedBgColor={currentProject.textColor}
-              invertedTextColor={currentProject.color}
-            >
-              <Code size={16} className="inline mr-2" />
-              VS Code
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenTerminal}
-              invertedBgColor={currentProject.textColor}
-              invertedTextColor={currentProject.color}
-            >
-              <Terminal size={16} className="inline mr-2" />
-              Terminal
-            </Button>
-            {githubUrl && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleOpenGithub}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Github size={16} className="inline mr-2" />
-                GitHub
-              </Button>
-            )}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenFork}
-              invertedBgColor={currentProject.textColor}
-              invertedTextColor={currentProject.color}
-            >
-              <GitBranch size={16} className="inline mr-2" />
-              Fork
-            </Button>
-            {availableScripts?.has_dev && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRunDev}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Play size={16} className="inline mr-2" />
-                Run Dev
-              </Button>
-            )}
-            {availableScripts?.has_build && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRunBuild}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Hammer size={16} className="inline mr-2" />
-                Build
-              </Button>
-            )}
-          </div>
         </div>
 
         {/* Feedback Section - only show for projects past setup stages */}
