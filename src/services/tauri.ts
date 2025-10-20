@@ -162,6 +162,14 @@ export async function getProjectDocs(projectPath: string): Promise<DocumentFile[
   return await invoke('get_project_docs', { projectPath });
 }
 
+export async function countCommitsSinceDate(projectPath: string, sinceDate: string | null): Promise<number> {
+  return await invoke('count_commits_since_date', { projectPath, sinceDate });
+}
+
+export async function recordCleanup(projectPath: string): Promise<void> {
+  return await invoke('record_cleanup', { projectPath });
+}
+
 // Prompts commands
 export async function getPrompt(promptName: string, replacements: Record<string, string>): Promise<string> {
   return await invoke('get_prompt', { promptName, replacements });

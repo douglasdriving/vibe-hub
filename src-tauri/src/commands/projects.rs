@@ -103,11 +103,11 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None, None, None, None);
+        return (None, String::new(), None, Vec::new(), None, None, None, None, None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -121,6 +121,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut color: Option<String> = None;
     let mut text_color: Option<String> = None;
     let mut platform: Option<String> = None;
+    let mut last_cleanup: Option<String> = None;
     let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
@@ -162,6 +163,12 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         // Parse TextColor: field
         if trimmed.starts_with("TextColor:") {
             text_color = Some(trimmed.trim_start_matches("TextColor:").trim().to_string());
+            continue;
+        }
+
+        // Parse LastCleanup: field
+        if trimmed.starts_with("LastCleanup:") {
+            last_cleanup = Some(trimmed.trim_start_matches("LastCleanup:").trim().to_string());
             continue;
         }
 
@@ -218,7 +225,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         let _ = fs::write(&metadata_path, updated_contents);
     }
 
-    (name, description, deployment_url, tech_stack, status, color, text_color, platform)
+    (name, description, deployment_url, tech_stack, status, color, text_color, platform, last_cleanup)
 }
 
 fn assign_project_color(project_name: &str) -> String {
@@ -390,7 +397,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, last_cleanup) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
@@ -419,6 +426,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 color: Some(color),
                 text_color: Some(text_color),
                 last_modified: get_last_modified(&path),
+                last_cleanup,
                 feedback_count,
                 has_uncommitted_changes: false, // Simplified for now
             };
@@ -457,7 +465,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, last_cleanup) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
 
@@ -485,6 +493,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         color: Some(color),
         text_color: Some(text_color),
         last_modified: get_last_modified(path),
+        last_cleanup,
         feedback_count,
         has_uncommitted_changes: false,
     })
@@ -1161,6 +1170,90 @@ pub struct DocumentFile {
     pub path: String,
     pub location: String, // "root", "vibe", "docs"
     pub modified_timestamp: u64, // Unix timestamp for sorting
+}
+
+#[tauri::command]
+pub async fn count_commits_since_date(project_path: String, since_date: Option<String>) -> Result<usize, String> {
+    use std::process::Command;
+
+    let mut args = vec!["rev-list", "--count", "HEAD"];
+
+    let since_arg;
+    if let Some(date) = since_date {
+        since_arg = format!("--since={}", date);
+        args.push(&since_arg);
+    }
+
+    let output = Command::new("git")
+        .args(&args)
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| format!("Failed to run git command: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(0);
+    }
+
+    let count_str = String::from_utf8(output.stdout)
+        .map_err(|e| format!("Failed to parse git output: {}", e))?
+        .trim()
+        .to_string();
+
+    count_str.parse::<usize>()
+        .map_err(|e| format!("Failed to parse commit count: {}", e))
+}
+
+#[tauri::command]
+pub async fn record_cleanup(project_path: String) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(VIBE_DIR).join(METADATA_FILE);
+
+    if !metadata_path.exists() {
+        return Err("Metadata file does not exist".to_string());
+    }
+
+    let metadata_contents = fs::read_to_string(&metadata_path)
+        .map_err(|e| format!("Failed to read metadata file: {}", e))?;
+
+    // Get current ISO timestamp
+    let now = chrono::Utc::now().to_rfc3339();
+
+    // Check if LastCleanup already exists
+    let has_cleanup_line = metadata_contents.lines().any(|line| line.starts_with("LastCleanup:"));
+
+    let updated_metadata = if has_cleanup_line {
+        // Update existing LastCleanup line
+        metadata_contents
+            .lines()
+            .map(|line| {
+                if line.starts_with("LastCleanup:") {
+                    format!("LastCleanup: {}", now)
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("\n")
+    } else {
+        // Add LastCleanup after TextColor line
+        let mut new_lines = Vec::new();
+        let mut cleanup_added = false;
+
+        for line in metadata_contents.lines() {
+            new_lines.push(line.to_string());
+            if line.starts_with("TextColor:") && !cleanup_added {
+                new_lines.push(format!("LastCleanup: {}", now));
+                cleanup_added = true;
+            }
+        }
+
+        new_lines.join("\n")
+    };
+
+    fs::write(&metadata_path, updated_metadata)
+        .map_err(|e| format!("Failed to write metadata file: {}", e))?;
+
+    Ok(())
 }
 
 #[tauri::command]

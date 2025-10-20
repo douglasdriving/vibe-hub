@@ -10,7 +10,7 @@ import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
-import { isSetupStatus } from '../../utils/prompts';
+import { isSetupStatus, generateCleanupPrompt } from '../../utils/prompts';
 import * as tauri from '../../services/tauri';
 
 export function ProjectDetail() {
@@ -37,6 +37,7 @@ export function ProjectDetail() {
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
+  const [commitsSinceCleanup, setCommitsSinceCleanup] = useState<number>(0);
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -67,6 +68,13 @@ export function ProjectDetail() {
         setDocs(docs);
       }).catch(err => {
         console.error('Failed to get project docs:', err);
+      });
+
+      // Count commits since last cleanup
+      tauri.countCommitsSinceDate(currentProject.path, currentProject.lastCleanup || null).then(count => {
+        setCommitsSinceCleanup(count);
+      }).catch(err => {
+        console.error('Failed to count commits:', err);
       });
     }
   }, [currentProject]);
@@ -263,6 +271,27 @@ export function ProjectDetail() {
     }
   };
 
+  const handleCleanupRefactor = async () => {
+    if (!currentProject) return;
+
+    try {
+      // Generate and copy cleanup prompt
+      const prompt = generateCleanupPrompt(currentProject.displayName || currentProject.name);
+      await copyToClipboard(prompt);
+
+      // Record the cleanup timestamp
+      await tauri.recordCleanup(currentProject.path);
+
+      // Refresh project to update lastCleanup
+      await refreshProject(currentProject.id);
+
+      // Launch Claude Code
+      handleLaunchClaude([]);
+    } catch (error) {
+      console.error('Failed to launch cleanup:', error);
+    }
+  };
+
 
   if (!currentProject) {
     return (
@@ -323,6 +352,22 @@ export function ProjectDetail() {
                 <Terminal size={16} className="inline mr-2" />
                 Claude
               </Button>
+              {commitsSinceCleanup >= 30 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCleanupRefactor}
+                  invertedBgColor={currentProject.textColor}
+                  invertedTextColor={currentProject.color}
+                  className="relative"
+                >
+                  <Wrench size={16} className="inline mr-2" />
+                  Cleanup
+                  <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {commitsSinceCleanup}
+                  </span>
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 size="sm"

@@ -30,6 +30,8 @@ pub fn run() {
             projects::create_design_feedback_file,
             projects::get_github_url,
             projects::get_project_docs,
+            projects::count_commits_since_date,
+            projects::record_cleanup,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,

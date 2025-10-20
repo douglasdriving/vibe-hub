@@ -17,6 +17,7 @@ pub struct Project {
     pub color: Option<String>, // Project color for UI
     pub text_color: Option<String>, // Text color for contrast with background
     pub last_modified: Option<String>,
+    pub last_cleanup: Option<String>, // Last cleanup timestamp (ISO 8601)
     pub feedback_count: usize,
     pub has_uncommitted_changes: bool,
 }

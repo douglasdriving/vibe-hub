@@ -63,6 +63,54 @@ export async function generateDeploymentPrompt(projectName: string, projectPath:
   });
 }
 
+export function generateCleanupPrompt(projectName: string): string {
+  return `# Project Cleanup & Refactoring for ${projectName}
+
+It's time for a comprehensive cleanup and refactoring session. Please help me review and improve the codebase systematically.
+
+## Cleanup Tasks:
+
+### 1. **File Organization**
+- Review the project structure and identify any files or directories that are outdated, unused, or misplaced
+- Delete old/deprecated files, commented-out code, and unused imports
+- Restructure folders if needed for better organization
+- Check for duplicate files or code
+
+### 2. **Code Quality**
+- Look for code that can be refactored for clarity and maintainability
+- Identify repeated patterns that could be extracted into reusable functions/components
+- Check for overly complex functions that should be broken down
+- Review naming conventions and improve variable/function names where needed
+
+### 3. **Documentation**
+- Update README.md if it's outdated
+- Review code comments and remove obsolete ones
+- Add comments where complex logic needs explanation
+- Update documentation files in /docs if present
+
+### 4. **Dependencies**
+- Check package.json (if applicable) for unused dependencies
+- Look for outdated packages that should be updated
+- Remove dev dependencies that are no longer needed
+
+### 5. **Performance & Best Practices**
+- Identify potential performance improvements
+- Check for security issues or bad practices
+- Look for opportunities to use modern language features
+
+### 6. **Testing**
+- Review test files and remove obsolete tests
+- Identify areas that need better test coverage
+
+## Process:
+1. First, give me an overview of what you find needs attention
+2. We'll go through each area systematically
+3. Make improvements one section at a time
+4. Test after significant changes to ensure nothing breaks
+
+Let's start with a comprehensive scan of the project. What do you find?`;
+}
+
 /**
  * Generate a prompt for advancing to the next stage
  * This is used when a stage is completed and the project is ready to move forward

@@ -14,6 +14,7 @@ export interface Project {
   color?: string;                // Project color for UI (synth-wave palette)
   textColor?: string;            // Text color for contrast with background (#000000 or #FFFFFF)
   lastModified?: string;         // From git or filesystem (ISO 8601)
+  lastCleanup?: string;          // Last cleanup timestamp (ISO 8601)
   feedbackCount: number;         // Calculated
   hasUncommittedChanges: boolean; // Git status
 }
