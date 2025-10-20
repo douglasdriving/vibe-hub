@@ -538,6 +538,82 @@ pub async fn update_project_metadata(
 }
 
 #[tauri::command]
+pub async fn update_all_metadata(
+    project_path: String,
+    display_name: Option<String>,
+    description: String,
+    platform: Option<String>,
+    status: String,
+    deployment_url: Option<String>,
+) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let vibe_dir = path.join(VIBE_DIR);
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    // Read existing metadata to preserve color and text color
+    let existing_contents = if metadata_path.exists() {
+        fs::read_to_string(&metadata_path).ok()
+    } else {
+        None
+    };
+
+    let mut existing_color: Option<String> = None;
+    let mut existing_text_color: Option<String> = None;
+
+    if let Some(contents) = &existing_contents {
+        for line in contents.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("Color:") {
+                existing_color = Some(trimmed.trim_start_matches("Color:").trim().to_string());
+            } else if trimmed.starts_with("TextColor:") {
+                existing_text_color = Some(trimmed.trim_start_matches("TextColor:").trim().to_string());
+            }
+        }
+    }
+
+    // Generate color if not present
+    let folder_name = get_project_name(path);
+    let color = existing_color.unwrap_or_else(|| assign_project_color(&folder_name));
+    let text_color = existing_text_color.unwrap_or_else(|| calculate_text_color(&color));
+
+    // Build the metadata file
+    let mut content = String::new();
+
+    if let Some(name) = display_name {
+        content.push_str(&format!("Name: {}\n", name));
+    }
+    content.push_str(&format!("Status: {}\n", status));
+    if let Some(plat) = platform {
+        content.push_str(&format!("Platform: {}\n", plat));
+    }
+    content.push_str(&format!("Color: {}\n", color));
+    content.push_str(&format!("TextColor: {}\n\n", text_color));
+
+    content.push_str("## Description\n\n");
+    if !description.is_empty() {
+        content.push_str(&description);
+        content.push_str("\n\n");
+    }
+
+    if let Some(url) = deployment_url {
+        content.push_str("## Deployment\n\n");
+        content.push_str(&url);
+        content.push('\n');
+    }
+
+    fs::write(&metadata_path, content)
+        .map_err(|e| format!("Failed to write metadata file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn create_metadata_template(project_path: String) -> Result<(), String> {
     let path = Path::new(&project_path);
     let vibe_dir = path.join(VIBE_DIR);

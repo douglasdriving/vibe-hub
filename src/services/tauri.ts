@@ -44,6 +44,24 @@ export async function updateProjectMetadata(
   });
 }
 
+export async function updateAllMetadata(
+  projectPath: string,
+  displayName: string | null,
+  description: string,
+  platform: string | null,
+  status: string,
+  deploymentUrl: string | null
+): Promise<void> {
+  return await invoke('update_all_metadata', {
+    projectPath,
+    displayName,
+    description,
+    platform,
+    status,
+    deploymentUrl
+  });
+}
+
 export async function createMetadataTemplate(projectPath: string): Promise<void> {
   return await invoke('create_metadata_template', { projectPath });
 }

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy, Play, Hammer, Code, Github, GitBranch } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
+import { EditMetadataModal } from './EditMetadataModal';
 import { ProjectSetupCard } from './ProjectSetupCard';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
@@ -29,6 +30,7 @@ export function ProjectDetail() {
   } = useProjectStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMetadataModalOpen, setIsEditMetadataModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [hasLoaded, setHasLoaded] = useState(false);
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
@@ -217,6 +219,33 @@ export function ProjectDetail() {
     }
   };
 
+  const handleSaveMetadata = async (data: {
+    displayName: string;
+    description: string;
+    platform: string;
+    status: string;
+    deploymentUrl: string;
+  }) => {
+    if (!currentProject) return;
+
+    try {
+      await tauri.updateAllMetadata(
+        currentProject.path,
+        data.displayName || null,
+        data.description,
+        data.platform || null,
+        data.status,
+        data.deploymentUrl || null
+      );
+
+      // Reload the project to reflect changes
+      await setCurrentProject(currentProject.id);
+    } catch (error) {
+      console.error('Failed to update metadata:', error);
+      throw error;
+    }
+  };
+
 
   if (!currentProject) {
     return (
@@ -364,11 +393,25 @@ export function ProjectDetail() {
 
         {/* Project Info */}
         <div className="rounded-lg shadow p-6 mb-6" style={{ backgroundColor: currentProject.color }}>
-          {currentProject.description ? (
-            <p className="mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.description}</p>
-          ) : (
-            <p className="mb-4 italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No description yet. Complete the project setup to add one.</p>
-          )}
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1">
+              {currentProject.description ? (
+                <p style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.description}</p>
+              ) : (
+                <p className="italic" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>No description yet. Complete the project setup to add one.</p>
+              )}
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsEditMetadataModalOpen(true)}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Settings size={16} className="inline mr-2" />
+              Edit
+            </Button>
+          </div>
 
           {/* Platform & Architecture */}
           {(currentProject.platform || currentProject.isLocalFirst || currentProject.isOpenSource || currentProject.hasBackend) ? (
@@ -538,6 +581,13 @@ export function ProjectDetail() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveFeedback}
         initialData={editingFeedback}
+      />
+
+      <EditMetadataModal
+        isOpen={isEditMetadataModalOpen}
+        onClose={() => setIsEditMetadataModalOpen(false)}
+        onSave={handleSaveMetadata}
+        project={currentProject}
       />
     </div>
   );

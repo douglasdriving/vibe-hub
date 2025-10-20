@@ -20,6 +20,7 @@ pub fn run() {
             projects::create_new_project,
             projects::save_project_idea,
             projects::update_project_metadata,
+            projects::update_all_metadata,
             projects::create_metadata_template,
             projects::check_metadata_exists,
             projects::generate_metadata_prompt,
