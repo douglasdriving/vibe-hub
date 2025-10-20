@@ -126,6 +126,19 @@
             color: #7c3aed;
         }
 
+        .screenshots {
+            margin: 40px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .screenshot {
+            width: 100%;
+            border-radius: 8px;
+            filter: drop-shadow(6px 6px 0px rgba(0, 0, 0, 0.8));
+        }
+
         @media (max-width: 768px) {
             body {
                 font-size: 1em;
@@ -179,6 +192,11 @@
         <p class="signature">
             /Douglas
         </p>
+
+        <div class="screenshots">
+            <img src="screenshot_home.png" alt="Vibe Hub Dashboard" class="screenshot">
+            <img src="screenshot_project.png" alt="Vibe Hub Project View" class="screenshot">
+        </div>
 
         <div class="download-section">
             <div class="download-buttons">
