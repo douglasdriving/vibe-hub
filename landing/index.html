@@ -131,8 +131,14 @@
             color: #7c3aed;
         }
 
-        .screenshots {
+        .screenshots-section {
             margin: 40px 0;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 12px;
+        }
+
+        .screenshots {
             display: flex;
             flex-direction: column;
             gap: 30px;
@@ -141,7 +147,7 @@
         .screenshot {
             width: 100%;
             border-radius: 8px;
-            border: 6px solid #000;
+            filter: drop-shadow(4px 4px 0px rgba(0, 0, 0, 0.3));
         }
 
         @media (max-width: 768px) {
@@ -218,10 +224,12 @@
             </div>
         </div>
 
-        <h2>Screenshots</h2>
-        <div class="screenshots">
-            <img src="screenshot_home.png" alt="Vibe Hub Dashboard" class="screenshot">
-            <img src="screenshot_project.png" alt="Vibe Hub Project View" class="screenshot">
+        <div class="screenshots-section">
+            <h2>Screenshots</h2>
+            <div class="screenshots">
+                <img src="screenshot_home.png" alt="Vibe Hub Dashboard" class="screenshot">
+                <img src="screenshot_project.png" alt="Vibe Hub Project View" class="screenshot">
+            </div>
         </div>
 
         <h2>The Project</h2>
