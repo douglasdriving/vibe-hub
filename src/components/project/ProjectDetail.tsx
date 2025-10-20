@@ -20,6 +20,7 @@ export function ProjectDetail() {
     currentProject,
     feedback,
     setCurrentProject,
+    refreshProject,
     addFeedback,
     updateFeedback,
     deleteFeedback,
@@ -238,8 +239,8 @@ export function ProjectDetail() {
         data.deploymentUrl || null
       );
 
-      // Reload the project to reflect changes
-      await setCurrentProject(currentProject.id);
+      // Refresh the project to reflect changes immediately
+      await refreshProject(currentProject.id);
     } catch (error) {
       console.error('Failed to update metadata:', error);
       throw error;
