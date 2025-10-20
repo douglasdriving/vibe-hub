@@ -356,7 +356,7 @@ export function ProjectDetail() {
                     {projectStats.feedbackCompleted.toLocaleString()}
                   </div>
                   <div className="text-sm opacity-70" style={{ color: currentProject.textColor || '#FFFFFF' }}>
-                    Implemented
+                    Fixes
                   </div>
                 </div>
               </div>
@@ -494,7 +494,7 @@ export function ProjectDetail() {
               invertedTextColor={currentProject.color}
             >
               <Settings size={16} className="inline mr-2" />
-              Edit
+              Edit Info
             </Button>
           </div>
         </div>
