@@ -9,14 +9,10 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
-  console.log('Modal render - isOpen:', isOpen);
-
   if (!isOpen) {
-    console.log('Modal not rendering because isOpen is false');
     return null;
   }
 
-  console.log('Modal rendering!');
   return (
     <div
       className="fixed inset-0 flex items-center justify-center p-4"

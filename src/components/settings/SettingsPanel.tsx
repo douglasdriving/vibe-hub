@@ -15,16 +15,16 @@ export function SettingsPanel() {
       if (path) {
         navigate('/');
       }
-    } catch (error) {
-      console.error('Failed to select directory:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
   const handleToggleSoundEffects = async () => {
     try {
       await updateSoundEffectsEnabled(!settings?.soundEffectsEnabled);
-    } catch (error) {
-      console.error('Failed to toggle sound effects:', error);
+    } catch {
+      // Silently handle error
     }
   };
 

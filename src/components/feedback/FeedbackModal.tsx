@@ -18,10 +18,7 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
   const [error, setError] = useState('');
   const [isTextareaFocused, setIsTextareaFocused] = useState(false);
 
-  console.log('FeedbackModal render - isOpen:', isOpen);
-
   useEffect(() => {
-    console.log('FeedbackModal useEffect - isOpen:', isOpen, 'initialData:', initialData);
     if (initialData) {
       setText(initialData.text);
       setPriority(initialData.priority);

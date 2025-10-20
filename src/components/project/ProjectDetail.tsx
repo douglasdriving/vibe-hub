@@ -54,36 +54,36 @@ export function ProjectDetail() {
     if (currentProject) {
       tauri.detectNpmScripts(currentProject.path).then(scripts => {
         setAvailableScripts(scripts);
-      }).catch(err => {
-        console.error('Failed to detect npm scripts:', err);
+      }).catch(() => {
+        // Silently handle error
       });
 
       // Get GitHub URL
       tauri.getGithubUrl(currentProject.path).then(url => {
         setGithubUrl(url);
-      }).catch(err => {
-        console.error('Failed to get GitHub URL:', err);
+      }).catch(() => {
+        // Silently handle error
       });
 
       // Get project documentation files
       tauri.getProjectDocs(currentProject.path).then(docs => {
         setDocs(docs);
-      }).catch(err => {
-        console.error('Failed to get project docs:', err);
+      }).catch(() => {
+        // Silently handle error
       });
 
       // Get cleanup stats
       tauri.getCleanupStats(currentProject.path).then(stats => {
         setCleanupStats(stats);
-      }).catch(err => {
-        console.error('Failed to get cleanup stats:', err);
+      }).catch(() => {
+        // Silently handle error
       });
 
       // Get project statistics
       tauri.getProjectStats(currentProject.path).then(stats => {
         setProjectStats(stats);
-      }).catch(err => {
-        console.error('Failed to get project stats:', err);
+      }).catch(() => {
+        // Silently handle error
       });
     }
   }, [currentProject]);
@@ -106,11 +106,8 @@ export function ProjectDetail() {
   };
 
   const handleAddFeedback = () => {
-    console.log('Add Feedback button clicked');
-    console.log('Current isModalOpen:', isModalOpen);
     setEditingFeedback(undefined);
     setIsModalOpen(true);
-    console.log('Set isModalOpen to true');
   };
 
   const handleEditFeedback = (item: FeedbackItem) => {
@@ -130,8 +127,8 @@ export function ProjectDetail() {
       } else {
         await addFeedback(currentProject.path, feedbackData);
       }
-    } catch (error) {
-      console.error('Failed to save feedback:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -141,8 +138,8 @@ export function ProjectDetail() {
 
     try {
       await deleteFeedback(currentProject.path, feedbackId);
-    } catch (error) {
-      console.error('Failed to delete feedback:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -153,8 +150,8 @@ export function ProjectDetail() {
 
     try {
       await toggleFeedbackComplete(currentProject.path, feedbackId);
-    } catch (error) {
-      console.error('Failed to toggle feedback:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -187,8 +184,8 @@ export function ProjectDetail() {
         availableScripts.dev_script_name,
         availableScripts.dev_script_type || undefined
       );
-    } catch (error) {
-      console.error('Failed to run dev server:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -196,8 +193,8 @@ export function ProjectDetail() {
     if (!currentProject) return;
     try {
       await tauri.runNpmScript(currentProject.path, 'build');
-    } catch (error) {
-      console.error('Failed to run build:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -215,8 +212,8 @@ export function ProjectDetail() {
     if (!currentProject) return;
     try {
       await tauri.openInVscode(currentProject.path);
-    } catch (error) {
-      console.error('Failed to open VS Code:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -224,8 +221,8 @@ export function ProjectDetail() {
     if (!currentProject) return;
     try {
       await tauri.openInTerminal(currentProject.path);
-    } catch (error) {
-      console.error('Failed to open terminal:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -233,8 +230,8 @@ export function ProjectDetail() {
     if (!githubUrl) return;
     try {
       await tauri.openUrl(githubUrl);
-    } catch (error) {
-      console.error('Failed to open GitHub:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -242,8 +239,8 @@ export function ProjectDetail() {
     if (!currentProject) return;
     try {
       await tauri.openInFork(currentProject.path);
-    } catch (error) {
-      console.error('Failed to open Fork:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -269,7 +266,6 @@ export function ProjectDetail() {
       // Refresh the project to reflect changes immediately
       await refreshProject(currentProject.id);
     } catch (error) {
-      console.error('Failed to update metadata:', error);
       throw error;
     }
   };
@@ -277,8 +273,8 @@ export function ProjectDetail() {
   const handleOpenDoc = async (docPath: string) => {
     try {
       await tauri.openInVscode(docPath);
-    } catch (error) {
-      console.error('Failed to open document:', error);
+    } catch {
+      // Silently handle error
     }
   };
 
@@ -292,8 +288,8 @@ export function ProjectDetail() {
 
       // Launch Claude Code directly - the counter will reset when the cleanup commit is made
       await tauri.launchClaudeCode(currentProject.path, prompt);
-    } catch (error) {
-      console.error('Failed to launch cleanup:', error);
+    } catch {
+      // Silently handle error
     }
   };
 

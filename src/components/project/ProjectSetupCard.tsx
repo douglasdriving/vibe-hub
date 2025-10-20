@@ -28,8 +28,8 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
       if (project.status === 'design-testing') {
         try {
           await createDesignFeedbackFile(project.path);
-        } catch (error) {
-          console.error('Failed to create design feedback file:', error);
+        } catch {
+          // Silently handle error
         }
       }
     };
@@ -68,34 +68,19 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
     const prompt = await stageInfo.promptGenerator(project.name, project.path);
 
     // Copy prompt to clipboard
-    navigator.clipboard.writeText(prompt).then(() => {
-      console.log('Prompt copied to clipboard!');
-    });
+    navigator.clipboard.writeText(prompt);
   };
 
   const handleAdvanceStage = async () => {
     if (!stageInfo) return;
 
-    console.log('🔵 handleAdvanceStage called');
-    console.log('🔵 Current project:', project);
-    console.log('🔵 Project ID:', project.id);
-    console.log('🔵 Project path:', project.path);
-    console.log('🔵 Current status:', project.status);
-    console.log('🔵 Next status:', stageInfo.nextStatus);
-
     try {
       setError(null);
-      console.log('🟢 Calling updateProjectStatus...');
       await updateProjectStatus(project.path, stageInfo.nextStatus);
-      console.log('🟢 updateProjectStatus completed successfully');
-
-      console.log('🟢 Calling refreshProject with ID:', project.id);
       await refreshProject(project.id);
-      console.log('🟢 refreshProject completed');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to advance stage';
       setError(errorMessage);
-      console.error('🔴 Failed to advance stage:', error);
     }
   };
 

@@ -1,7 +1,7 @@
 {
   "name": "vibe-hub",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,9 +19,7 @@
     "lucide-react": "^0.545.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.4",
-    "uuid": "^13.0.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -32,7 +30,6 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
     "happy-dom": "^20.0.1",

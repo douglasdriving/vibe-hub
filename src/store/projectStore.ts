@@ -64,15 +64,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           try {
             const color = await tauri.assignColorIfMissing(project.path);
             project.color = color;
-          } catch (error) {
-            console.error(`Failed to assign color to ${project.name}:`, error);
+          } catch {
+            // Silently continue if color assignment fails
           }
         }
       }
 
       set({ projects, isLoading: false });
     } catch (error) {
-      console.error('Failed to load projects:', error);
       set({ error: (error as Error).message, isLoading: false });
     }
   },
@@ -97,7 +96,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const newProject = projects.find(p => p.path === projectPath);
       return newProject?.id;
     } catch (error) {
-      console.error('Failed to create project:', error);
       throw error;
     }
   },
@@ -128,7 +126,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         }
       }
     } catch (error) {
-      console.error('Failed to save project idea:', error);
       throw error;
     }
   },
@@ -147,58 +144,41 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const feedback = await tauri.getFeedback(project.path);
       set({ currentProject: project, feedback, isLoading: false });
     } catch (error) {
-      console.error('Failed to set current project:', error);
       set({ error: (error as Error).message, isLoading: false });
     }
   },
 
   // Refresh a specific project
   refreshProject: async (projectId: string) => {
-    console.log('🟡 refreshProject called with ID:', projectId);
     try {
       const { projects } = get();
-      console.log('🟡 All projects:', projects.map(p => ({ id: p.id, path: p.path, status: p.status })));
 
       const project = projects.find(p => p.id === projectId);
-      console.log('🟡 Found project by ID:', project);
 
       if (!project) {
-        console.log('🔴 Project not found! Returning early.');
         return;
       }
 
-      console.log('🟡 Calling getProjectDetail for path:', project.path);
       const updatedProject = await tauri.getProjectDetail(project.path);
-      console.log('🟡 Got updated project:', { status: updatedProject.status, id: updatedProject.id });
 
       // Preserve the original ID since project IDs are regenerated on each scan
-      console.log('🟡 Preserving original ID:', project.id);
       updatedProject.id = project.id;
 
       const updatedProjects = projects.map(p =>
         p.path === project.path ? updatedProject : p
       );
-      console.log('🟡 Updated projects array:', updatedProjects.map(p => ({ id: p.id, path: p.path, status: p.status })));
 
-      console.log('🟡 Setting projects in store...');
       set({ projects: updatedProjects });
 
       // If this is the current project, update it and reload feedback
       const { currentProject } = get();
-      console.log('🟡 Current project path:', currentProject?.path);
-      console.log('🟡 Updated project path:', project.path);
 
       if (currentProject?.path === project.path) {
-        console.log('🟡 This is the current project, updating currentProject and feedback');
         const feedback = await tauri.getFeedback(updatedProject.path);
-        console.log('🟡 Setting currentProject and feedback...');
         set({ currentProject: updatedProject, feedback });
-        console.log('🟢 currentProject updated to status:', updatedProject.status);
-      } else {
-        console.log('🟡 Not the current project, skipping currentProject update');
       }
-    } catch (error) {
-      console.error('🔴 Failed to refresh project:', error);
+    } catch {
+      // Silently handle errors
     }
   },
 
@@ -209,7 +189,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const { feedback } = get();
       set({ feedback: [...feedback, newFeedback].sort((a, b) => a.priority - b.priority) });
     } catch (error) {
-      console.error('Failed to add feedback:', error);
       throw error;
     }
   },
@@ -225,7 +204,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
       set({ feedback: updatedFeedback });
     } catch (error) {
-      console.error('Failed to update feedback:', error);
       throw error;
     }
   },
@@ -237,7 +215,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const { feedback } = get();
       set({ feedback: feedback.filter(f => f.id !== feedbackId) });
     } catch (error) {
-      console.error('Failed to delete feedback:', error);
       throw error;
     }
   },
@@ -257,7 +234,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
       await get().updateFeedback(projectPath, feedbackId, updates);
     } catch (error) {
-      console.error('Failed to toggle feedback:', error);
       throw error;
     }
   },
@@ -273,7 +249,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         await get().refreshProject(currentProject.id);
       }
     } catch (error) {
-      console.error('Failed to update project metadata:', error);
       throw error;
     }
   },
@@ -295,7 +270,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       // Then launch Claude Code
       await tauri.launchClaudeCode(projectPath, prompt);
     } catch (error) {
-      console.error('Failed to launch Claude Code:', error);
       throw error;
     }
   },
@@ -305,7 +279,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     try {
       await tauri.openInExplorer(projectPath);
     } catch (error) {
-      console.error('Failed to open in explorer:', error);
       throw error;
     }
   },
@@ -315,7 +288,6 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     try {
       await tauri.openUrl(url);
     } catch (error) {
-      console.error('Failed to open URL:', error);
       throw error;
     }
   },

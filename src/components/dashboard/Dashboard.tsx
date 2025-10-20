@@ -10,23 +10,15 @@ import { APP_NAME } from '../../utils/constants';
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { projects, isLoading, loadProjects, createProject, error } = useProjectStore();
+  const { projects, isLoading, loadProjects, createProject } = useProjectStore();
   const { settings } = useSettingsStore();
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
   useEffect(() => {
     if (settings?.projectsDirectory) {
-      console.log('Loading projects from:', settings.projectsDirectory);
       loadProjects();
     }
   }, [settings?.projectsDirectory, loadProjects]);
-
-  // Log any errors
-  useEffect(() => {
-    if (error) {
-      console.error('Dashboard error:', error);
-    }
-  }, [error]);
 
   const handleRefresh = () => {
     loadProjects();
@@ -42,11 +34,6 @@ export function Dashboard() {
       navigate(`/project/${projectId}`);
     }
   };
-
-  // Log settings for debugging
-  console.log('Dashboard settings:', settings);
-  console.log('Projects:', projects);
-  console.log('Is loading:', isLoading);
 
   // Empty state - no projects directory configured
   if (!settings?.projectsDirectory) {
