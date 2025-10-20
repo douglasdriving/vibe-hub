@@ -1233,6 +1233,13 @@ pub async fn get_project_docs(project_path: String) -> Result<Vec<DocumentFile>,
     let docs_cap_dir = project_root.join("Docs");
     docs.extend(scan_dir(&docs_cap_dir, "docs")?);
 
+    // Deduplicate by path (case-insensitive on Windows)
+    let mut seen_paths = std::collections::HashSet::new();
+    docs.retain(|doc| {
+        let normalized_path = doc.path.to_lowercase();
+        seen_paths.insert(normalized_path)
+    });
+
     // Sort by modification timestamp (newest first)
     docs.sort_by(|a, b| b.modified_timestamp.cmp(&a.modified_timestamp));
 
