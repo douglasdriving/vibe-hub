@@ -151,6 +151,16 @@ export async function getGithubUrl(projectPath: string): Promise<string | null> 
   return await invoke('get_github_url', { projectPath });
 }
 
+export interface DocumentFile {
+  name: string;
+  path: string;
+  location: 'root' | 'vibe' | 'docs';
+}
+
+export async function getProjectDocs(projectPath: string): Promise<DocumentFile[]> {
+  return await invoke('get_project_docs', { projectPath });
+}
+
 // Prompts commands
 export async function getPrompt(promptName: string, replacements: Record<string, string>): Promise<string> {
   return await invoke('get_prompt', { promptName, replacements });

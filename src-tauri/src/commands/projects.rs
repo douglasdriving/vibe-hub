@@ -1153,3 +1153,83 @@ pub async fn get_github_url(project_path: String) -> Result<Option<String>, Stri
 
     Ok(Some(https_url))
 }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentFile {
+    pub name: String,
+    pub path: String,
+    pub location: String, // "root", "vibe", "docs"
+}
+
+#[tauri::command]
+pub async fn get_project_docs(project_path: String) -> Result<Vec<DocumentFile>, String> {
+    let project_root = Path::new(&project_path);
+    let mut docs = Vec::new();
+
+    // Helper function to scan a directory for .md files
+    let scan_dir = |dir: &Path, location: &str| -> Result<Vec<DocumentFile>, String> {
+        let mut found_docs = Vec::new();
+
+        if !dir.exists() || !dir.is_dir() {
+            return Ok(found_docs);
+        }
+
+        let entries = fs::read_dir(dir)
+            .map_err(|e| format!("Failed to read directory: {}", e))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
+            let path = entry.path();
+
+            // Only process files (not subdirectories)
+            if path.is_file() {
+                if let Some(extension) = path.extension() {
+                    if extension == "md" {
+                        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                            found_docs.push(DocumentFile {
+                                name: name.to_string(),
+                                path: path.to_string_lossy().to_string(),
+                                location: location.to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(found_docs)
+    };
+
+    // Scan root directory
+    docs.extend(scan_dir(project_root, "root")?);
+
+    // Scan .vibe directory
+    let vibe_dir = project_root.join(VIBE_DIR);
+    docs.extend(scan_dir(&vibe_dir, "vibe")?);
+
+    // Scan docs directory (lowercase)
+    let docs_dir = project_root.join("docs");
+    docs.extend(scan_dir(&docs_dir, "docs")?);
+
+    // Scan Docs directory (capitalized)
+    let docs_cap_dir = project_root.join("Docs");
+    docs.extend(scan_dir(&docs_cap_dir, "docs")?);
+
+    // Sort by location priority (vibe > docs > root) then by name
+    docs.sort_by(|a, b| {
+        let location_priority = |loc: &str| match loc {
+            "vibe" => 0,
+            "docs" => 1,
+            "root" => 2,
+            _ => 3,
+        };
+
+        let a_priority = location_priority(&a.location);
+        let b_priority = location_priority(&b.location);
+
+        a_priority.cmp(&b_priority).then(a.name.cmp(&b.name))
+    });
+
+    Ok(docs)
+}

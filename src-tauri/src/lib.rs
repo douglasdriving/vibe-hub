@@ -29,6 +29,7 @@ pub fn run() {
             projects::assign_color_if_missing,
             projects::create_design_feedback_file,
             projects::get_github_url,
+            projects::get_project_docs,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,
