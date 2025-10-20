@@ -155,6 +155,7 @@ export interface DocumentFile {
   name: string;
   path: string;
   location: 'root' | 'vibe' | 'docs';
+  modifiedTimestamp: number;
 }
 
 export async function getProjectDocs(projectPath: string): Promise<DocumentFile[]> {

@@ -1160,6 +1160,7 @@ pub struct DocumentFile {
     pub name: String,
     pub path: String,
     pub location: String, // "root", "vibe", "docs"
+    pub modified_timestamp: u64, // Unix timestamp for sorting
 }
 
 #[tauri::command]
@@ -1187,10 +1188,26 @@ pub async fn get_project_docs(project_path: String) -> Result<Vec<DocumentFile>,
                 if let Some(extension) = path.extension() {
                     if extension == "md" {
                         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                            // Get file modification time
+                            let modified_timestamp = if let Ok(metadata) = fs::metadata(&path) {
+                                if let Ok(modified) = metadata.modified() {
+                                    if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
+                                        duration.as_secs()
+                                    } else {
+                                        0
+                                    }
+                                } else {
+                                    0
+                                }
+                            } else {
+                                0
+                            };
+
                             found_docs.push(DocumentFile {
                                 name: name.to_string(),
                                 path: path.to_string_lossy().to_string(),
                                 location: location.to_string(),
+                                modified_timestamp,
                             });
                         }
                     }
@@ -1216,20 +1233,8 @@ pub async fn get_project_docs(project_path: String) -> Result<Vec<DocumentFile>,
     let docs_cap_dir = project_root.join("Docs");
     docs.extend(scan_dir(&docs_cap_dir, "docs")?);
 
-    // Sort by location priority (vibe > docs > root) then by name
-    docs.sort_by(|a, b| {
-        let location_priority = |loc: &str| match loc {
-            "vibe" => 0,
-            "docs" => 1,
-            "root" => 2,
-            _ => 3,
-        };
-
-        let a_priority = location_priority(&a.location);
-        let b_priority = location_priority(&b.location);
-
-        a_priority.cmp(&b_priority).then(a.name.cmp(&b.name))
-    });
+    // Sort by modification timestamp (newest first)
+    docs.sort_by(|a, b| b.modified_timestamp.cmp(&a.modified_timestamp));
 
     Ok(docs)
 }
