@@ -1292,10 +1292,21 @@ pub async fn get_project_stats(project_path: String) -> Result<ProjectStats, Str
     // Fallback to simple line count if tools not available
     let lines_of_code = count_lines_of_code(&project_path);
 
-    // Get feedback stats
+    // Get feedback stats from both pending and completed files
     let path = Path::new(&project_path);
-    let feedback_file = read_feedback_file(path).unwrap_or_default();
-    let feedback_completed = feedback_file.feedback.iter().filter(|f| f.status == "completed").count();
+    let pending_feedback = read_feedback_file(path).unwrap_or_default();
+    let completed_feedback_path = path.join(VIBE_DIR).join("feedback-completed.json");
+    let completed_feedback = if completed_feedback_path.exists() {
+        let contents = fs::read_to_string(&completed_feedback_path).unwrap_or_default();
+        serde_json::from_str::<FeedbackFile>(&contents).unwrap_or_default()
+    } else {
+        FeedbackFile::default()
+    };
+
+    // Count completed feedback from both sources (for backwards compatibility)
+    let feedback_completed =
+        pending_feedback.feedback.iter().filter(|f| f.status == "completed").count() +
+        completed_feedback.feedback.len();
 
     Ok(ProjectStats {
         total_commits,
