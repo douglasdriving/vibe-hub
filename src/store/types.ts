@@ -48,6 +48,7 @@ export interface FeedbackFile {
 // Settings
 export interface Settings {
   projectsDirectory: string;
+  soundEffectsEnabled: boolean;
 }
 
 // Priority Labels

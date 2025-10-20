@@ -6,7 +6,7 @@ import { APP_NAME } from '../../utils/constants';
 
 export function SettingsPanel() {
   const navigate = useNavigate();
-  const { settings, selectDirectory } = useSettingsStore();
+  const { settings, selectDirectory, updateSoundEffectsEnabled } = useSettingsStore();
 
   const handleSelectDirectory = async () => {
     try {
@@ -17,6 +17,14 @@ export function SettingsPanel() {
       }
     } catch (error) {
       console.error('Failed to select directory:', error);
+    }
+  };
+
+  const handleToggleSoundEffects = async () => {
+    try {
+      await updateSoundEffectsEnabled(!settings?.soundEffectsEnabled);
+    } catch (error) {
+      console.error('Failed to toggle sound effects:', error);
     }
   };
 
@@ -40,7 +48,7 @@ export function SettingsPanel() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Projects Directory
@@ -74,6 +82,36 @@ export function SettingsPanel() {
               ? 'Change Directory'
               : 'Select Directory'}
           </Button>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Sound Effects
+          </h2>
+
+          <p className="text-gray-600 text-sm mb-4">
+            Enable or disable sound effects for button clicks, hovers, and interactions.
+          </p>
+
+          <label className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={settings?.soundEffectsEnabled ?? true}
+                onChange={handleToggleSoundEffects}
+                className="sr-only"
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors ${
+                settings?.soundEffectsEnabled ? 'bg-blue-600' : 'bg-gray-300'
+              }`}></div>
+              <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
+                settings?.soundEffectsEnabled ? 'transform translate-x-6' : ''
+              }`}></div>
+            </div>
+            <div className="ml-3 text-gray-700 font-medium">
+              {settings?.soundEffectsEnabled ? 'Enabled' : 'Disabled'}
+            </div>
+          </label>
         </div>
       </main>
     </div>

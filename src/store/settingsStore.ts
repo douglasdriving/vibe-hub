@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Settings } from './types';
 import * as tauri from '../services/tauri';
+import { soundEffects } from '../utils/sounds';
 
 interface SettingsStore {
   // State
@@ -10,6 +11,7 @@ interface SettingsStore {
   // Actions
   loadSettings: () => Promise<void>;
   updateProjectsDirectory: (path: string) => Promise<void>;
+  updateSoundEffectsEnabled: (enabled: boolean) => Promise<void>;
   selectDirectory: () => Promise<string | null>;
 }
 
@@ -25,6 +27,10 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       console.log('Loading settings...');
       const settings = await tauri.getSettings();
       console.log('Settings loaded:', settings);
+
+      // Apply sound effects setting
+      soundEffects.setEnabled(settings.soundEffectsEnabled ?? true);
+
       set({ settings, isLoading: false });
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -39,7 +45,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     console.log('Current settings:', settings);
 
     // If no settings exist, create new one
-    const currentSettings = settings || { projectsDirectory: '' };
+    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true };
 
     try {
       const newSettings = { ...currentSettings, projectsDirectory: path };
@@ -49,6 +55,22 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       set({ settings: newSettings });
     } catch (error) {
       console.error('Failed to update settings:', error);
+      throw error;
+    }
+  },
+
+  // Update sound effects enabled
+  updateSoundEffectsEnabled: async (enabled: boolean) => {
+    const { settings } = useSettingsStore.getState();
+    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true };
+
+    try {
+      const newSettings = { ...currentSettings, soundEffectsEnabled: enabled };
+      await tauri.updateSettings(newSettings);
+      soundEffects.setEnabled(enabled);
+      set({ settings: newSettings });
+    } catch (error) {
+      console.error('Failed to update sound effects setting:', error);
       throw error;
     }
   },
