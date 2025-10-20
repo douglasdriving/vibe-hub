@@ -1170,8 +1170,10 @@ pub async fn count_commits_since_cleanup(project_path: String) -> Result<usize, 
     const CLEANUP_COMMIT_MESSAGE: &str = "Cleanup and refactor codebase";
 
     // First, try to find the most recent cleanup commit
+    // Using --grep with ^$ anchors to match the exact subject line only
+    let grep_pattern = format!("^{}$", CLEANUP_COMMIT_MESSAGE);
     let find_cleanup = Command::new("git")
-        .args(&["log", "--all", "--grep", CLEANUP_COMMIT_MESSAGE, "--format=%H", "-1"])
+        .args(&["log", "--all", "--grep", &grep_pattern, "--format=%H", "-1"])
         .current_dir(&project_path)
         .output()
         .map_err(|e| format!("Failed to run git command: {}", e))?;
