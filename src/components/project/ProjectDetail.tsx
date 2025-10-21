@@ -699,8 +699,8 @@ export function ProjectDetail() {
                                 </span>
                               </div>
                               <div className="flex items-center gap-4 mt-2">
-                                {formatDate(item.createdAt) && (
-                                  <span className="text-white/80">{formatDate(item.createdAt)}</span>
+                                {item.completedAt && formatDate(item.completedAt) && (
+                                  <span className="text-white/80">Completed: {formatDate(item.completedAt)}</span>
                                 )}
                                 <div className="flex gap-2">
                                   <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
