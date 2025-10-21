@@ -1,5 +1,8 @@
 use std::process::Command;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 #[tauri::command]
 pub async fn launch_claude_code(project_path: String, _prompt: String) -> Result<(), String> {
     // Copy prompt to clipboard using tauri plugin
@@ -7,6 +10,7 @@ pub async fn launch_claude_code(project_path: String, _prompt: String) -> Result
     {
         // Launch a new cmd window in the project directory with claude command
         // Using start with a new window title to handle spaces in paths properly
+        // Note: We intentionally DO show this window (it's for Claude Code terminal)
         Command::new("cmd")
             .args(&[
                 "/c",
@@ -17,6 +21,7 @@ pub async fn launch_claude_code(project_path: String, _prompt: String) -> Result
                 "claude"
             ])
             .current_dir(&project_path)
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
             .spawn()
             .map_err(|e| format!("Failed to launch Claude Code: {}", e))?;
     }
@@ -60,6 +65,7 @@ pub async fn open_url(url: String) -> Result<(), String> {
     {
         Command::new("cmd")
             .args(&["/c", "start", &url])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the cmd window
             .spawn()
             .map_err(|e| format!("Failed to open URL: {}", e))?;
     }
@@ -82,6 +88,7 @@ pub async fn open_in_vscode(project_path: String) -> Result<(), String> {
         // Use cmd to launch code, which will inherit the user's PATH
         Command::new("cmd")
             .args(&["/c", "code", &project_path])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the cmd window
             .spawn()
             .map_err(|e| format!("Failed to open VS Code: {}. Make sure VS Code is installed.", e))?;
     }
@@ -101,9 +108,12 @@ pub async fn open_in_vscode(project_path: String) -> Result<(), String> {
 pub async fn open_in_terminal(project_path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
+        // Note: We intentionally DO show the terminal window (user requested it)
+        // But we hide the intermediate cmd window that launches it
         Command::new("cmd")
             .args(&["/c", "start", "cmd"])
             .current_dir(&project_path)
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
             .spawn()
             .map_err(|e| format!("Failed to open terminal: {}", e))?;
     }
