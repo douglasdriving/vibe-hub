@@ -40,7 +40,7 @@ export function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <h1 className="text-6xl uppercase text-gray-900 mb-4">{APP_NAME}</h1>
+          <h1 className="text-6xl uppercase text-purple-700 font-bold mb-4" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>{APP_NAME}</h1>
           <p className="text-gray-600 mb-6">
             Welcome! Please configure your projects directory to get started.
           </p>
@@ -59,7 +59,7 @@ export function Dashboard() {
       <div className="min-h-screen">
         <header className="shadow-sm">
           <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <h1 className="text-6xl uppercase text-gray-900">{APP_NAME}</h1>
+            <h1 className="text-6xl uppercase text-purple-700 font-bold" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>{APP_NAME}</h1>
             <div className="flex gap-2">
               <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
                 <Plus size={16} className="inline mr-2" />
@@ -111,7 +111,7 @@ export function Dashboard() {
       <header className="shadow-sm">
         <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div>
-            <h1 className="text-6xl uppercase text-gray-900">{APP_NAME}</h1>
+            <h1 className="text-6xl uppercase text-purple-700 font-bold" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>{APP_NAME}</h1>
           </div>
           <div className="flex gap-2">
             <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
@@ -145,7 +145,7 @@ export function Dashboard() {
             {/* Active Projects Section */}
             {activeProjects.length > 0 && (
               <section>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6 uppercase">
+                <h2 className="text-3xl font-bold text-purple-700 mb-6 uppercase" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.3)' }}>
                   Active ({activeProjects.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -159,7 +159,7 @@ export function Dashboard() {
             {/* Projects in Development Section */}
             {developmentProjects.length > 0 && (
               <section>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6 uppercase">
+                <h2 className="text-3xl font-bold text-purple-700 mb-6 uppercase" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.3)' }}>
                   Drafts ({developmentProjects.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

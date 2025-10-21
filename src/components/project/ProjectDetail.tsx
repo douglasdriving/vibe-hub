@@ -318,7 +318,7 @@ export function ProjectDetail() {
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-6xl uppercase" style={{ color: currentProject.textColor || '#FFFFFF' }}>{currentProject.displayName || currentProject.name}</h1>
+                  <h1 className="text-6xl uppercase font-bold" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>{currentProject.displayName || currentProject.name}</h1>
                   <span className={`${STATUS_COLORS[currentProject.status]} text-white text-base px-3 py-1 rounded`}>
                     {STATUS_LABELS[currentProject.status]}
                   </span>
@@ -530,7 +530,7 @@ export function ProjectDetail() {
         {/* Documentation Section */}
         {docs.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-4" style={{ color: currentProject.textColor || '#FFFFFF' }}>Documentation</h2>
+            <h2 className="text-2xl font-bold mb-4 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,0.3)' }}>Documentation</h2>
             <div className="flex flex-wrap gap-2">
               {docs.map((doc) => {
                 // Format document name: remove .md, replace _ and - with spaces, title case
