@@ -43,7 +43,7 @@ export function SettingsPanel() {
             >
               <ArrowLeft size={24} />
             </button>
-            <h1 className="text-2xl font-bold text-purple-700 uppercase" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.3)' }}>Settings</h1>
+            <h1 className="text-2xl font-bold text-purple-700 uppercase" style={{ textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>Settings</h1>
           </div>
         </div>
       </header>

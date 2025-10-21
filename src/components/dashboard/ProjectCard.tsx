@@ -51,7 +51,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="text-3xl font-bold" style={{ color: project.textColor || '#FFFFFF' }}>{project.displayName || project.name}</h3>
+          <h3 className="text-3xl font-bold" style={{ color: project.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>{project.displayName || project.name}</h3>
           <span className={`${STATUS_COLORS[project.status]} text-white text-base px-2 py-1 rounded mt-1 inline-block`}>
             {STATUS_LABELS[project.status]}
           </span>

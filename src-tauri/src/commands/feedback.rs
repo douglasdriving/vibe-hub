@@ -2,6 +2,7 @@ use crate::models::{FeedbackItem, FeedbackFile, NewFeedbackItem, UpdateFeedbackI
 use std::fs;
 use std::path::Path;
 use uuid::Uuid;
+use chrono;
 
 const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
@@ -191,14 +192,20 @@ pub async fn update_feedback(
 
     // Check if we need to move the item between files
     if status_changed {
-        let item_clone = item.clone();
+        let mut item_clone = item.clone();
 
         if was_pending && new_status == "completed" {
             // Move from pending to completed
+            // Ensure completedAt is set if not already provided
+            if item_clone.completed_at.is_none() {
+                item_clone.completed_at = Some(chrono::Utc::now().to_rfc3339());
+            }
             pending_file.feedback.retain(|f| f.id != feedback_id);
             completed_file.feedback.push(item_clone);
         } else if !was_pending && new_status == "pending" {
             // Move from completed to pending
+            // Clear completedAt when moving back to pending
+            item_clone.completed_at = None;
             completed_file.feedback.retain(|f| f.id != feedback_id);
             pending_file.feedback.push(item_clone);
         }
