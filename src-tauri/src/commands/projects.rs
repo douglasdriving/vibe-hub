@@ -3,6 +3,17 @@ use std::fs;
 use std::path::Path;
 use uuid::Uuid;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+// Helper to create git command with no window flash on Windows
+fn git_command() -> std::process::Command {
+    let mut cmd = std::process::Command::new("git");
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    cmd
+}
+
 const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
 const METADATA_FILE: &str = "metadata.md";
@@ -327,10 +338,10 @@ TextColor: {}
 }
 
 fn get_last_modified(project_path: &Path) -> Option<String> {
-    use std::process::Command;
+    
 
     // Try to get last commit date from git
-    let output = Command::new("git")
+    let output = git_command()
         .arg("-C")
         .arg(project_path)
         .arg("log")
@@ -685,7 +696,7 @@ pub async fn check_metadata_exists(project_path: String) -> Result<bool, String>
 
 #[tauri::command]
 pub async fn create_new_project(projects_dir: String, project_name: String) -> Result<String, String> {
-    use std::process::Command;
+    
 
     // Convert project name to folder name (lowercase with dashes)
     let folder_name = project_name.to_lowercase().replace(" ", "-");
@@ -807,7 +818,7 @@ TextColor: {}
         .map_err(|e| format!("Failed to create feedback file: {}", e))?;
 
     // Initialize git repository
-    let output = Command::new("git")
+    let output = git_command()
         .arg("init")
         .current_dir(&project_path)
         .output()
@@ -1129,9 +1140,9 @@ Let's go through my feedback items one by one and fix all the design and UX issu
 
 #[tauri::command]
 pub async fn get_github_url(project_path: String) -> Result<Option<String>, String> {
-    use std::process::Command;
+    
 
-    let output = Command::new("git")
+    let output = git_command()
         .args(&["remote", "get-url", "origin"])
         .current_dir(&project_path)
         .output()
@@ -1184,12 +1195,12 @@ pub struct CleanupStats {
 
 #[tauri::command]
 pub async fn get_cleanup_stats(project_path: String) -> Result<CleanupStats, String> {
-    use std::process::Command;
+    
 
     const CLEANUP_COMMIT_MESSAGE: &str = "Cleanup and refactor codebase";
 
     // First, count total commits
-    let count_all = Command::new("git")
+    let count_all = git_command()
         .args(&["rev-list", "--count", "HEAD"])
         .current_dir(&project_path)
         .output()
@@ -1216,7 +1227,7 @@ pub async fn get_cleanup_stats(project_path: String) -> Result<CleanupStats, Str
 
     // Find the most recent cleanup commit
     let grep_pattern = format!("^{}$", CLEANUP_COMMIT_MESSAGE);
-    let find_cleanup = Command::new("git")
+    let find_cleanup = git_command()
         .args(&["log", "--all", "--grep", &grep_pattern, "--format=%H", "-1"])
         .current_dir(&project_path)
         .output()
@@ -1247,7 +1258,7 @@ pub async fn get_cleanup_stats(project_path: String) -> Result<CleanupStats, Str
     }
 
     // Count commits since the cleanup commit (exclusive)
-    let count_since = Command::new("git")
+    let count_since = git_command()
         .args(&["rev-list", "--count", &format!("{}..HEAD", cleanup_commit_hash)])
         .current_dir(&project_path)
         .output()
@@ -1286,10 +1297,10 @@ pub struct ProjectStats {
 
 #[tauri::command]
 pub async fn get_project_stats(project_path: String) -> Result<ProjectStats, String> {
-    use std::process::Command;
+    
 
     // Count total commits
-    let total_commits = Command::new("git")
+    let total_commits = git_command()
         .args(&["rev-list", "--count", "HEAD"])
         .current_dir(&project_path)
         .output()
@@ -1326,10 +1337,10 @@ pub async fn get_project_stats(project_path: String) -> Result<ProjectStats, Str
 }
 
 fn count_lines_of_code(project_path: &str) -> usize {
-    use std::process::Command;
+    
 
     // Get list of tracked files from git
-    let git_files = Command::new("git")
+    let git_files = git_command()
         .args(&["ls-files"])
         .current_dir(project_path)
         .output()

@@ -16,7 +16,8 @@
       "Bash(git push --tags)",
       "Bash(git reset:*)",
       "Bash(npm run tauri:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cargo fix:*)"
     ],
     "deny": [],
     "ask": []
