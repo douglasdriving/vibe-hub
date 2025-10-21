@@ -14,7 +14,8 @@
       "Bash(git log a41c76b -1 --format=\"%B\")",
       "Bash(git tag v0.2.0)",
       "Bash(git push --tags)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm run tauri:*)"
     ],
     "deny": [],
     "ask": []
