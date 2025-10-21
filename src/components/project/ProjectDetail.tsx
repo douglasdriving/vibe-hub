@@ -675,7 +675,13 @@ export function ProjectDetail() {
                   <div className="space-y-3">
                     {feedback
                       .filter(f => f.status === 'completed')
-                      .sort((a, b) => a.priority - b.priority)
+                      .sort((a, b) => {
+                        // Sort by completion date (most recent first)
+                        if (!a.completedAt && !b.completedAt) return 0;
+                        if (!a.completedAt) return 1;
+                        if (!b.completedAt) return -1;
+                        return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+                      })
                       .map((item) => (
                         <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg opacity-60">
                           <div className="flex items-start gap-3">
