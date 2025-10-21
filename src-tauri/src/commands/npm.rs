@@ -3,6 +3,9 @@ use std::path::Path;
 use std::process::Command;
 use serde::{Deserialize, Serialize};
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PackageJson {
     pub scripts: Option<std::collections::HashMap<String, String>>,
@@ -126,6 +129,7 @@ pub async fn run_npm_script(project_path: String, script_name: String, script_ty
             Command::new("cmd")
                 .args(&["/c", "start", "cmd", "/k", bat_path.to_str().unwrap()])
                 .current_dir(&project_path)
+                .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
                 .spawn()
                 .map_err(|e| format!("Failed to launch bat file: {}", e))?;
         } else if script_type == "sh" {
@@ -134,6 +138,7 @@ pub async fn run_npm_script(project_path: String, script_name: String, script_ty
             Command::new("cmd")
                 .args(&["/c", "start", "cmd", "/k", "bash", sh_path.to_str().unwrap()])
                 .current_dir(&project_path)
+                .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
                 .spawn()
                 .map_err(|e| format!("Failed to launch sh file: {}", e))?;
         } else {
@@ -142,6 +147,7 @@ pub async fn run_npm_script(project_path: String, script_name: String, script_ty
             Command::new("cmd")
                 .args(&["/c", "start", "cmd", "/k", &command])
                 .current_dir(&project_path)
+                .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
                 .spawn()
                 .map_err(|e| format!("Failed to launch npm script: {}", e))?;
         }
