@@ -57,7 +57,7 @@ export function Dashboard() {
   if (!isLoading && projects.length === 0) {
     return (
       <div className="min-h-screen">
-        <header className="shadow-sm">
+        <header>
           <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <h1 className="text-6xl uppercase text-purple-700 font-bold" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>{APP_NAME}</h1>
             <div className="flex gap-2">
