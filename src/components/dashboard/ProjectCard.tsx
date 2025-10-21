@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink, Folder, Terminal } from 'lucide-react';
 import type { Project } from '../../store/types';
-import { STATUS_LABELS, STATUS_COLORS } from '../../store/types';
+import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS } from '../../store/types';
 import { formatRelativeTime } from '../../utils/formatters';
 import { useProjectStore } from '../../store/projectStore';
 import { soundEffects } from '../../utils/sounds';
@@ -57,7 +57,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </span>
         </div>
         {project.feedbackCount > 0 && (
-          <span className="bg-yellow-300 text-black text-lg font-bold px-2.5 py-0.5 rounded">
+          <span className={`${project.highestFeedbackPriority ? PRIORITY_COLORS[project.highestFeedbackPriority] : 'bg-yellow-300'} text-white text-lg font-bold px-2.5 py-0.5 rounded`}>
             {project.feedbackCount}
           </span>
         )}

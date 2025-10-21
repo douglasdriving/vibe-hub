@@ -18,6 +18,7 @@ pub struct Project {
     pub text_color: Option<String>, // Text color for contrast with background
     pub last_modified: Option<String>,
     pub feedback_count: usize,
+    pub highest_feedback_priority: Option<u8>, // 1-5, None if no pending feedback
     pub has_uncommitted_changes: bool,
 }
 

@@ -402,7 +402,11 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
             let text_color = metadata_text_color.unwrap_or_else(|| calculate_text_color(&color));
 
             let feedback_file = read_feedback_file(&path).unwrap_or_default();
-            let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
+            let pending_feedback: Vec<_> = feedback_file.feedback.iter().filter(|f| f.status == "pending").collect();
+            let feedback_count = pending_feedback.len();
+            let highest_feedback_priority = pending_feedback.iter()
+                .map(|f| f.priority)
+                .min(); // Lower number = higher priority (1 is highest)
 
             let project = Project {
                 id: Uuid::new_v4().to_string(),
@@ -420,6 +424,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 text_color: Some(text_color),
                 last_modified: get_last_modified(&path),
                 feedback_count,
+                highest_feedback_priority,
                 has_uncommitted_changes: false, // Simplified for now
             };
 
@@ -468,7 +473,11 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
     let text_color = metadata_text_color.unwrap_or_else(|| calculate_text_color(&color));
 
     let feedback_file = read_feedback_file(path).unwrap_or_default();
-    let feedback_count = feedback_file.feedback.iter().filter(|f| f.status == "pending").count();
+    let pending_feedback: Vec<_> = feedback_file.feedback.iter().filter(|f| f.status == "pending").collect();
+    let feedback_count = pending_feedback.len();
+    let highest_feedback_priority = pending_feedback.iter()
+        .map(|f| f.priority)
+        .min(); // Lower number = higher priority (1 is highest)
 
     Ok(Project {
         id: Uuid::new_v4().to_string(),
@@ -486,6 +495,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         text_color: Some(text_color),
         last_modified: get_last_modified(path),
         feedback_count,
+        highest_feedback_priority,
         has_uncommitted_changes: false,
     })
 }
