@@ -61,15 +61,20 @@ export function Button({
   const shadowStyle = 'shadow-[3px_3px_0px_rgba(0,0,0,0.8)]';
 
   // If inverted colors are provided, use inline styles with sharp shadow
+  // and add a special class for hover effects
   const invertedStyle = invertedBgColor && invertedTextColor ? {
+    '--btn-bg': invertedBgColor,
+    '--btn-text': invertedTextColor,
     backgroundColor: invertedBgColor,
     color: invertedTextColor,
     boxShadow: '3px 3px 0px rgba(0,0,0,0.8)',
-  } : undefined;
+  } as React.CSSProperties : undefined;
+
+  const invertedClass = invertedBgColor && invertedTextColor ? 'inverted-btn' : '';
 
   return (
     <button
-      className={`${baseClasses} ${!invertedStyle ? `${colors[variant].bg} ${colors[variant].text} ${colors[variant].hoverBg} ${colors[variant].hoverText} ${colors[variant].ring}` : ''} ${sizeClasses[size]} ${shadowStyle} ${className}`}
+      className={`${baseClasses} ${!invertedStyle ? `${colors[variant].bg} ${colors[variant].text} ${colors[variant].hoverBg} ${colors[variant].hoverText} ${colors[variant].ring}` : invertedClass} ${sizeClasses[size]} ${shadowStyle} ${className}`}
       style={invertedStyle}
       onClick={handleClick}
       {...props}
