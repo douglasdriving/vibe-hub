@@ -60,6 +60,15 @@ export const PRIORITY_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
   5: 'Nice to Have',
 };
 
+// Priority Descriptions
+export const PRIORITY_DESCRIPTIONS: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: 'Completely game breaking bug or game changing feature',
+  2: 'Important issue that significantly impacts functionality',
+  3: 'Moderate improvement or fix that enhances the experience',
+  4: 'Minor enhancement or polish that can wait',
+  5: 'Optional nice-to-have feature for future consideration',
+};
+
 // Priority Colors (Tailwind classes)
 export const PRIORITY_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
   1: 'bg-red-500',

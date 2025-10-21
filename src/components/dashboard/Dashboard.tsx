@@ -112,9 +112,6 @@ export function Dashboard() {
         <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div>
             <h1 className="text-6xl uppercase text-gray-900">{APP_NAME}</h1>
-            <p className="text-base text-gray-600 mt-1">
-              {projects.length} project{projects.length !== 1 ? 's' : ''}
-            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
@@ -149,7 +146,7 @@ export function Dashboard() {
             {activeProjects.length > 0 && (
               <section>
                 <h2 className="text-3xl font-bold text-gray-900 mb-6 uppercase">
-                  Active Projects ({activeProjects.length})
+                  Active ({activeProjects.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {activeProjects.map((project) => (
@@ -163,7 +160,7 @@ export function Dashboard() {
             {developmentProjects.length > 0 && (
               <section>
                 <h2 className="text-3xl font-bold text-gray-900 mb-6 uppercase">
-                  Projects in Development ({developmentProjects.length})
+                  Drafts ({developmentProjects.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {developmentProjects.map((project) => (

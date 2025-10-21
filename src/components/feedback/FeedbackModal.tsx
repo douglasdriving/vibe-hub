@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import type { FeedbackItem } from '../../store/types';
-import { PRIORITY_LABELS } from '../../store/types';
+import { PRIORITY_LABELS, PRIORITY_DESCRIPTIONS } from '../../store/types';
 import { soundEffects } from '../../utils/sounds';
 
 interface FeedbackModalProps {
@@ -124,9 +124,11 @@ export function FeedbackModal({ isOpen, onClose, onSave, initialData }: Feedback
                     ? 'bg-blue-500 text-white border-blue-500 font-semibold'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300 hover:bg-blue-50'
                 }`}
+                title={PRIORITY_DESCRIPTIONS[p]}
               >
                 <div className="text-base font-medium">{p}</div>
-                <div className="text-base mt-1">{PRIORITY_LABELS[p]}</div>
+                <div className="text-sm mt-1">{PRIORITY_LABELS[p]}</div>
+                <div className="text-xs mt-1 opacity-75">{PRIORITY_DESCRIPTIONS[p]}</div>
               </button>
             ))}
           </div>
