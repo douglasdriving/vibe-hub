@@ -84,6 +84,20 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
     }
   };
 
+  const handleGoBack = async () => {
+    const previousStatus = getPreviousStatus(project.status);
+    if (!previousStatus) return;
+
+    try {
+      setError(null);
+      await updateProjectStatus(project.path, previousStatus);
+      await refreshProject(project.id);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to go back';
+      setError(errorMessage);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-6 mb-6">
       <div className="flex items-start gap-4">
@@ -102,6 +116,16 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
 
           {stageInfo && (
             <div className="flex gap-3">
+              {/* Back button - show for all stages except initialized */}
+              {project.status !== 'initialized' && getPreviousStatus(project.status) && (
+                <Button
+                  onClick={handleGoBack}
+                  variant="secondary"
+                >
+                  ← Back
+                </Button>
+              )}
+
               {project.status === 'initialized' ? (
                 <Button
                   onClick={() => setIsIdeaModalOpen(true)}
@@ -254,4 +278,19 @@ function getStageOrder(status: string): number {
 
 function getStageNumber(stage: string): number {
   return getStageOrder(stage);
+}
+
+function getPreviousStatus(currentStatus: string): string | null {
+  const statusFlow: Record<string, string> = {
+    'idea': 'initialized',
+    'designed': 'idea',
+    'tech-spec-ready': 'designed',
+    'metadata-ready': 'tech-spec-ready',
+    'mvp-implemented': 'metadata-ready',
+    'technical-testing': 'mvp-implemented',
+    'design-testing': 'technical-testing',
+    'deployment': 'design-testing',
+    'deployed': 'deployment',
+  };
+  return statusFlow[currentStatus] || null;
 }
