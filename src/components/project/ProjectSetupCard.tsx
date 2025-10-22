@@ -10,7 +10,7 @@ import {
   isSetupStatus,
 } from '../../utils/prompts';
 import type { Project } from '../../store/types';
-import { updateProjectStatus, createDesignFeedbackFile } from '../../services/tauri';
+import { updateProjectStatus, createDesignFeedbackFile, getProjectIdea } from '../../services/tauri';
 
 interface ProjectSetupCardProps {
   project: Project;
@@ -60,6 +60,19 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
 
   const handleUpdateDraft = (ideaData: IdeaFormData) => {
     setDraftIdeaData(ideaData);
+  };
+
+  const handleOpenIdeaModal = async () => {
+    // Load existing idea data if available
+    try {
+      const existingIdea = await getProjectIdea(project.path);
+      if (existingIdea && existingIdea.summary) {
+        setDraftIdeaData(existingIdea);
+      }
+    } catch {
+      // Silently handle error - modal will open with empty form
+    }
+    setIsIdeaModalOpen(true);
   };
 
   const handleGenerateWithClaude = async () => {
@@ -128,7 +141,7 @@ export function ProjectSetupCard({ project }: ProjectSetupCardProps) {
 
               {project.status === 'initialized' ? (
                 <Button
-                  onClick={() => setIsIdeaModalOpen(true)}
+                  onClick={handleOpenIdeaModal}
                   variant="primary"
                 >
                   {stageInfo.actionLabel}

@@ -722,6 +722,14 @@ pub async fn create_new_project(projects_dir: String, project_name: String, summ
     let metadata_path = vibe_dir.join(METADATA_FILE);
     let color = assign_project_color(&project_name);
     let text_color = calculate_text_color(&color);
+
+    // Use summary as description if provided, otherwise use placeholder
+    let description_text = if let Some(ref summary_text) = summary {
+        summary_text.clone()
+    } else {
+        "[Project description will be filled after writing the project pitch]".to_string()
+    };
+
     let metadata_template = format!(r#"Name: {}
 Status: initialized
 Platform: [Will be determined during project setup]
@@ -730,7 +738,7 @@ TextColor: {}
 
 ## Description
 
-[Project description will be filled after writing the project pitch]
+{}
 
 ## Tech Stack
 
@@ -739,7 +747,7 @@ TextColor: {}
 ## Deployment
 
 [Deployment info will be added after MVP is deployed]
-"#, project_name, color, text_color);
+"#, project_name, color, text_color, description_text);
 
     fs::write(&metadata_path, metadata_template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
@@ -978,6 +986,121 @@ pub async fn save_project_idea(
     }
 
     Ok(())
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectIdea {
+    pub summary: String,
+    pub problem: String,
+    pub core_functionality: String,
+    pub value_proposition: String,
+    pub additional_requirements: String,
+}
+
+#[tauri::command]
+pub async fn get_project_idea(project_path: String) -> Result<Option<ProjectIdea>, String> {
+    let path = Path::new(&project_path);
+    let idea_path = path.join(VIBE_DIR).join(IDEA_FILE);
+
+    if !idea_path.exists() {
+        return Ok(None);
+    }
+
+    let contents = fs::read_to_string(&idea_path)
+        .map_err(|e| format!("Failed to read idea file: {}", e))?;
+
+    // Simple parsing - extract sections
+    let mut summary = String::new();
+    let mut problem = String::new();
+    let mut core_functionality = String::new();
+    let mut value_proposition = String::new();
+    let mut additional_requirements = String::new();
+
+    let mut current_section = "";
+    let mut section_content = String::new();
+
+    for line in contents.lines() {
+        let trimmed = line.trim();
+
+        if trimmed == "## Summary" {
+            if !current_section.is_empty() {
+                save_section(current_section, &section_content, &mut summary, &mut problem, &mut core_functionality, &mut value_proposition, &mut additional_requirements);
+            }
+            current_section = "summary";
+            section_content.clear();
+        } else if trimmed == "## Problem" {
+            if !current_section.is_empty() {
+                save_section(current_section, &section_content, &mut summary, &mut problem, &mut core_functionality, &mut value_proposition, &mut additional_requirements);
+            }
+            current_section = "problem";
+            section_content.clear();
+        } else if trimmed == "## Core Functionality" || trimmed == "## Core Features" {
+            if !current_section.is_empty() {
+                save_section(current_section, &section_content, &mut summary, &mut problem, &mut core_functionality, &mut value_proposition, &mut additional_requirements);
+            }
+            current_section = "core_functionality";
+            section_content.clear();
+        } else if trimmed == "## Value Proposition" {
+            if !current_section.is_empty() {
+                save_section(current_section, &section_content, &mut summary, &mut problem, &mut core_functionality, &mut value_proposition, &mut additional_requirements);
+            }
+            current_section = "value_proposition";
+            section_content.clear();
+        } else if trimmed == "## Additional Requirements" {
+            if !current_section.is_empty() {
+                save_section(current_section, &section_content, &mut summary, &mut problem, &mut core_functionality, &mut value_proposition, &mut additional_requirements);
+            }
+            current_section = "additional_requirements";
+            section_content.clear();
+        } else if !trimmed.starts_with('#') && !trimmed.is_empty() {
+            if !section_content.is_empty() {
+                section_content.push('\n');
+            }
+            section_content.push_str(line);
+        }
+    }
+
+    // Save last section
+    if !current_section.is_empty() {
+        save_section(current_section, &section_content, &mut summary, &mut problem, &mut core_functionality, &mut value_proposition, &mut additional_requirements);
+    }
+
+    // Check if we have any content (not just placeholders)
+    if summary.contains("[One-sentence summary") {
+        summary.clear();
+    }
+    if problem.contains("[Description of the core problem") {
+        problem.clear();
+    }
+
+    Ok(Some(ProjectIdea {
+        summary: summary.trim().to_string(),
+        problem: problem.trim().to_string(),
+        core_functionality: core_functionality.trim().to_string(),
+        value_proposition: value_proposition.trim().to_string(),
+        additional_requirements: additional_requirements.trim().to_string(),
+    }))
+}
+
+fn save_section(
+    section: &str,
+    content: &str,
+    summary: &mut String,
+    problem: &mut String,
+    core_functionality: &mut String,
+    value_proposition: &mut String,
+    additional_requirements: &mut String,
+) {
+    let trimmed = content.trim();
+    match section {
+        "summary" => *summary = trimmed.to_string(),
+        "problem" => *problem = trimmed.to_string(),
+        "core_functionality" => *core_functionality = trimmed.to_string(),
+        "value_proposition" => *value_proposition = trimmed.to_string(),
+        "additional_requirements" => *additional_requirements = trimmed.to_string(),
+        _ => {}
+    }
 }
 
 #[tauri::command]

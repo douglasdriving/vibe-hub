@@ -19,6 +19,7 @@ pub fn run() {
             projects::get_project_detail,
             projects::create_new_project,
             projects::save_project_idea,
+            projects::get_project_idea,
             projects::update_project_metadata,
             projects::update_all_metadata,
             projects::create_metadata_template,
@@ -44,6 +45,7 @@ pub fn run() {
             launcher::open_in_vscode,
             launcher::open_in_terminal,
             launcher::open_in_fork,
+            launcher::get_debug_log_path,
             // Prompts commands
             prompts::get_prompt,
             // NPM commands

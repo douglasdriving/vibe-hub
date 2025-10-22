@@ -14,6 +14,14 @@ export async function createNewProject(projectsDir: string, projectName: string,
   return await invoke('create_new_project', { projectsDir, projectName, summary });
 }
 
+export interface ProjectIdea {
+  summary: string;
+  problem: string;
+  coreFunctionality: string;
+  valueProposition: string;
+  additionalRequirements: string;
+}
+
 export async function saveProjectIdea(
   projectPath: string,
   summary: string,
@@ -30,6 +38,10 @@ export async function saveProjectIdea(
     valueProposition,
     additionalRequirements
   });
+}
+
+export async function getProjectIdea(projectPath: string): Promise<ProjectIdea | null> {
+  return await invoke('get_project_idea', { projectPath });
 }
 
 export async function updateProjectMetadata(
