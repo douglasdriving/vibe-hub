@@ -1,0 +1,44 @@
+{
+  "feedback": [
+    {
+      "id": "06d7f806-9ca1-4cf2-a265-a16c819e40cd",
+      "text": "across all projects, there are many apps using many ports on localhost. a lot of the time, these are conflicting with each other, because one thing might be running while i try to start something else on the same port. first of all, it would be very helpful if I could easily overview everything that is running locally right now in the hub, like a localhost port overview. secondly, and maybe more importantly, perhaps it could be good to add port information for each app into the metadata of each project, and have code in the vibe-hub that makes checks to ensure they are all different and do not clash.\n\nDESIGN DECISIONS:\n- Display: Separate ports page/tab (not dashboard header or project card badges)\n- Port field: Support multiple ports per project (e.g., frontend: 3000, backend: 4000) as comma-separated or list\n- Conflict handling: Show warning for duplicate ports with a Claude prompt that helps resolve conflicts (prompt should include knowledge of what ports are already occupied)\n- Project metadata should store ports as array of port numbers\n\nIMPLEMENTATION NOTES:\n1. Update Project model to include ports: Option<Vec<u16>>\n2. Update metadata.md parsing to read/write ports field\n3. Add multi-port input field to EditMetadataModal\n4. Create new Ports view/page showing all projects with their ports\n5. Add conflict detection logic during project scanning\n6. Add warning UI with Claude prompt generation for conflicts\n7. Optionally add ports field to NewProjectModal",
+      "priority": 4,
+      "status": "pending",
+      "createdAt": "2025-10-20T05:32:57.939446700+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "6e927195-2947-4e02-9814-15f6f86b80c8",
+      "text": "bug: cleanup button appears when there is not even a git repo initialized",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-21T06:33:08.596951500+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "ed0c9f6a-4347-401d-bc93-d33b1f2c564b",
+      "text": "bug: fork button appears before a git repo has been initialized",
+      "priority": 5,
+      "status": "pending",
+      "createdAt": "2025-10-21T06:33:24.389171100+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "2cf90d0c-537d-4fa2-bdba-9b9b38b6835f",
+      "text": "when adding a new project, it would be nice to be able to add the 1-sentance summary right away, so that you have it saved. Then in the first step, where you write the project pitch, you will fill out more details about the idea. This would allow you to quickly add \"ideas\" to the vibe hub, without necessarily filling out the whole pitch.",
+      "priority": 4,
+      "status": "pending",
+      "createdAt": "2025-10-22T00:07:43.921232100+00:00",
+      "completedAt": null
+    },
+    {
+      "id": "4555acea-c696-403b-a975-6aefc9309a45",
+      "text": "make it possible to go \"back\" one step in the project creation pipiline, if you hit forward accidentally",
+      "priority": 4,
+      "status": "pending",
+      "createdAt": "2025-10-22T00:19:44.962447400+00:00",
+      "completedAt": null
+    }
+  ]
+}
