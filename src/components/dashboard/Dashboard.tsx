@@ -28,8 +28,8 @@ export function Dashboard() {
     navigate('/settings');
   };
 
-  const handleCreateProject = async (projectName: string) => {
-    const projectId = await createProject(projectName);
+  const handleCreateProject = async (projectName: string, summary?: string) => {
+    const projectId = await createProject(projectName, summary);
     if (projectId) {
       navigate(`/project/${projectId}`);
     }

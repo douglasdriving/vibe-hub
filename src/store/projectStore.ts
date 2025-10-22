@@ -13,7 +13,7 @@ interface ProjectStore {
 
   // Actions
   loadProjects: () => Promise<void>;
-  createProject: (projectName: string) => Promise<string | undefined>;
+  createProject: (projectName: string, summary?: string) => Promise<string | undefined>;
   saveProjectIdea: (projectPath: string, idea: {
     summary: string;
     problem: string;
@@ -77,7 +77,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   // Create new project
-  createProject: async (projectName: string) => {
+  createProject: async (projectName: string, summary?: string) => {
     try {
       const settingsStore = await import('./settingsStore');
       const { settings } = settingsStore.useSettingsStore.getState();
@@ -86,7 +86,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         throw new Error('Projects directory not configured');
       }
 
-      const projectPath = await tauri.createNewProject(settings.projectsDirectory, projectName);
+      const projectPath = await tauri.createNewProject(settings.projectsDirectory, projectName, summary);
 
       // Reload projects list to show the new project
       await get().loadProjects();
@@ -255,21 +255,32 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   // Launch Claude Code with feedback context
   launchClaudeCode: async (projectPath: string, _feedbackIds?: string[]) => {
+    console.log('[projectStore] launchClaudeCode started for:', projectPath);
     try {
       const { currentProject } = get();
+      console.log('[projectStore] Current project:', currentProject?.name);
 
       // Generate prompt that references the feedback.json file directly
+      console.log('[projectStore] Generating Claude prompt...');
       const prompt = await generateClaudePrompt(
         currentProject?.name || 'Project',
         projectPath
       );
+      console.log('[projectStore] Prompt generated, length:', prompt.length);
 
       // Copy prompt to clipboard first
+      console.log('[projectStore] Copying to clipboard...');
       await navigator.clipboard.writeText(prompt);
+      console.log('[projectStore] Clipboard copy successful');
 
       // Then launch Claude Code
+      console.log('[projectStore] Calling tauri.launchClaudeCode...');
       await tauri.launchClaudeCode(projectPath, prompt);
+      console.log('[projectStore] tauri.launchClaudeCode completed successfully');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('[projectStore] Failed to launch Claude Code:', errorMessage);
+      alert(`Failed to launch Claude Code: ${errorMessage}\n\nCheck the debug log for more details.`);
       throw error;
     }
   },

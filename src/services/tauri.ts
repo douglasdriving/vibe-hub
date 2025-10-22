@@ -10,8 +10,8 @@ export async function getProjectDetail(projectPath: string): Promise<Project> {
   return await invoke('get_project_detail', { projectPath });
 }
 
-export async function createNewProject(projectsDir: string, projectName: string): Promise<string> {
-  return await invoke('create_new_project', { projectsDir, projectName });
+export async function createNewProject(projectsDir: string, projectName: string, summary?: string): Promise<string> {
+  return await invoke('create_new_project', { projectsDir, projectName, summary });
 }
 
 export async function saveProjectIdea(
@@ -106,7 +106,14 @@ export async function launchClaudeCode(
   projectPath: string,
   prompt: string
 ): Promise<void> {
-  return await invoke('launch_claude_code', { projectPath, prompt });
+  console.log('[tauri.ts] launchClaudeCode called with:', { projectPath, promptLength: prompt.length });
+  try {
+    await invoke('launch_claude_code', { projectPath, prompt });
+    console.log('[tauri.ts] launchClaudeCode invoke completed successfully');
+  } catch (error) {
+    console.error('[tauri.ts] launchClaudeCode invoke failed:', error);
+    throw error;
+  }
 }
 
 export async function openInExplorer(projectPath: string): Promise<void> {
@@ -216,4 +223,8 @@ export async function openInTerminal(projectPath: string): Promise<void> {
 
 export async function openInFork(projectPath: string): Promise<void> {
   return await invoke('open_in_fork', { projectPath });
+}
+
+export async function getDebugLogPath(): Promise<string> {
+  return await invoke('get_debug_log_path');
 }

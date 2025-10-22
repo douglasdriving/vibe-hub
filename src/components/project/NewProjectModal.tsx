@@ -5,11 +5,12 @@ import { Button } from '../common/Button';
 interface NewProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (projectName: string) => Promise<void>;
+  onCreate: (projectName: string, summary?: string) => Promise<void>;
 }
 
 export function NewProjectModal({ isOpen, onClose, onCreate }: NewProjectModalProps) {
   const [projectName, setProjectName] = useState('');
+  const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -36,8 +37,9 @@ export function NewProjectModal({ isOpen, onClose, onCreate }: NewProjectModalPr
     setError('');
 
     try {
-      await onCreate(projectName.trim());
+      await onCreate(projectName.trim(), summary.trim() || undefined);
       setProjectName('');
+      setSummary('');
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project');
@@ -49,6 +51,7 @@ export function NewProjectModal({ isOpen, onClose, onCreate }: NewProjectModalPr
   const handleClose = () => {
     if (!isCreating) {
       setProjectName('');
+      setSummary('');
       setError('');
       onClose();
     }
@@ -78,6 +81,23 @@ export function NewProjectModal({ isOpen, onClose, onCreate }: NewProjectModalPr
               Folder name: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{folderName}</span>
             </p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Quick Summary <span className="text-gray-500 font-normal">(Optional)</span>
+          </label>
+          <textarea
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            disabled={isCreating}
+            rows={2}
+            className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+            placeholder="A one-sentence description of your project idea..."
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Save your idea quickly! You can expand on this later in the project pitch.
+          </p>
         </div>
 
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
