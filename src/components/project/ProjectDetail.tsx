@@ -392,7 +392,7 @@ export function ProjectDetail() {
               <Terminal size={16} className="inline mr-2" />
               Claude
             </Button>
-            {cleanupStats?.shouldCleanup && (
+            {currentProject.hasGitRepo && cleanupStats?.shouldCleanup && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -451,16 +451,18 @@ export function ProjectDetail() {
                 GitHub
               </Button>
             )}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleOpenFork}
-              invertedBgColor={currentProject.textColor}
-              invertedTextColor={currentProject.color}
-            >
-              <GitBranch size={16} className="inline mr-2" />
-              Fork
-            </Button>
+            {currentProject.hasGitRepo && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleOpenFork}
+                invertedBgColor={currentProject.textColor}
+                invertedTextColor={currentProject.color}
+              >
+                <GitBranch size={16} className="inline mr-2" />
+                Fork
+              </Button>
+            )}
             {availableScripts?.has_dev && (
               <Button
                 variant="secondary"

@@ -437,6 +437,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 feedback_count,
                 highest_feedback_priority,
                 has_uncommitted_changes: false, // Simplified for now
+                has_git_repo: has_git,
             };
 
             projects.push(project);
@@ -508,6 +509,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         feedback_count,
         highest_feedback_priority,
         has_uncommitted_changes: false,
+        has_git_repo: has_git,
     })
 }
 
@@ -695,8 +697,8 @@ pub async fn check_metadata_exists(project_path: String) -> Result<bool, String>
 }
 
 #[tauri::command]
-pub async fn create_new_project(projects_dir: String, project_name: String) -> Result<String, String> {
-    
+pub async fn create_new_project(projects_dir: String, project_name: String, summary: Option<String>) -> Result<String, String> {
+
 
     // Convert project name to folder name (lowercase with dashes)
     let folder_name = project_name.to_lowercase().replace(" ", "-");
@@ -744,7 +746,33 @@ TextColor: {}
 
     // Create idea.md template
     let idea_path = vibe_dir.join(IDEA_FILE);
-    let idea_template = r#"# Project Idea
+    let idea_template = if let Some(ref summary_text) = summary {
+        format!(r#"# Project Idea
+
+## Summary
+
+{}
+
+## Problem
+
+[Description of the core problem this project solves]
+
+## Core Features
+
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+## Value Proposition
+
+[What value does this provide to users?]
+
+## Additional Requirements
+
+[Any additional requirements or constraints]
+"#, summary_text)
+    } else {
+        r#"# Project Idea
 
 ## Summary
 
@@ -767,7 +795,8 @@ TextColor: {}
 ## Additional Requirements
 
 [Any additional requirements or constraints]
-"#;
+"#.to_string()
+    };
 
     fs::write(&idea_path, idea_template)
         .map_err(|e| format!("Failed to create idea file: {}", e))?;

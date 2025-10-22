@@ -17,6 +17,7 @@ export interface Project {
   feedbackCount: number;         // Calculated
   highestFeedbackPriority?: 1 | 2 | 3 | 4 | 5; // Highest priority of pending feedback (1 is highest)
   hasUncommittedChanges: boolean; // Git status
+  hasGitRepo: boolean;           // Whether project has .git directory
 }
 
 // Feedback Item Model

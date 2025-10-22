@@ -20,6 +20,7 @@ pub struct Project {
     pub feedback_count: usize,
     pub highest_feedback_priority: Option<u8>, // 1-5, None if no pending feedback
     pub has_uncommitted_changes: bool,
+    pub has_git_repo: bool,
 }
 
 #[allow(dead_code)]
