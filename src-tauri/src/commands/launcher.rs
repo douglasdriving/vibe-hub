@@ -1,41 +1,121 @@
 use std::process::Command;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
+fn log_to_file(message: &str) {
+    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+    let log_message = format!("[{}] {}", timestamp, message);
+
+    // Always write to stderr for debugging
+    eprintln!("{}", log_message);
+
+    // Try multiple log locations
+    let mut log_locations = vec![
+        std::env::temp_dir().join("vibe-hub-debug.log"),
+        std::path::PathBuf::from("E:\\vibe-hub-debug.log"),
+    ];
+
+    // Add current directory if available
+    if let Ok(current_dir) = std::env::current_dir() {
+        log_locations.push(current_dir.join("vibe-hub-debug.log"));
+    }
+
+    for log_path in &log_locations {
+        if let Ok(mut file) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(log_path)
+        {
+            let _ = writeln!(file, "{}", log_message);
+            let _ = file.flush();
+            break; // Successfully wrote, stop trying other locations
+        }
+    }
+}
+
 #[tauri::command]
-pub async fn launch_claude_code(project_path: String, _prompt: String) -> Result<(), String> {
-    // Copy prompt to clipboard using tauri plugin
+pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<(), String> {
+    log_to_file(&format!("launch_claude_code called with path: {}", project_path));
+    log_to_file(&format!("Prompt length: {} chars", prompt.len()));
+
     #[cfg(target_os = "windows")]
     {
-        // Launch a new cmd window in the project directory with claude command
-        // Using start with a new window title to handle spaces in paths properly
-        // Note: We intentionally DO show this window (it's for Claude Code terminal)
-        Command::new("cmd")
-            .args(&[
-                "/c",
-                "start",
-                "Claude Code",  // Window title (required when path has spaces)
-                "cmd",
-                "/k",
-                "claude"
-            ])
-            .current_dir(&project_path)
+        // Create a temporary batch file to launch Claude Code
+        // This approach works reliably from both GUI and console subsystems
+        let temp_dir = std::env::temp_dir();
+        let batch_file = temp_dir.join("vibe-hub-launch-claude.bat");
+
+        // Escape double quotes in the prompt for batch file
+        let escaped_prompt = prompt.replace("\"", "\"\"");
+
+        // Generate batch file that launches claude with the prompt
+        let batch_content = if !prompt.is_empty() {
+            format!(
+                "@echo off\ncd /d \"{}\"\nclaude \"{}\"\npause",
+                project_path, escaped_prompt
+            )
+        } else {
+            format!(
+                "@echo off\ncd /d \"{}\"\nclaude\npause",
+                project_path
+            )
+        };
+
+        log_to_file(&format!("Creating batch file at: {:?}", batch_file));
+        log_to_file(&format!("Batch content: {}", batch_content));
+
+        // Write the batch file
+        if let Err(e) = std::fs::write(&batch_file, batch_content) {
+            let error_msg = format!("Failed to create batch file: {}", e);
+            log_to_file(&error_msg);
+            return Err(error_msg);
+        }
+
+        log_to_file("Batch file created successfully");
+
+        // Launch the batch file in a new console window
+        log_to_file(&format!("Executing: cmd /c start \"Claude Code\" cmd /c \"{}\"", batch_file.display()));
+
+        let result = Command::new("cmd")
+            .args(&["/c", "start", "Claude Code", "cmd", "/c", batch_file.to_str().unwrap()])
             .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
-            .spawn()
-            .map_err(|e| format!("Failed to launch Claude Code: {}", e))?;
+            .spawn();
+
+        match result {
+            Ok(_) => {
+                log_to_file("Command spawned successfully");
+                log_to_file(&format!("Batch file should be at: {}", batch_file.display()));
+                Ok(())
+            }
+            Err(e) => {
+                let error_msg = format!("Failed to launch Claude Code: {}", e);
+                log_to_file(&error_msg);
+                Err(error_msg)
+            }
+        }
     }
 
     #[cfg(target_os = "linux")]
     {
-        // Launch terminal in the project directory
+        // Launch terminal in the project directory with optional prompt
+        let command = if !prompt.is_empty() {
+            // Escape single quotes in the prompt for bash
+            let escaped_prompt = prompt.replace("'", "'\\''");
+            format!("cd '{}' && claude '{}'; exec bash", project_path, escaped_prompt)
+        } else {
+            format!("cd '{}' && claude; exec bash", project_path)
+        };
+
         Command::new("gnome-terminal")
-            .args(&["--", "bash", "-c", &format!("cd '{}' && claude; exec bash", project_path)])
+            .args(&["--", "bash", "-c", &command])
             .spawn()
             .map_err(|e| format!("Failed to launch Claude Code: {}", e))?;
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
 
 #[tauri::command]
@@ -136,6 +216,12 @@ pub async fn open_in_terminal(project_path: String) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_debug_log_path() -> Result<String, String> {
+    let log_path = std::env::temp_dir().join("vibe-hub-debug.log");
+    Ok(log_path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
