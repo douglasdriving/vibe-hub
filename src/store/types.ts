@@ -25,7 +25,22 @@ export interface FeedbackItem {
   id: string;                    // UUID
   text: string;                  // Feedback content
   priority: 1 | 2 | 3 | 4 | 5;  // Priority level
-  status: 'pending' | 'completed';
+  status: 'pending' | 'completed' | 'refined';
+  createdAt: string;             // ISO 8601 timestamp
+  completedAt?: string;          // ISO 8601 timestamp
+  refinedIntoIssueIds?: string[]; // IDs of issues this feedback was refined into
+}
+
+// Issue Model (refined feedback ready for implementation)
+export interface Issue {
+  id: string;                    // UUID
+  originalFeedbackId?: string;   // ID of the raw feedback this was refined from
+  title: string;                 // Short summary
+  description: string;           // Detailed description
+  subtasks: string[];            // List of subtasks
+  timeEstimate: string;          // Estimated time (e.g., "2 hours", "1 day")
+  priority: 1 | 2 | 3 | 4 | 5;  // Priority level
+  status: 'pending' | 'in-progress' | 'completed';
   createdAt: string;             // ISO 8601 timestamp
   completedAt?: string;          // ISO 8601 timestamp
 }

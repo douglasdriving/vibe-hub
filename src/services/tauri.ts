@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Project, FeedbackItem, Settings } from '../store/types';
+import type { Project, FeedbackItem, Issue, Settings } from '../store/types';
 
 // Project commands
 export async function scanProjects(projectsDir: string): Promise<Project[]> {
@@ -111,6 +111,45 @@ export async function deleteFeedback(
   feedbackId: string
 ): Promise<void> {
   return await invoke('delete_feedback', { projectPath, feedbackId });
+}
+
+export async function getArchivedFeedback(projectPath: string): Promise<FeedbackItem[]> {
+  return await invoke('get_archived_feedback', { projectPath });
+}
+
+export async function moveFeedbackToArchive(
+  projectPath: string,
+  feedbackId: string,
+  refinedIntoIssueIds: string[]
+): Promise<void> {
+  return await invoke('move_feedback_to_archive', { projectPath, feedbackId, refinedIntoIssueIds });
+}
+
+// Issue commands
+export async function getIssues(projectPath: string): Promise<Issue[]> {
+  return await invoke('get_issues', { projectPath });
+}
+
+export async function addIssue(
+  projectPath: string,
+  issue: Omit<Issue, 'id' | 'createdAt' | 'completedAt'>
+): Promise<Issue> {
+  return await invoke('add_issue', { projectPath, issue });
+}
+
+export async function updateIssue(
+  projectPath: string,
+  issueId: string,
+  updates: Partial<Issue>
+): Promise<void> {
+  return await invoke('update_issue', { projectPath, issueId, updates });
+}
+
+export async function deleteIssue(
+  projectPath: string,
+  issueId: string
+): Promise<void> {
+  return await invoke('delete_issue', { projectPath, issueId });
 }
 
 // Launcher commands
