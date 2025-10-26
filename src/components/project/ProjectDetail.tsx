@@ -42,13 +42,16 @@ export function ProjectDetail() {
   const [projectStats, setProjectStats] = useState<tauri.ProjectStats | null>(null);
   const [activeTab, setActiveTab] = useState<'feedback' | 'issues' | 'completed' | 'archived'>('feedback');
 
+  // Decode the project path from URL
+  const projectPath = id ? decodeURIComponent(id) : null;
+
   useEffect(() => {
-    // Only load project if we haven't loaded it yet, or if the ID changed
-    if (id && (!currentProject || currentProject.id !== id || !hasLoaded)) {
-      setCurrentProject(id);
+    // Only load project if we haven't loaded it yet, or if the path changed
+    if (projectPath && (!currentProject || currentProject.path !== projectPath || !hasLoaded)) {
+      setCurrentProject(projectPath);
       setHasLoaded(true);
     }
-  }, [id]);
+  }, [projectPath]);
 
   useEffect(() => {
     // Detect available npm scripts when project loads

@@ -23,7 +23,7 @@ interface ProjectStore {
     valueProposition: string;
     additionalRequirements: string;
   }) => Promise<void>;
-  setCurrentProject: (projectId: string) => Promise<void>;
+  setCurrentProject: (projectPath: string) => Promise<void>;
   refreshProject: (projectId: string) => Promise<void>;
 
   addFeedback: (projectPath: string, feedback: Omit<FeedbackItem, 'id' | 'createdAt'>) => Promise<void>;
@@ -101,10 +101,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       // Reload projects list to show the new project
       await get().loadProjects();
 
-      // Find the newly created project by path and return its ID
-      const { projects } = get();
-      const newProject = projects.find(p => p.path === projectPath);
-      return newProject?.id;
+      // Return the project path for navigation
+      return projectPath;
     } catch (error) {
       throw error;
     }
@@ -141,11 +139,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   // Set current project and load its feedback, issues, and archived feedback
-  setCurrentProject: async (projectId: string) => {
+  setCurrentProject: async (projectPath: string) => {
     set({ isLoading: true, error: null });
     try {
       const { projects } = get();
-      const project = projects.find(p => p.id === projectId);
+      const project = projects.find(p => p.path === projectPath);
 
       if (!project) {
         throw new Error('Project not found');

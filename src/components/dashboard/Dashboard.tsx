@@ -29,9 +29,9 @@ export function Dashboard() {
   };
 
   const handleCreateProject = async (projectName: string, summary?: string) => {
-    const projectId = await createProject(projectName, summary);
-    if (projectId) {
-      navigate(`/project/${projectId}`);
+    const projectPath = await createProject(projectName, summary);
+    if (projectPath) {
+      navigate(`/project/${encodeURIComponent(projectPath)}`);
     }
   };
 

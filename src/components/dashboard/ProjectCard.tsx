@@ -14,7 +14,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   const handleOpenProject = () => {
     soundEffects.playWhoosh();
-    navigate(`/project/${project.id}`);
+    navigate(`/project/${encodeURIComponent(project.path)}`);
   };
 
   const handleHover = () => {
