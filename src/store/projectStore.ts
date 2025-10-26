@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project, FeedbackItem } from './types';
+import type { Project, FeedbackItem, Issue } from './types';
 import * as tauri from '../services/tauri';
 import { generateClaudePrompt } from '../services/clipboard';
 
@@ -8,6 +8,8 @@ interface ProjectStore {
   projects: Project[];
   currentProject: Project | null;
   feedback: FeedbackItem[];
+  archivedFeedback: FeedbackItem[];
+  issues: Issue[];
   isLoading: boolean;
   error: string | null;
 
@@ -28,6 +30,12 @@ interface ProjectStore {
   updateFeedback: (projectPath: string, feedbackId: string, updates: Partial<FeedbackItem>) => Promise<void>;
   deleteFeedback: (projectPath: string, feedbackId: string) => Promise<void>;
   toggleFeedbackComplete: (projectPath: string, feedbackId: string) => Promise<void>;
+  loadArchivedFeedback: (projectPath: string) => Promise<void>;
+
+  addIssue: (projectPath: string, issue: Omit<Issue, 'id' | 'createdAt' | 'completedAt'>) => Promise<void>;
+  updateIssue: (projectPath: string, issueId: string, updates: Partial<Issue>) => Promise<void>;
+  deleteIssue: (projectPath: string, issueId: string) => Promise<void>;
+  loadIssues: (projectPath: string) => Promise<void>;
 
   updateProjectMetadata: (projectPath: string, data: { description: string; techStack: string[]; deploymentUrl?: string }) => Promise<void>;
 
@@ -41,6 +49,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   projects: [],
   currentProject: null,
   feedback: [],
+  archivedFeedback: [],
+  issues: [],
   isLoading: false,
   error: null,
 
@@ -130,7 +140,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }
   },
 
-  // Set current project and load its feedback
+  // Set current project and load its feedback, issues, and archived feedback
   setCurrentProject: async (projectId: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -141,8 +151,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         throw new Error('Project not found');
       }
 
-      const feedback = await tauri.getFeedback(project.path);
-      set({ currentProject: project, feedback, isLoading: false });
+      const [feedback, issues, archivedFeedback] = await Promise.all([
+        tauri.getFeedback(project.path),
+        tauri.getIssues(project.path),
+        tauri.getArchivedFeedback(project.path)
+      ]);
+
+      set({ currentProject: project, feedback, issues, archivedFeedback, isLoading: false });
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
     }
@@ -233,6 +248,62 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       };
 
       await get().updateFeedback(projectPath, feedbackId, updates);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Load archived feedback
+  loadArchivedFeedback: async (projectPath: string) => {
+    try {
+      const archivedFeedback = await tauri.getArchivedFeedback(projectPath);
+      set({ archivedFeedback });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Add issue
+  addIssue: async (projectPath: string, issue: Omit<Issue, 'id' | 'createdAt' | 'completedAt'>) => {
+    try {
+      const newIssue = await tauri.addIssue(projectPath, issue);
+      const { issues } = get();
+      set({ issues: [...issues, newIssue] });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update issue
+  updateIssue: async (projectPath: string, issueId: string, updates: Partial<Issue>) => {
+    try {
+      await tauri.updateIssue(projectPath, issueId, updates);
+      const { issues } = get();
+      const updatedIssues = issues.map(i =>
+        i.id === issueId ? { ...i, ...updates } : i
+      );
+      set({ issues: updatedIssues });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Delete issue
+  deleteIssue: async (projectPath: string, issueId: string) => {
+    try {
+      await tauri.deleteIssue(projectPath, issueId);
+      const { issues } = get();
+      set({ issues: issues.filter(i => i.id !== issueId) });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Load issues
+  loadIssues: async (projectPath: string) => {
+    try {
+      const issues = await tauri.getIssues(projectPath);
+      set({ issues });
     } catch (error) {
       throw error;
     }
