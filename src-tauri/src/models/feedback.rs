@@ -10,6 +10,13 @@ pub struct FeedbackItem {
     pub created_at: String,
     #[serde(alias = "completed_at", rename = "completedAt")]
     pub completed_at: Option<String>,
+    #[serde(
+        alias = "refinedIntoIssueIds",
+        rename = "refinedIntoIssueIds",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub refined_into_issue_ids: Option<Vec<String>>,
 }
 
 #[allow(dead_code)]
@@ -27,6 +34,7 @@ pub struct UpdateFeedbackItem {
     pub priority: Option<u8>,
     pub status: Option<String>,
     pub completed_at: Option<String>,
+    pub refined_into_issue_ids: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

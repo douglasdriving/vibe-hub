@@ -7,6 +7,7 @@ use chrono;
 const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
 const FEEDBACK_COMPLETED_FILE: &str = "feedback-completed.json";
+const FEEDBACK_ARCHIVE_FILE: &str = "feedback-archive.json";
 
 fn read_feedback_file_from_path(feedback_path: &Path) -> Result<FeedbackFile, String> {
     if !feedback_path.exists() {
@@ -141,6 +142,7 @@ pub async fn add_feedback(
         status: "pending".to_string(),
         created_at: chrono::Utc::now().to_rfc3339(),
         completed_at: None,
+        refined_into_issue_ids: None,
     };
 
     feedback_file.feedback.push(new_feedback.clone());
@@ -186,6 +188,9 @@ pub async fn update_feedback(
     if let Some(completed_at) = updates.completed_at {
         item.completed_at = Some(completed_at);
     }
+    if let Some(refined_into_issue_ids) = updates.refined_into_issue_ids {
+        item.refined_into_issue_ids = Some(refined_into_issue_ids);
+    }
 
     let new_status = item.status.clone();
     let status_changed = old_status != new_status;
@@ -230,6 +235,58 @@ pub async fn delete_feedback(project_path: String, feedback_id: String) -> Resul
 
     write_pending_feedback(path, &pending_file)?;
     write_completed_feedback(path, &completed_file)?;
+
+    Ok(())
+}
+
+fn read_archived_feedback(project_path: &Path) -> Result<FeedbackFile, String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_ARCHIVE_FILE);
+    read_feedback_file_from_path(&feedback_path)
+}
+
+fn write_archived_feedback(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_ARCHIVE_FILE);
+    write_feedback_file_to_path(&feedback_path, feedback_file)
+}
+
+#[tauri::command]
+pub async fn get_archived_feedback(project_path: String) -> Result<Vec<FeedbackItem>, String> {
+    let path = Path::new(&project_path);
+    let archive_file = read_archived_feedback(path)?;
+
+    // Sort by created_at (most recent first)
+    let mut archived = archive_file.feedback;
+    archived.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+
+    Ok(archived)
+}
+
+#[tauri::command]
+pub async fn move_feedback_to_archive(
+    project_path: String,
+    feedback_id: String,
+    refined_into_issue_ids: Vec<String>,
+) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let mut pending_file = read_pending_feedback(path)?;
+    let mut archive_file = read_archived_feedback(path)?;
+
+    // Find the feedback item in pending
+    let feedback_index = pending_file.feedback.iter()
+        .position(|f| f.id == feedback_id)
+        .ok_or("Feedback item not found in pending feedback")?;
+
+    // Remove from pending and update with issue IDs
+    let mut feedback_item = pending_file.feedback.remove(feedback_index);
+    feedback_item.refined_into_issue_ids = Some(refined_into_issue_ids);
+    feedback_item.status = "refined".to_string();
+
+    // Add to archive
+    archive_file.feedback.push(feedback_item);
+
+    // Write both files
+    write_pending_feedback(path, &pending_file)?;
+    write_archived_feedback(path, &archive_file)?;
 
     Ok(())
 }

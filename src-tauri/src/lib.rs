@@ -1,7 +1,7 @@
 mod models;
 mod commands;
 
-use commands::{settings, projects, feedback, launcher, prompts, npm};
+use commands::{settings, projects, feedback, issues, launcher, prompts, npm};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,6 +38,13 @@ pub fn run() {
             feedback::add_feedback,
             feedback::update_feedback,
             feedback::delete_feedback,
+            feedback::get_archived_feedback,
+            feedback::move_feedback_to_archive,
+            // Issue commands
+            issues::get_issues,
+            issues::add_issue,
+            issues::update_issue,
+            issues::delete_issue,
             // Launcher commands
             launcher::launch_claude_code,
             launcher::open_in_explorer,

@@ -1,6 +1,7 @@
 pub mod settings;
 pub mod projects;
 pub mod feedback;
+pub mod issues;
 pub mod launcher;
 pub mod prompts;
 pub mod npm;
