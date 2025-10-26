@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Copy, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
+import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
@@ -9,10 +9,9 @@ import { ProjectSetupCard } from './ProjectSetupCard';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
-import { copyToClipboard, generateClaudePrompt } from '../../services/clipboard';
 import { isSetupStatus, generateCleanupPrompt } from '../../utils/prompts';
+import { generateFeedbackRefinementPrompt, generateIssueFixPrompt } from '../../services/clipboard';
 import * as tauri from '../../services/tauri';
-import { soundEffects } from '../../utils/sounds';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -20,12 +19,13 @@ export function ProjectDetail() {
   const {
     currentProject,
     feedback,
+    issues,
+    archivedFeedback,
     setCurrentProject,
     refreshProject,
     addFeedback,
     updateFeedback,
     deleteFeedback,
-    toggleFeedbackComplete,
     launchClaudeCode,
     openInExplorer,
     openDeploymentUrl,
@@ -40,6 +40,7 @@ export function ProjectDetail() {
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
   const [cleanupStats, setCleanupStats] = useState<tauri.CleanupStats | null>(null);
   const [projectStats, setProjectStats] = useState<tauri.ProjectStats | null>(null);
+  const [activeTab, setActiveTab] = useState<'feedback' | 'issues' | 'completed' | 'archived'>('feedback');
 
   useEffect(() => {
     // Only load project if we haven't loaded it yet, or if the ID changed
@@ -143,37 +144,39 @@ export function ProjectDetail() {
     }
   };
 
-  const handleToggleComplete = async (feedbackId: string) => {
+  const handleLaunchClaude = async (feedbackIds?: string[]) => {
     if (!currentProject) return;
+    await launchClaudeCode(currentProject.path, feedbackIds);
+  };
 
-    soundEffects.playBlip();
-
+  const handleRefineAllFeedback = async () => {
+    if (!currentProject) return;
     try {
-      await toggleFeedbackComplete(currentProject.path, feedbackId);
-    } catch {
-      // Silently handle error
+      const prompt = await generateFeedbackRefinementPrompt(
+        currentProject.name,
+        currentProject.path
+      );
+      await tauri.launchClaudeCode(currentProject.path, prompt);
+    } catch (error) {
+      console.error('Failed to launch feedback refinement:', error);
     }
   };
 
-  const handleLaunchClaude = (feedbackIds?: string[]) => {
+  const handleFixAllIssues = async () => {
     if (!currentProject) return;
-    launchClaudeCode(currentProject.path, feedbackIds);
+    try {
+      const prompt = await generateIssueFixPrompt(
+        currentProject.name,
+        currentProject.path
+      );
+      await tauri.launchClaudeCode(currentProject.path, prompt);
+    } catch (error) {
+      console.error('Failed to launch issue fix:', error);
+    }
   };
 
-  const handleLaunchWithAllPending = () => {
-    const pendingIds = feedback.filter(f => f.status === 'pending').map(f => f.id);
-    handleLaunchClaude(pendingIds);
-  };
-
-  const handleCopyFixPrompt = async () => {
-    if (!currentProject) return;
-
-    const prompt = await generateClaudePrompt(currentProject.name, currentProject.path);
-    await copyToClipboard(prompt);
-  };
-
-  const handleLaunchWithoutContext = () => {
-    handleLaunchClaude([]);
+  const handleLaunchWithoutContext = async () => {
+    handleLaunchClaude(undefined);
   };
 
   const handleRunDev = async () => {
@@ -282,9 +285,8 @@ export function ProjectDetail() {
     if (!currentProject) return;
 
     try {
-      // Generate and copy cleanup prompt
+      // Generate cleanup prompt
       const prompt = generateCleanupPrompt(currentProject.displayName || currentProject.name);
-      await copyToClipboard(prompt);
 
       // Launch Claude Code directly - the counter will reset when the cleanup commit is made
       await tauri.launchClaudeCode(currentProject.path, prompt);
@@ -578,90 +580,190 @@ export function ProjectDetail() {
           </div>
         )}
 
-        {/* Feedback Section - only show for projects past setup stages */}
+        {/* Feedback & Issues Section - only show for projects past setup stages */}
         {!isSetupStatus(currentProject.status) && (
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
+          {/* Tab Navigation */}
+          <div className="flex gap-4 mb-6 border-b-4 border-black">
+            <button
+              onClick={() => setActiveTab('feedback')}
+              className={`text-xl font-bold px-4 py-2 uppercase transition-colors ${
+                activeTab === 'feedback'
+                  ? 'border-b-4 border-white'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                color: currentProject.textColor || '#FFFFFF',
+                textShadow: '2px 2px 0px rgba(0,0,0,1)',
+                marginBottom: '-4px'
+              }}
+            >
               Feedback ({feedback.filter(f => f.status === 'pending').length})
-            </h2>
-            <div className="flex gap-2">
-              {feedback.filter(f => f.status === 'pending').length > 0 && (
-                <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleCopyFixPrompt()}
-                    invertedBgColor={currentProject.textColor}
-                    invertedTextColor={currentProject.color}
-                  >
-                    <Copy size={18} className="inline mr-2" />
-                    Copy Prompt
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={handleLaunchWithAllPending}
-                    invertedBgColor={currentProject.textColor}
-                    invertedTextColor={currentProject.color}
-                  >
-                    <Wrench size={18} className="inline mr-2" />
-                    Fix
-                  </Button>
-                </>
-              )}
-              <Button
-                onClick={handleAddFeedback}
-                invertedBgColor={currentProject.textColor}
-                invertedTextColor={currentProject.color}
-              >
-                <Plus size={18} className="inline mr-2" />
-                Add
-              </Button>
-            </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('issues')}
+              className={`text-xl font-bold px-4 py-2 uppercase transition-colors ${
+                activeTab === 'issues'
+                  ? 'border-b-4 border-white'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                color: currentProject.textColor || '#FFFFFF',
+                textShadow: '2px 2px 0px rgba(0,0,0,1)',
+                marginBottom: '-4px'
+              }}
+            >
+              Issues ({issues.filter(i => i.status !== 'completed').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`text-xl font-bold px-4 py-2 uppercase transition-colors ${
+                activeTab === 'completed'
+                  ? 'border-b-4 border-white'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                color: currentProject.textColor || '#FFFFFF',
+                textShadow: '2px 2px 0px rgba(0,0,0,1)',
+                marginBottom: '-4px'
+              }}
+            >
+              Completed ({feedback.filter(f => f.status === 'completed').length + issues.filter(i => i.status === 'completed').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('archived')}
+              className={`text-xl font-bold px-4 py-2 uppercase transition-colors ${
+                activeTab === 'archived'
+                  ? 'border-b-4 border-white'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                color: currentProject.textColor || '#FFFFFF',
+                textShadow: '2px 2px 0px rgba(0,0,0,1)',
+                marginBottom: '-4px'
+              }}
+            >
+              Archived ({archivedFeedback.length})
+            </button>
           </div>
 
-          {feedback.length === 0 ? (
-            <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
-              <p>No feedback items yet.</p>
-              <p className="mt-2">Click "Add Feedback" to create one.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Pending Items */}
-              {feedback.filter(f => f.status === 'pending').sort((a, b) => a.priority - b.priority).length > 0 && (
+          {/* Feedback Tab */}
+          {activeTab === 'feedback' && (
+            <div>
+              <div className="flex items-center justify-end mb-6">
+                <div className="flex gap-2">
+                  {feedback.filter(f => f.status === 'pending').length > 0 && (
+                    <Button
+                      variant="secondary"
+                      onClick={handleRefineAllFeedback}
+                      invertedBgColor={currentProject.textColor}
+                      invertedTextColor={currentProject.color}
+                    >
+                      <Wrench size={18} className="inline mr-2" />
+                      Refine All
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleAddFeedback}
+                    invertedBgColor={currentProject.textColor}
+                    invertedTextColor={currentProject.color}
+                  >
+                    <Plus size={18} className="inline mr-2" />
+                    Add Feedback
+                  </Button>
+                </div>
+              </div>
+
+              {feedback.filter(f => f.status === 'pending').length === 0 ? (
+                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
+                  <p>No raw feedback items.</p>
+                  <p className="mt-2">Click "Add Feedback" to create one.</p>
+                </div>
+              ) : (
                 <div className="space-y-3">
                   {feedback
                     .filter(f => f.status === 'pending')
                     .sort((a, b) => a.priority - b.priority)
                     .map((item) => (
                       <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg">
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={false}
-                            onChange={() => handleToggleComplete(item.id)}
-                            className="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                          />
+                        <div className="flex items-start justify-between gap-4">
+                          <p className="text-white flex-1">{item.text}</p>
+                          <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
+                            {PRIORITY_LABELS[item.priority]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2">
+                          {formatDate(item.createdAt) && (
+                            <span className="text-white/80">{formatDate(item.createdAt)}</span>
+                          )}
+                          <div className="flex gap-2">
+                            <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
+                              <Edit size={14} className="inline mr-1" />
+                              Edit
+                            </button>
+                            <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100">
+                              <Trash2 size={14} className="inline mr-1" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Issues Tab */}
+          {activeTab === 'issues' && (
+            <div>
+              <div className="flex items-center justify-end mb-6">
+                <div className="flex gap-2">
+                  {issues.filter(i => i.status !== 'completed').length > 0 && (
+                    <Button
+                      variant="secondary"
+                      onClick={handleFixAllIssues}
+                      invertedBgColor={currentProject.textColor}
+                      invertedTextColor={currentProject.color}
+                    >
+                      <Hammer size={18} className="inline mr-2" />
+                      Fix All
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {issues.filter(i => i.status !== 'completed').length === 0 ? (
+                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
+                  <p>No issues yet.</p>
+                  <p className="mt-2">Refine raw feedback items to create issues.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {issues
+                    .filter(i => i.status !== 'completed')
+                    .sort((a, b) => a.priority - b.priority)
+                    .map((issue) => (
+                      <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <div className="flex items-start justify-between gap-4">
-                              <p className="text-white">{item.text}</p>
-                              <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
-                                {PRIORITY_LABELS[item.priority]}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 mt-2">
-                              {formatDate(item.createdAt) && (
-                                <span className="text-white/80">{formatDate(item.createdAt)}</span>
-                              )}
-                              <div className="flex gap-2">
-                                <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
-                                  <Edit size={14} className="inline mr-1" />
-                                  Edit
-                                </button>
-                                <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100">
-                                  <Trash2 size={14} className="inline mr-1" />
-                                  Delete
-                                </button>
+                            <h3 className="text-white font-bold text-lg mb-2">{issue.title}</h3>
+                            <p className="text-white/90 mb-3">{issue.description}</p>
+                            {issue.subtasks.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-white/80 text-sm font-bold mb-1">Subtasks:</p>
+                                <ul className="list-disc list-inside text-white/80 text-sm space-y-1">
+                                  {issue.subtasks.map((subtask, idx) => (
+                                    <li key={idx}>{subtask}</li>
+                                  ))}
+                                </ul>
                               </div>
+                            )}
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="text-white/80">Est: {issue.timeEstimate}</span>
+                              <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
+                                {PRIORITY_LABELS[issue.priority]}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -669,57 +771,105 @@ export function ProjectDetail() {
                     ))}
                 </div>
               )}
+            </div>
+          )}
 
-              {/* Completed Items */}
-              {feedback.filter(f => f.status === 'completed').length > 0 && (
-                <div>
-                  <h3 className="text-md mb-3" style={{ color: currentProject.textColor || '#FFFFFF' }}>Implemented</h3>
-                  <div className="space-y-3">
-                    {feedback
-                      .filter(f => f.status === 'completed')
-                      .sort((a, b) => {
-                        // Sort by completion date (most recent first)
-                        if (!a.completedAt && !b.completedAt) return 0;
-                        if (!a.completedAt) return 1;
-                        if (!b.completedAt) return -1;
-                        return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
-                      })
-                      .map((item) => (
-                        <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg opacity-60">
-                          <div className="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              checked={true}
-                              onChange={() => handleToggleComplete(item.id)}
-                              className="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between gap-4">
-                                <p className="text-white line-through">{item.text}</p>
-                                <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
-                                  {PRIORITY_LABELS[item.priority]}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4 mt-2">
-                                {item.completedAt && formatDate(item.completedAt) && (
-                                  <span className="text-white/80">Completed: {formatDate(item.completedAt)}</span>
-                                )}
-                                <div className="flex gap-2">
-                                  <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
-                                    <Edit size={14} className="inline mr-1" />
-                                    Edit
-                                  </button>
-                                  <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100">
-                                    <Trash2 size={14} className="inline mr-1" />
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
+          {/* Completed Tab */}
+          {activeTab === 'completed' && (
+            <div>
+              {feedback.filter(f => f.status === 'completed').length === 0 && issues.filter(i => i.status === 'completed').length === 0 ? (
+                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
+                  <p>No completed items yet.</p>
+                  <p className="mt-2">Completed feedback and issues will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Completed Feedback */}
+                  {feedback
+                    .filter(f => f.status === 'completed')
+                    .sort((a, b) => {
+                      if (!a.completedAt && !b.completedAt) return 0;
+                      if (!a.completedAt) return 1;
+                      if (!b.completedAt) return -1;
+                      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+                    })
+                    .map((item) => (
+                      <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg opacity-60">
+                        <div className="flex items-start justify-between gap-4">
+                          <p className="text-white flex-1 line-through">{item.text}</p>
+                          <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
+                            {PRIORITY_LABELS[item.priority]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2">
+                          {item.completedAt && formatDate(item.completedAt) && (
+                            <span className="text-white/80">Completed: {formatDate(item.completedAt)}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  {/* Completed Issues */}
+                  {issues
+                    .filter(i => i.status === 'completed')
+                    .sort((a, b) => {
+                      if (!a.completedAt && !b.completedAt) return 0;
+                      if (!a.completedAt) return 1;
+                      if (!b.completedAt) return -1;
+                      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+                    })
+                    .map((issue) => (
+                      <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg opacity-60">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-white font-bold text-lg mb-2 line-through">{issue.title}</h3>
+                            <p className="text-white/90 mb-3 line-through">{issue.description}</p>
+                            <div className="flex items-center gap-4 text-sm">
+                              {issue.completedAt && formatDate(issue.completedAt) && (
+                                <span className="text-white/80">Completed: {formatDate(issue.completedAt)}</span>
+                              )}
+                              <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
+                                {PRIORITY_LABELS[issue.priority]}
+                              </span>
                             </div>
                           </div>
                         </div>
-                      ))}
-                  </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Archived Tab */}
+          {activeTab === 'archived' && (
+            <div>
+              {archivedFeedback.length === 0 ? (
+                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
+                  <p>No archived feedback.</p>
+                  <p className="mt-2">Refined feedback items will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {archivedFeedback
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map((item) => (
+                      <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 shadow-lg opacity-70">
+                        <div className="flex items-start justify-between gap-4">
+                          <p className="text-white flex-1">{item.text}</p>
+                          <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
+                            {PRIORITY_LABELS[item.priority]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2">
+                          {formatDate(item.createdAt) && (
+                            <span className="text-white/80">Created: {formatDate(item.createdAt)}</span>
+                          )}
+                          {item.refinedIntoIssueIds && item.refinedIntoIssueIds.length > 0 && (
+                            <span className="text-white/80">→ {item.refinedIntoIssueIds.length} issue(s)</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>

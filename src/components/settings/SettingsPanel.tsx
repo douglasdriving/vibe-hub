@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Folder } from 'lucide-react';
+import { ArrowLeft, Folder, FileText } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { Button } from '../common/Button';
 import { APP_NAME } from '../../utils/constants';
+import * as tauri from '../../services/tauri';
 
 export function SettingsPanel() {
   const navigate = useNavigate();
@@ -30,6 +31,18 @@ export function SettingsPanel() {
 
   const handleBack = () => {
     navigate('/');
+  };
+
+  const handleOpenDebugLog = async () => {
+    try {
+      const logPath = await tauri.getDebugLogPath();
+      alert(`Debug log location:\n${logPath}\n\nOpening in Explorer...`);
+      // Open the temp folder
+      const tempDir = logPath.substring(0, logPath.lastIndexOf('\\'));
+      await tauri.openInExplorer(tempDir);
+    } catch (error) {
+      alert(`Failed to get debug log path: ${error}`);
+    }
   };
 
   return (
@@ -112,6 +125,21 @@ export function SettingsPanel() {
               {settings?.soundEffectsEnabled ? 'Enabled' : 'Disabled'}
             </div>
           </label>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Debug
+          </h2>
+
+          <p className="text-gray-600 text-sm mb-4">
+            View debug logs to troubleshoot issues with Claude Code launcher and other features.
+          </p>
+
+          <Button onClick={handleOpenDebugLog} variant="secondary">
+            <FileText size={18} className="inline mr-2" />
+            Open Debug Log
+          </Button>
         </div>
       </main>
     </div>

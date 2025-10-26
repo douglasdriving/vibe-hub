@@ -5,7 +5,7 @@ use std::io::Write;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
-fn log_to_file(message: &str) {
+pub fn log_to_file(message: &str) {
     let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
     let log_message = format!("[{}] {}", timestamp, message);
 
@@ -37,6 +37,12 @@ fn log_to_file(message: &str) {
 }
 
 #[tauri::command]
+pub async fn log_debug(message: String) -> Result<(), String> {
+    log_to_file(&format!("[FRONTEND] {}", message));
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<(), String> {
     log_to_file(&format!("launch_claude_code called with path: {}", project_path));
     log_to_file(&format!("Prompt length: {} chars", prompt.len()));
@@ -48,14 +54,23 @@ pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<
         let temp_dir = std::env::temp_dir();
         let batch_file = temp_dir.join("vibe-hub-launch-claude.bat");
 
-        // Escape double quotes in the prompt for batch file
-        let escaped_prompt = prompt.replace("\"", "\"\"");
-
-        // Generate batch file that launches claude with the prompt
+        // Generate batch file that launches claude with or without a prompt
         let batch_content = if !prompt.is_empty() {
+            // Write the prompt to a temporary text file
+            let prompt_file = temp_dir.join("vibe-hub-claude-prompt.txt");
+            if let Err(e) = std::fs::write(&prompt_file, &prompt) {
+                let error_msg = format!("Failed to create prompt file: {}", e);
+                log_to_file(&error_msg);
+                return Err(error_msg);
+            }
+            log_to_file(&format!("Prompt file created at: {:?}", prompt_file));
+
+            // Read the prompt from the file and pass it as a command-line argument
+            // Using @file syntax to read from file
             format!(
-                "@echo off\ncd /d \"{}\"\nclaude \"{}\"\npause",
-                project_path, escaped_prompt
+                "@echo off\ncd /d \"{}\"\nclaude \"@{}\"\npause",
+                project_path,
+                prompt_file.display()
             )
         } else {
             format!(
@@ -65,7 +80,6 @@ pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<
         };
 
         log_to_file(&format!("Creating batch file at: {:?}", batch_file));
-        log_to_file(&format!("Batch content: {}", batch_content));
 
         // Write the batch file
         if let Err(e) = std::fs::write(&batch_file, batch_content) {

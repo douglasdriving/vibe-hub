@@ -53,6 +53,7 @@ pub fn run() {
             launcher::open_in_terminal,
             launcher::open_in_fork,
             launcher::get_debug_log_path,
+            launcher::log_debug,
             // Prompts commands
             prompts::get_prompt,
             // NPM commands

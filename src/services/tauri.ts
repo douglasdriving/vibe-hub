@@ -152,17 +152,29 @@ export async function deleteIssue(
   return await invoke('delete_issue', { projectPath, issueId });
 }
 
+// Debug logging
+export async function logDebug(message: string): Promise<void> {
+  try {
+    await invoke('log_debug', { message });
+  } catch (error) {
+    console.error('[tauri.ts] log_debug failed:', error);
+  }
+}
+
 // Launcher commands
 export async function launchClaudeCode(
   projectPath: string,
   prompt: string
 ): Promise<void> {
   console.log('[tauri.ts] launchClaudeCode called with:', { projectPath, promptLength: prompt.length });
+  await logDebug('[tauri.ts] launchClaudeCode called with path: ' + projectPath);
   try {
     await invoke('launch_claude_code', { projectPath, prompt });
     console.log('[tauri.ts] launchClaudeCode invoke completed successfully');
+    await logDebug('[tauri.ts] launchClaudeCode completed successfully');
   } catch (error) {
     console.error('[tauri.ts] launchClaudeCode invoke failed:', error);
+    await logDebug('[tauri.ts] launchClaudeCode failed: ' + String(error));
     throw error;
   }
 }

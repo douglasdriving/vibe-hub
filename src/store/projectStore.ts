@@ -325,33 +325,24 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   // Launch Claude Code with feedback context
-  launchClaudeCode: async (projectPath: string, _feedbackIds?: string[]) => {
-    console.log('[projectStore] launchClaudeCode started for:', projectPath);
+  launchClaudeCode: async (projectPath: string, feedbackIds?: string[]) => {
     try {
-      const { currentProject } = get();
-      console.log('[projectStore] Current project:', currentProject?.name);
+      let prompt = '';
 
-      // Generate prompt that references the feedback.json file directly
-      console.log('[projectStore] Generating Claude prompt...');
-      const prompt = await generateClaudePrompt(
-        currentProject?.name || 'Project',
-        projectPath
-      );
-      console.log('[projectStore] Prompt generated, length:', prompt.length);
+      // Only generate a prompt if feedback items are specified
+      if (feedbackIds && feedbackIds.length > 0) {
+        const { currentProject } = get();
+        prompt = await generateClaudePrompt(
+          currentProject?.name || 'Project',
+          projectPath
+        );
+      }
 
-      // Copy prompt to clipboard first
-      console.log('[projectStore] Copying to clipboard...');
-      await navigator.clipboard.writeText(prompt);
-      console.log('[projectStore] Clipboard copy successful');
-
-      // Then launch Claude Code
-      console.log('[projectStore] Calling tauri.launchClaudeCode...');
+      // Launch Claude Code with or without prompt
       await tauri.launchClaudeCode(projectPath, prompt);
-      console.log('[projectStore] tauri.launchClaudeCode completed successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('[projectStore] Failed to launch Claude Code:', errorMessage);
-      alert(`Failed to launch Claude Code: ${errorMessage}\n\nCheck the debug log for more details.`);
       throw error;
     }
   },

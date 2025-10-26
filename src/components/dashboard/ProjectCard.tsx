@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { ExternalLink, Folder, Terminal } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import type { Project } from '../../store/types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS } from '../../store/types';
 import { formatRelativeTime } from '../../utils/formatters';
-import { useProjectStore } from '../../store/projectStore';
 import { soundEffects } from '../../utils/sounds';
 
 interface ProjectCardProps {
@@ -12,7 +11,6 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
-  const { openInExplorer, launchClaudeCode } = useProjectStore();
 
   const handleOpenProject = () => {
     soundEffects.playWhoosh();
@@ -21,16 +19,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   const handleHover = () => {
     soundEffects.playHover();
-  };
-
-  const handleOpenExplorer = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    openInExplorer(project.path);
-  };
-
-  const handleLaunchClaude = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    launchClaudeCode(project.path);
   };
 
   const cardStyle = project.color
@@ -97,36 +85,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4" style={{ borderTop: `1px solid ${project.textColor}40` }}>
-        <div className="flex items-center gap-4 text-base" style={{ color: project.textColor || '#FFFFFF' }}>
-          {project.lastModified && <span>{formatRelativeTime(project.lastModified)}</span>}
-          {project.deploymentUrl && (
-            <span className="flex items-center gap-1" style={{ color: project.textColor || '#FFFFFF' }}>
-              <ExternalLink size={16} />
-              Deployed
-            </span>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={handleOpenExplorer}
-            className="p-2 hover:bg-white/20 rounded transition-colors"
-            style={{ color: project.textColor || '#FFFFFF' }}
-            title="Open in Explorer"
-          >
-            <Folder size={18} />
-          </button>
-          <button
-            onClick={handleLaunchClaude}
-            className="p-2 hover:bg-white/20 rounded transition-colors"
-            style={{ color: project.textColor || '#FFFFFF' }}
-            title="Open Claude Code"
-          >
-            <Terminal size={18} />
-          </button>
-        </div>
+      <div className="flex items-center gap-4 text-base pt-4" style={{ borderTop: `1px solid ${project.textColor}40`, color: project.textColor || '#FFFFFF' }}>
+        {project.lastModified && <span>{formatRelativeTime(project.lastModified)}</span>}
+        {project.deploymentUrl && (
+          <span className="flex items-center gap-1" style={{ color: project.textColor || '#FFFFFF' }}>
+            <ExternalLink size={16} />
+            Deployed
+          </span>
+        )}
       </div>
     </div>
   );

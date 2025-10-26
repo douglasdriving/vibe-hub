@@ -17,7 +17,14 @@
       "Bash(git reset:*)",
       "Bash(npm run tauri:*)",
       "WebSearch",
-      "Bash(cargo fix:*)"
+      "Bash(cargo fix:*)",
+      "Bash(cmd /c \"echo %TEMP%\")",
+      "Read(//e//**)",
+      "Read(//tmp/**)",
+      "Bash(cmd /c \"C:\\Users\\dougl\\AppData\\Local\\Temp\\vibe-hub-launch-claude.bat\")",
+      "Bash(cat:*)",
+      "Read(//c/Users/**)",
+      "Bash(cmd /c \"dir %TEMP%\\vibe-hub-*.* 2>nul\")"
     ],
     "deny": [],
     "ask": []

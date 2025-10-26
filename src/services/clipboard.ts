@@ -2,25 +2,41 @@ import type { FeedbackItem } from '../store/types';
 import * as tauri from './tauri';
 
 /**
- * Generate a Claude Code prompt for feedback workflow
- *
- * Loads the prompt template from prompts.json at the project root.
- * The prompt references the feedback.json file directly instead of
- * embedding all feedback items in the prompt text.
- *
- * Edit prompts.json to customize the feedback workflow prompt.
+ * Generate a Claude Code prompt for refining raw feedback
+ */
+export async function generateFeedbackRefinementPrompt(
+  projectName: string,
+  projectPath: string
+): Promise<string> {
+  return await tauri.getPrompt('feedbackRefinement', {
+    PROJECT_NAME: projectName,
+    PROJECT_PATH: projectPath
+  });
+}
+
+/**
+ * Generate a Claude Code prompt for implementing refined issues
+ */
+export async function generateIssueFixPrompt(
+  projectName: string,
+  projectPath: string
+): Promise<string> {
+  return await tauri.getPrompt('issueFix', {
+    PROJECT_NAME: projectName,
+    PROJECT_PATH: projectPath
+  });
+}
+
+/**
+ * @deprecated Use generateFeedbackRefinementPrompt or generateIssueFixPrompt instead
  */
 export async function generateClaudePrompt(
   projectName: string,
   projectPath: string,
-  _feedbackItems?: FeedbackItem[] // Kept for backwards compatibility but not used
+  _feedbackItems?: FeedbackItem[]
 ): Promise<string> {
-  // Load prompt from prompts.json
-  // The prompt will instruct Claude to read feedback.json directly
-  return await tauri.getPrompt('feedbackWorkflow', {
-    PROJECT_NAME: projectName,
-    PROJECT_PATH: projectPath
-  });
+  // Default to issueFix for backward compatibility
+  return generateIssueFixPrompt(projectName, projectPath);
 }
 
 /**
