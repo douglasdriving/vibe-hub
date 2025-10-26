@@ -39,7 +39,7 @@ pub struct UpdateFeedbackItem {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FeedbackFile {
-    #[serde(alias = "archivedFeedback")]
+    #[serde(alias = "archivedFeedback", alias = "archived")]
     pub feedback: Vec<FeedbackItem>,
 }
 

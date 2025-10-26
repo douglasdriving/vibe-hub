@@ -1,4 +1,4 @@
-use crate::models::{Project, FeedbackFile};
+use crate::models::{Project, FeedbackFile, IssueFile};
 use std::fs;
 use std::path::Path;
 use uuid::Uuid;
@@ -16,6 +16,7 @@ fn git_command() -> std::process::Command {
 
 const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
+const ISSUES_FILE: &str = "issues.json";
 const METADATA_FILE: &str = "metadata.md";
 
 // Project pipeline documents
@@ -112,6 +113,20 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
 
     serde_json::from_str(&contents)
         .map_err(|e| format!("Failed to parse feedback file: {}", e))
+}
+
+fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
+    let issues_path = project_path.join(VIBE_DIR).join(ISSUES_FILE);
+
+    if !issues_path.exists() {
+        return Ok(IssueFile::default());
+    }
+
+    let contents = fs::read_to_string(&issues_path)
+        .map_err(|e| format!("Failed to read issues file: {}", e))?;
+
+    serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse issues file: {}", e))
 }
 
 fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
@@ -414,9 +429,17 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let feedback_file = read_feedback_file(&path).unwrap_or_default();
             let pending_feedback: Vec<_> = feedback_file.feedback.iter().filter(|f| f.status == "pending").collect();
-            let feedback_count = pending_feedback.len();
+
+            let issues_file = read_issues_file(&path).unwrap_or_default();
+            let pending_issues: Vec<_> = issues_file.issues.iter().filter(|i| i.status == "pending").collect();
+
+            // Combine feedback and issues count
+            let feedback_count = pending_feedback.len() + pending_issues.len();
+
+            // Find highest priority from both feedback and issues
             let highest_feedback_priority = pending_feedback.iter()
                 .map(|f| f.priority)
+                .chain(pending_issues.iter().map(|i| i.priority))
                 .min(); // Lower number = higher priority (1 is highest)
 
             let project = Project {
@@ -486,9 +509,17 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let feedback_file = read_feedback_file(path).unwrap_or_default();
     let pending_feedback: Vec<_> = feedback_file.feedback.iter().filter(|f| f.status == "pending").collect();
-    let feedback_count = pending_feedback.len();
+
+    let issues_file = read_issues_file(path).unwrap_or_default();
+    let pending_issues: Vec<_> = issues_file.issues.iter().filter(|i| i.status == "pending").collect();
+
+    // Combine feedback and issues count
+    let feedback_count = pending_feedback.len() + pending_issues.len();
+
+    // Find highest priority from both feedback and issues
     let highest_feedback_priority = pending_feedback.iter()
         .map(|f| f.priority)
+        .chain(pending_issues.iter().map(|i| i.priority))
         .min(); // Lower number = higher priority (1 is highest)
 
     Ok(Project {
