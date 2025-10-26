@@ -24,7 +24,9 @@
       "Bash(cmd /c \"C:\\Users\\dougl\\AppData\\Local\\Temp\\vibe-hub-launch-claude.bat\")",
       "Bash(cat:*)",
       "Read(//c/Users/**)",
-      "Bash(cmd /c \"dir %TEMP%\\vibe-hub-*.* 2>nul\")"
+      "Bash(cmd /c \"dir %TEMP%\\vibe-hub-*.* 2>nul\")",
+      "Read(//e/projects/vibe/friend-gifting/.vibe/**)",
+      "Bash(cmd /c \"dir E:\\projects\\vibe\\friend-gifting\\.vibe\")"
     ],
     "deny": [],
     "ask": []
