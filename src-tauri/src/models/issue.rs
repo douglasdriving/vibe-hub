@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+fn default_time_estimate() -> String {
+    "Not estimated".to_string()
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Issue {
     pub id: String,
@@ -8,7 +12,7 @@ pub struct Issue {
     pub title: String,
     pub description: String,
     pub subtasks: Vec<String>,
-    #[serde(alias = "timeEstimate", rename = "timeEstimate")]
+    #[serde(alias = "timeEstimate", rename = "timeEstimate", default = "default_time_estimate")]
     pub time_estimate: String,
     pub priority: u8,
     pub status: String,

@@ -140,14 +140,23 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   // Set current project and load its feedback, issues, and archived feedback
   setCurrentProject: async (projectPath: string) => {
+    console.log('[projectStore] setCurrentProject called with:', projectPath);
     set({ isLoading: true, error: null });
     try {
       const { projects } = get();
+      console.log('[projectStore] Total projects in store:', projects.length);
+      console.log('[projectStore] Looking for project with path:', projectPath);
+
       const project = projects.find(p => p.path === projectPath);
 
       if (!project) {
+        console.error('[projectStore] Project NOT found!');
+        console.log('[projectStore] Available project paths:', projects.map(p => p.path));
         throw new Error('Project not found');
       }
+
+      console.log('[projectStore] Project found:', project.name);
+      console.log('[projectStore] Loading feedback, issues, and archived feedback...');
 
       const [feedback, issues, archivedFeedback] = await Promise.all([
         tauri.getFeedback(project.path),
@@ -155,9 +164,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         tauri.getArchivedFeedback(project.path)
       ]);
 
+      console.log('[projectStore] Loaded:', {
+        feedbackCount: feedback.length,
+        issuesCount: issues.length,
+        archivedCount: archivedFeedback.length
+      });
+
       set({ currentProject: project, feedback, issues, archivedFeedback, isLoading: false });
+      console.log('[projectStore] setCurrentProject completed successfully');
     } catch (error) {
+      console.error('[projectStore] setCurrentProject error:', error);
       set({ error: (error as Error).message, isLoading: false });
+      throw error;
     }
   },
 

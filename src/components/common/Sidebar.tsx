@@ -107,7 +107,17 @@ export function Sidebar() {
   };
 
   const handleProjectClick = (projectPath: string) => {
-    navigate(`/project/${encodeURIComponent(projectPath)}`);
+    console.log('[Sidebar] Project clicked:', projectPath);
+    const encodedPath = encodeURIComponent(projectPath);
+    console.log('[Sidebar] Encoded path:', encodedPath);
+    const targetUrl = `/project/${encodedPath}`;
+    console.log('[Sidebar] Navigating to:', targetUrl);
+    try {
+      navigate(targetUrl);
+      console.log('[Sidebar] Navigation called successfully');
+    } catch (error) {
+      console.error('[Sidebar] Navigation error:', error);
+    }
   };
 
   const isOnDashboard = location.pathname === '/';

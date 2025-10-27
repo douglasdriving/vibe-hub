@@ -22,6 +22,7 @@ export function ProjectDetail() {
     feedback,
     issues,
     archivedFeedback,
+    error: projectError,
     setCurrentProject,
     refreshProject,
     addFeedback,
@@ -48,10 +49,27 @@ export function ProjectDetail() {
   const projectPath = id ? decodeURIComponent(id) : null;
 
   useEffect(() => {
+    console.log('[ProjectDetail] useEffect triggered');
+    console.log('[ProjectDetail] URL id param:', id);
+    console.log('[ProjectDetail] Decoded projectPath:', projectPath);
+    console.log('[ProjectDetail] currentProject:', currentProject);
+    console.log('[ProjectDetail] hasLoaded:', hasLoaded);
+
     // Only load project if we haven't loaded it yet, or if the path changed
     if (projectPath && (!currentProject || currentProject.path !== projectPath || !hasLoaded)) {
-      setCurrentProject(projectPath);
-      setHasLoaded(true);
+      console.log('[ProjectDetail] Conditions met, calling setCurrentProject with:', projectPath);
+      try {
+        setCurrentProject(projectPath);
+        setHasLoaded(true);
+        console.log('[ProjectDetail] setCurrentProject called successfully');
+      } catch (error) {
+        console.error('[ProjectDetail] Error calling setCurrentProject:', error);
+      }
+    } else {
+      console.log('[ProjectDetail] Conditions NOT met, skipping load');
+      console.log('[ProjectDetail] - projectPath exists?', !!projectPath);
+      console.log('[ProjectDetail] - currentProject path matches?', currentProject?.path === projectPath);
+      console.log('[ProjectDetail] - hasLoaded?', hasLoaded);
     }
   }, [projectPath]);
 
@@ -311,6 +329,54 @@ export function ProjectDetail() {
     }
   };
 
+
+  if (projectError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="max-w-2xl w-full bg-red-50 border-4 border-red-500 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-red-900 mb-2">Failed to Load Project</h2>
+              <p className="text-red-800 mb-4">{projectError}</p>
+
+              {projectError.includes('issues file') && (
+                <div className="bg-white border-2 border-red-300 rounded p-4 mb-4">
+                  <h3 className="font-bold text-red-900 mb-2">Issue File Format Error</h3>
+                  <p className="text-sm text-red-800 mb-2">
+                    The <code className="bg-red-100 px-1 rounded">.vibe/issues.json</code> file has an incorrect format.
+                    It may be missing required fields like <code className="bg-red-100 px-1 rounded">timeEstimate</code>.
+                  </p>
+                  <p className="text-sm text-red-800">
+                    Please check the file or delete it to reset. See the console for more details.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigate('/')}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                >
+                  Back to Dashboard
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                >
+                  Reload App
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentProject) {
     return (
