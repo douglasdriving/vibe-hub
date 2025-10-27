@@ -2,7 +2,53 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Circle } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
+import type { Project } from '../../store/types';
 import * as tauri from '../../services/tauri';
+
+// Status sort order (workflow order)
+const STATUS_ORDER = [
+  'deployed',
+  'deployment',
+  'design-testing',
+  'technical-testing',
+  'mvp-implemented',
+  'metadata-ready',
+  'tech-spec-ready',
+  'designed',
+  'idea',
+  'initialized',
+];
+
+// Sort projects by status (workflow order) and then by lastModified within each status group
+function sortProjectsByStatus(projects: Project[]): Project[] {
+  return [...projects].sort((a, b) => {
+    const aStatusIndex = STATUS_ORDER.indexOf(a.status);
+    const bStatusIndex = STATUS_ORDER.indexOf(b.status);
+
+    // First sort by status
+    if (aStatusIndex !== bStatusIndex) {
+      return aStatusIndex - bStatusIndex;
+    }
+
+    // Then sort by lastModified within same status (newest first)
+    return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+  });
+}
+
+// Group projects by status
+function groupProjectsByStatus(projects: Project[]): Map<string, Project[]> {
+  const groups = new Map<string, Project[]>();
+
+  for (const project of projects) {
+    const status = project.status;
+    if (!groups.has(status)) {
+      groups.set(status, []);
+    }
+    groups.get(status)!.push(project);
+  }
+
+  return groups;
+}
 
 // Generate a consistent color from a string using a simple hash
 function hashStringToColor(str: string): string {
@@ -125,25 +171,47 @@ export function Sidebar() {
 
       {/* Project list */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-4">
-        {projects.map((project) => {
-          const pendingCount = project.feedbackCount || 0;
-          const sessionStatus = sessionStatuses.get(project.path);
-          const hasClaudeSession = sessionStatus?.status === 'running';
-          const isActive = currentProjectPath === project.path;
+        {(() => {
+          const sortedProjects = sortProjectsByStatus(projects);
+          const groupedProjects = groupProjectsByStatus(sortedProjects);
+          const statusGroups: JSX.Element[] = [];
 
-          return (
-            <div key={project.id} className="flex justify-center px-2">
-              <ProjectIcon
-                projectName={project.displayName || project.name}
-                color={project.color || hashStringToColor(project.name)}
-                pendingCount={pendingCount}
-                isActive={isActive}
-                hasClaudeSession={hasClaudeSession}
-                onClick={() => handleProjectClick(project.path)}
-              />
-            </div>
-          );
-        })}
+          // Render groups in status order
+          STATUS_ORDER.forEach((status) => {
+            const projectsInStatus = groupedProjects.get(status);
+            if (!projectsInStatus || projectsInStatus.length === 0) return;
+
+            // Add divider before each group (except the first)
+            if (statusGroups.length > 0) {
+              statusGroups.push(
+                <div key={`divider-${status}`} className="border-t border-gray-700 mx-4 my-2" />
+              );
+            }
+
+            // Add projects in this status group
+            projectsInStatus.forEach((project) => {
+              const pendingCount = project.feedbackCount || 0;
+              const sessionStatus = sessionStatuses.get(project.path);
+              const hasClaudeSession = sessionStatus?.status === 'running';
+              const isActive = currentProjectPath === project.path;
+
+              statusGroups.push(
+                <div key={project.id} className="flex justify-center px-2">
+                  <ProjectIcon
+                    projectName={project.displayName || project.name}
+                    color={project.color || hashStringToColor(project.name)}
+                    pendingCount={pendingCount}
+                    isActive={isActive}
+                    hasClaudeSession={hasClaudeSession}
+                    onClick={() => handleProjectClick(project.path)}
+                  />
+                </div>
+              );
+            });
+          });
+
+          return statusGroups;
+        })()}
       </div>
     </div>
   );
