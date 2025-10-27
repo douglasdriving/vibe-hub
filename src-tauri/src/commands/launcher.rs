@@ -321,10 +321,68 @@ pub async fn open_in_fork(project_path: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_session_status(project_path: String) -> Result<SessionInfo, String> {
-    let sessions = SESSIONS.lock().unwrap();
+    // First check if we have a session registered
+    let has_session = {
+        let sessions = SESSIONS.lock().unwrap();
+        sessions.contains_key(&project_path)
+    };
 
-    if let Some(session) = sessions.get(&project_path) {
-        Ok(session.clone())
+    if has_session {
+        // Verify the window still exists
+        #[cfg(target_os = "windows")]
+        {
+            use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
+            use windows::core::PCWSTR;
+
+            let title_patterns = vec![
+                "Claude Code - Vibe Hub",
+                "Claude Code",
+                "claude",
+            ];
+
+            let mut window_found = false;
+
+            unsafe {
+                for pattern in title_patterns {
+                    let window_title: Vec<u16> = pattern
+                        .encode_utf16()
+                        .chain(std::iter::once(0))
+                        .collect();
+
+                    if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(window_title.as_ptr())) {
+                        if !hwnd.is_invalid() {
+                            window_found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if !window_found {
+                // Window is gone, clean up the session
+                let mut sessions = SESSIONS.lock().unwrap();
+                sessions.remove(&project_path);
+                log_to_file(&format!("Session cleanup: window not found for {}", project_path));
+
+                return Ok(SessionInfo {
+                    project_path: project_path.clone(),
+                    status: "not_started".to_string(),
+                    pid: None,
+                });
+            }
+        }
+
+        // Window still exists or we're not on Windows, return the session
+        let sessions = SESSIONS.lock().unwrap();
+        if let Some(session) = sessions.get(&project_path) {
+            Ok(session.clone())
+        } else {
+            Ok(SessionInfo {
+                project_path: project_path.clone(),
+                status: "not_started".to_string(),
+                pid: None,
+            })
+        }
     } else {
         // Return not_started status if no session exists
         Ok(SessionInfo {
