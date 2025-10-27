@@ -1,20 +1,3 @@
 {
-  "feedback": [
-    {
-      "id": "186e688a-8884-4efe-bd95-6c002e4ee090",
-      "text": "feature: integrate claude into the vibe hub itself. When you open a project page, an \"integrated\" terminal with claude open it it could be show on the top of the page. When you press \"fix\" or any other prompt, that one is just copied and fired right into that terminal. Instead of flipping between vibe-hub and the claude terminal, you would simply move between the different project pages to see how claude is doing there. Important note is that claude have to keep running even if you exit out of a project page and back to the dashboard.",
-      "priority": 2,
-      "status": "pending",
-      "createdAt": "2025-10-26T04:35:48.591458700+00:00",
-      "completedAt": null
-    },
-    {
-      "id": "334acb30-25a5-4413-b50b-29159fd1ecd9",
-      "text": "okay so right now, to navigate between project, you have to exit to the dashboard and click on a different project. to make this navigation easier, add a sidebar menu to the left, where each project has a little icon or something in a list. to navigate to that project page, simply click on the icon. the dashboard can still be reachable via a \"home\" button at the top of the sidebar, so that you can get the project overview view if you want it.",
-      "priority": 4,
-      "status": "pending",
-      "createdAt": "2025-10-26T04:38:53.450268500+00:00",
-      "completedAt": null
-    }
-  ]
+  "feedback": []
 }

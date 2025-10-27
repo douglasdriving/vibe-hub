@@ -1,4 +1,4 @@
-use crate::models::{Issue, IssueFile, NewIssue, UpdateIssue};
+use crate::models::{Issue, IssueFile, NewIssue, UpdateIssue, FeedbackFile};
 use std::fs;
 use std::path::Path;
 use uuid::Uuid;
@@ -6,6 +6,7 @@ use chrono;
 
 const VIBE_DIR: &str = ".vibe";
 const ISSUES_FILE: &str = "issues.json";
+const FEEDBACK_ARCHIVE_FILE: &str = "feedback-archive.json";
 
 fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
     let issues_path = project_path.join(VIBE_DIR).join(ISSUES_FILE);
@@ -36,6 +37,39 @@ fn write_issues_file(project_path: &Path, issues_file: &IssueFile) -> Result<(),
 
     fs::write(&issues_path, json)
         .map_err(|e| format!("Failed to write issues file: {}", e))?;
+
+    Ok(())
+}
+
+fn read_archived_feedback(project_path: &Path) -> Result<FeedbackFile, String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_ARCHIVE_FILE);
+
+    if !feedback_path.exists() {
+        return Ok(FeedbackFile::default());
+    }
+
+    let contents = fs::read_to_string(&feedback_path)
+        .map_err(|e| format!("Failed to read feedback archive file: {}", e))?;
+
+    serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse feedback archive file: {}", e))
+}
+
+fn write_archived_feedback(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
+    let vibe_dir = project_path.join(VIBE_DIR);
+    let feedback_path = vibe_dir.join(FEEDBACK_ARCHIVE_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    let json = serde_json::to_string_pretty(feedback_file)
+        .map_err(|e| format!("Failed to serialize feedback archive: {}", e))?;
+
+    fs::write(&feedback_path, json)
+        .map_err(|e| format!("Failed to write feedback archive file: {}", e))?;
 
     Ok(())
 }
@@ -133,9 +167,29 @@ pub async fn delete_issue(project_path: String, issue_id: String) -> Result<(), 
     let path = Path::new(&project_path);
     let mut issues_file = read_issues_file(path)?;
 
-    issues_file.issues.retain(|i| i.id != issue_id);
+    // Find the issue to get its original feedback ID before deleting
+    let original_feedback_id = issues_file.issues
+        .iter()
+        .find(|i| i.id == issue_id)
+        .and_then(|i| i.original_feedback_id.clone());
 
+    // Remove the issue from issues.json
+    issues_file.issues.retain(|i| i.id != issue_id);
     write_issues_file(path, &issues_file)?;
+
+    // If the issue was linked to archived feedback, clean up the link
+    if let Some(feedback_id) = original_feedback_id {
+        let mut archive_file = read_archived_feedback(path)?;
+
+        // Find the archived feedback item and remove this issue ID from its refinedIntoIssueIds array
+        if let Some(feedback_item) = archive_file.feedback.iter_mut().find(|f| f.id == feedback_id) {
+            if let Some(ref mut issue_ids) = feedback_item.refined_into_issue_ids {
+                issue_ids.retain(|id| id != &issue_id);
+            }
+        }
+
+        write_archived_feedback(path, &archive_file)?;
+    }
 
     Ok(())
 }

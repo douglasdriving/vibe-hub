@@ -26,6 +26,7 @@ export function ProjectDetail() {
     addFeedback,
     updateFeedback,
     deleteFeedback,
+    deleteIssue,
     launchClaudeCode,
     openInExplorer,
     openDeploymentUrl,
@@ -142,6 +143,17 @@ export function ProjectDetail() {
 
     try {
       await deleteFeedback(currentProject.path, feedbackId);
+    } catch {
+      // Silently handle error
+    }
+  };
+
+  const handleDeleteIssue = async (issueId: string) => {
+    if (!currentProject) return;
+    if (!confirm('Are you sure you want to delete this issue?')) return;
+
+    try {
+      await deleteIssue(currentProject.path, issueId);
     } catch {
       // Silently handle error
     }
@@ -767,6 +779,10 @@ export function ProjectDetail() {
                               <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
                                 {PRIORITY_LABELS[issue.priority]}
                               </span>
+                              <button onClick={() => handleDeleteIssue(issue.id)} className="text-red-300 hover:text-red-100 ml-2">
+                                <Trash2 size={14} className="inline mr-1" />
+                                Delete
+                              </button>
                             </div>
                           </div>
                         </div>
