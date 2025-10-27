@@ -825,16 +825,7 @@ export function ProjectDetail() {
                           <div className="flex-1">
                             <h3 className="text-white font-bold text-lg mb-2">{issue.title}</h3>
                             <p className="text-white/90 mb-3">{issue.description}</p>
-                            {issue.subtasks.length > 0 && (
-                              <div className="mb-3">
-                                <p className="text-white/80 text-sm font-bold mb-1">Subtasks:</p>
-                                <ul className="list-disc list-inside text-white/80 text-sm space-y-1">
-                                  {issue.subtasks.map((subtask, idx) => (
-                                    <li key={idx}>{subtask}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                            {/* Subtasks are hidden from UI - they're implementation details for Claude */}
                             <div className="flex items-center gap-4 text-sm">
                               <span className="text-white/80">Est: {issue.timeEstimate}</span>
                               <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
