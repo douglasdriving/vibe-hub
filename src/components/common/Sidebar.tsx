@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Circle } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import type { Project } from '../../store/types';
-import * as tauri from '../../services/tauri';
 
 // Status sort order (workflow order)
 const STATUS_ORDER = [
@@ -67,11 +65,10 @@ interface ProjectIconProps {
   color: string;
   pendingCount: number;
   isActive: boolean;
-  hasClaudeSession: boolean;
   onClick: () => void;
 }
 
-function ProjectIcon({ projectName, color, pendingCount, isActive, hasClaudeSession, onClick }: ProjectIconProps) {
+function ProjectIcon({ projectName, color, pendingCount, isActive, onClick }: ProjectIconProps) {
   const initial = projectName.charAt(0).toUpperCase();
 
   return (
@@ -91,14 +88,6 @@ function ProjectIcon({ projectName, color, pendingCount, isActive, hasClaudeSess
           {pendingCount > 9 ? '9+' : pendingCount}
         </span>
       )}
-
-      {/* Claude session indicator */}
-      {hasClaudeSession && (
-        <Circle
-          size={12}
-          className="absolute -bottom-1 -right-1 bg-green-500 fill-current text-green-500 border-2 border-white rounded-full"
-        />
-      )}
     </button>
   );
 }
@@ -107,28 +96,6 @@ export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projects } = useProjectStore();
-  const [sessionStatuses, setSessionStatuses] = useState<Map<string, tauri.SessionInfo>>(new Map());
-
-  // Poll for Claude session statuses
-  useEffect(() => {
-    const loadSessionStatuses = async () => {
-      const statuses = new Map<string, tauri.SessionInfo>();
-      for (const project of projects) {
-        try {
-          const status = await tauri.getSessionStatus(project.path);
-          statuses.set(project.path, status);
-        } catch (error) {
-          console.error(`Failed to get session status for ${project.path}:`, error);
-        }
-      }
-      setSessionStatuses(statuses);
-    };
-
-    loadSessionStatuses();
-    const interval = setInterval(loadSessionStatuses, 10000); // Poll every 10 seconds
-
-    return () => clearInterval(interval);
-  }, [projects]);
 
   const handleHomeClick = () => {
     navigate('/');
@@ -184,15 +151,13 @@ export function Sidebar() {
             // Add divider before each group (except the first)
             if (statusGroups.length > 0) {
               statusGroups.push(
-                <div key={`divider-${status}`} className="border-t border-gray-700 mx-4 my-2" />
+                <div key={`divider-${status}`} className="border-t-2 border-gray-700 mx-4 my-2" />
               );
             }
 
             // Add projects in this status group
             projectsInStatus.forEach((project) => {
               const pendingCount = project.feedbackCount || 0;
-              const sessionStatus = sessionStatuses.get(project.path);
-              const hasClaudeSession = sessionStatus?.status === 'running';
               const isActive = currentProjectPath === project.path;
 
               statusGroups.push(
@@ -202,7 +167,6 @@ export function Sidebar() {
                     color={project.color || hashStringToColor(project.name)}
                     pendingCount={pendingCount}
                     isActive={isActive}
-                    hasClaudeSession={hasClaudeSession}
                     onClick={() => handleProjectClick(project.path)}
                   />
                 </div>

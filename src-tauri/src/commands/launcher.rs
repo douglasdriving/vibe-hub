@@ -18,6 +18,8 @@ pub struct SessionInfo {
     pub project_path: String,
     pub status: String, // "running", "idle", "not_started"
     pub pid: Option<u32>,
+    #[serde(skip)]
+    pub created_at: Option<std::time::Instant>,
 }
 
 impl SessionInfo {
@@ -26,6 +28,7 @@ impl SessionInfo {
             project_path,
             status: "running".to_string(),
             pid,
+            created_at: Some(std::time::Instant::now()),
         }
     }
 }
@@ -338,47 +341,27 @@ pub async fn get_session_status(project_path: String) -> Result<SessionInfo, Str
     };
 
     if has_session {
-        // Verify the window still exists
-        #[cfg(target_os = "windows")]
-        {
-            use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
-            use windows::core::PCWSTR;
-
-            // Extract project name for unique window title
-            let project_name = std::path::Path::new(&project_path)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("Project");
-
-            let window_title = format!("Claude Code - {}", project_name);
-
-            let mut window_found = false;
-
-            unsafe {
-                let title_wide: Vec<u16> = window_title
-                    .encode_utf16()
-                    .chain(std::iter::once(0))
-                    .collect();
-
-                if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(title_wide.as_ptr())) {
-                    if !hwnd.is_invalid() {
-                        window_found = true;
-                    }
+        // Only verify window exists after grace period (30 seconds)
+        // This gives the terminal time to launch and set its title
+        let should_verify = {
+            let sessions = SESSIONS.lock().unwrap();
+            if let Some(session) = sessions.get(&project_path) {
+                if let Some(created_at) = session.created_at {
+                    created_at.elapsed().as_secs() > 30
+                } else {
+                    true // Verify if no timestamp (old sessions)
                 }
+            } else {
+                false
             }
+        };
 
-            if !window_found {
-                // Window is gone, clean up the session
-                let mut sessions = SESSIONS.lock().unwrap();
-                sessions.remove(&project_path);
-                log_to_file(&format!("Session cleanup: window not found for {}", project_path));
-
-                return Ok(SessionInfo {
-                    project_path: project_path.clone(),
-                    status: "not_started".to_string(),
-                    pid: None,
-                });
-            }
+        // Note: Window verification disabled because Claude changes window title dynamically
+        // Session will remain active until manually cleared or app restart
+        // TODO: Implement working directory enumeration for reliable window tracking
+        #[cfg(target_os = "windows")]
+        if should_verify {
+            log_to_file(&format!("Session verification skipped (window title unreliable) for {}", project_path));
         }
 
         // Window still exists or we're not on Windows, return the session
@@ -390,6 +373,7 @@ pub async fn get_session_status(project_path: String) -> Result<SessionInfo, Str
                 project_path: project_path.clone(),
                 status: "not_started".to_string(),
                 pid: None,
+                created_at: None,
             })
         }
     } else {
@@ -398,6 +382,7 @@ pub async fn get_session_status(project_path: String) -> Result<SessionInfo, Str
             project_path: project_path.clone(),
             status: "not_started".to_string(),
             pid: None,
+            created_at: None,
         })
     }
 }
@@ -431,14 +416,10 @@ pub async fn focus_claude_terminal(project_path: String) -> Result<(), String> {
                 }
             }
 
-            // If we couldn't find the window, clean up the session
-            {
-                let mut sessions = SESSIONS.lock().unwrap();
-                sessions.remove(&project_path);
-                log_to_file(&format!("Window not found, removed session for: {}", project_path));
-            }
-
-            Err(format!("Claude terminal window '{}' not found. It may have been closed.", window_title))
+            // If we couldn't find the window, just log and return error
+            // Don't remove the session - let get_session_status handle cleanup
+            log_to_file(&format!("Window '{}' not found for focus, but keeping session active", window_title));
+            Err(format!("Claude terminal window '{}' not found. It may be minimized or the window title may have changed.", window_title))
         }
     }
 

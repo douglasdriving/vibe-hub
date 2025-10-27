@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Terminal, Circle, ExternalLink } from 'lucide-react';
+import { Terminal, Circle } from 'lucide-react';
 import { Button } from '../common/Button';
 import * as tauri from '../../services/tauri';
 
@@ -35,13 +35,11 @@ export function ClaudeSessionPanel({ projectPath, textColor = '#FFFFFF', bgColor
     }
   };
 
-  const handleFocusTerminal = async () => {
+  const handleOpenTerminal = async () => {
     try {
-      await tauri.focusClaudeTerminal(projectPath);
+      await tauri.openInTerminal(projectPath);
     } catch (error) {
-      console.error('Failed to focus terminal:', error);
-      // Terminal likely closed - reload session status to reflect this
-      loadSessionStatus();
+      console.error('Failed to open terminal:', error);
     }
   };
 
@@ -89,12 +87,12 @@ export function ClaudeSessionPanel({ projectPath, textColor = '#FFFFFF', bgColor
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleFocusTerminal}
+            onClick={handleOpenTerminal}
             invertedBgColor={textColor}
             invertedTextColor={bgColor}
           >
-            <ExternalLink size={16} className="inline mr-2" />
-            Focus Terminal
+            <Terminal size={16} className="inline mr-2" />
+            Open Terminal
           </Button>
         )}
       </div>
