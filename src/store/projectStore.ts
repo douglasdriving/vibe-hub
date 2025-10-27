@@ -323,12 +323,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const issue = issues.find(i => i.id === issueId);
       if (!issue) return;
 
-      const newStatus = issue.status === 'completed' ? 'pending' : 'completed';
+      const newStatus: 'pending' | 'completed' = issue.status === 'completed' ? 'pending' : 'completed';
       await tauri.updateIssue(projectPath, issueId, { status: newStatus });
 
       const updatedIssues = issues.map(i =>
         i.id === issueId
-          ? { ...i, status: newStatus, completedAt: newStatus === 'completed' ? new Date().toISOString() : null }
+          ? { ...i, status: newStatus, completedAt: newStatus === 'completed' ? new Date().toISOString() : undefined }
           : i
       );
       set({ issues: updatedIssues });

@@ -29,7 +29,9 @@ function sortProjectsByStatus(projects: Project[]): Project[] {
     }
 
     // Then sort by lastModified within same status (newest first)
-    return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+    const aTime = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+    const bTime = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+    return bTime - aTime;
   });
 }
 
@@ -141,7 +143,7 @@ export function Sidebar() {
         {(() => {
           const sortedProjects = sortProjectsByStatus(projects);
           const groupedProjects = groupProjectsByStatus(sortedProjects);
-          const statusGroups: JSX.Element[] = [];
+          const statusGroups: React.ReactElement[] = [];
 
           // Render groups in status order
           STATUS_ORDER.forEach((status) => {
