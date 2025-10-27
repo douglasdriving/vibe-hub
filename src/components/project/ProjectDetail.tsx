@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
+import { Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
@@ -111,23 +111,6 @@ export function ProjectDetail() {
       });
     }
   }, [currentProject]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        navigate('/');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [navigate]);
-
-  const handleBack = () => {
-    navigate('/');
-  };
 
   const handleAddFeedback = () => {
     setEditingFeedback(undefined);
@@ -392,27 +375,18 @@ export function ProjectDetail() {
       <header className="shadow-sm" style={{ backgroundColor: currentProject.color }}>
         <div className="px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleBack}
-                className="hover:opacity-75"
-                style={{ color: currentProject.textColor || '#FFFFFF' }}
-              >
-                <ArrowLeft size={24} />
-              </button>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-6xl uppercase font-bold" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '3px 3px 0px rgba(0,0,0,1)' }}>{currentProject.displayName || currentProject.name}</h1>
-                  <span className={`${STATUS_COLORS[currentProject.status]} text-white text-base px-3 py-1 rounded`}>
-                    {STATUS_LABELS[currentProject.status]}
-                  </span>
-                </div>
-                {currentProject.lastModified && (
-                  <p className="mt-1" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.8 }}>
-                    Last modified: {formatDate(currentProject.lastModified)}
-                  </p>
-                )}
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-6xl uppercase font-bold" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '3px 3px 0px rgba(0,0,0,1)' }}>{currentProject.displayName || currentProject.name}</h1>
+                <span className={`${STATUS_COLORS[currentProject.status]} text-white text-base px-3 py-1 rounded`}>
+                  {STATUS_LABELS[currentProject.status]}
+                </span>
               </div>
+              {currentProject.lastModified && (
+                <p className="mt-1" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.8 }}>
+                  Last modified: {formatDate(currentProject.lastModified)}
+                </p>
+              )}
             </div>
 
             {/* Project Statistics */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
+import { Home, Circle } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import * as tauri from '../../services/tauri';
 
@@ -61,21 +61,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { projects } = useProjectStore();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [sessionStatuses, setSessionStatuses] = useState<Map<string, tauri.SessionInfo>>(new Map());
-
-  // Load collapsed state from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    if (saved !== null) {
-      setIsCollapsed(saved === 'true');
-    }
-  }, []);
-
-  // Save collapsed state to localStorage
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', String(isCollapsed));
-  }, [isCollapsed]);
 
   // Poll for Claude session statuses
   useEffect(() => {
@@ -97,10 +83,6 @@ export function Sidebar() {
 
     return () => clearInterval(interval);
   }, [projects]);
-
-  const handleToggle = () => {
-    setIsCollapsed(!isCollapsed);
-  };
 
   const handleHomeClick = () => {
     navigate('/');
@@ -126,20 +108,7 @@ export function Sidebar() {
     : null;
 
   return (
-    <div
-      className={`h-screen bg-gray-900 flex flex-col transition-all duration-300 ${
-        isCollapsed ? 'w-16' : 'w-20'
-      }`}
-    >
-      {/* Toggle button */}
-      <button
-        onClick={handleToggle}
-        className="p-4 text-white hover:bg-gray-800 transition-colors"
-        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-      </button>
-
+    <div className="h-screen bg-gray-900 flex flex-col w-20">
       {/* Home button */}
       <button
         onClick={handleHomeClick}
