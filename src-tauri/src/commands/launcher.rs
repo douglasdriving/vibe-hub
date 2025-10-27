@@ -83,6 +83,14 @@ pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<
 
     #[cfg(target_os = "windows")]
     {
+        // Extract project name from path for unique window title
+        let project_name = std::path::Path::new(&project_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("Project");
+
+        let window_title = format!("Claude Code - {}", project_name);
+
         // Create a temporary batch file to launch Claude Code
         // This approach works reliably from both GUI and console subsystems
         let temp_dir = std::env::temp_dir();
@@ -102,13 +110,15 @@ pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<
             // Read the prompt from the file and pass it as a command-line argument
             // Using @file syntax to read from file
             format!(
-                "@echo off\ntitle Claude Code - Vibe Hub\ncd /d \"{}\"\nclaude \"@{}\"\npause",
+                "@echo off\ntitle {}\ncd /d \"{}\"\nclaude \"@{}\"\npause",
+                window_title,
                 project_path,
                 prompt_file.display()
             )
         } else {
             format!(
-                "@echo off\ntitle Claude Code - Vibe Hub\ncd /d \"{}\"\nclaude\npause",
+                "@echo off\ntitle {}\ncd /d \"{}\"\nclaude\npause",
+                window_title,
                 project_path
             )
         };
@@ -124,11 +134,11 @@ pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<
 
         log_to_file("Batch file created successfully");
 
-        // Launch the batch file in a new console window
-        log_to_file(&format!("Executing: cmd /c start \"Claude Code\" cmd /c \"{}\"", batch_file.display()));
+        // Launch the batch file in a new console window with unique title
+        log_to_file(&format!("Executing: cmd /c start \"{}\" cmd /c \"{}\"", window_title, batch_file.display()));
 
         let result = Command::new("cmd")
-            .args(&["/c", "start", "Claude Code", "cmd", "/c", batch_file.to_str().unwrap()])
+            .args(&["/c", "start", &window_title, "cmd", "/c", batch_file.to_str().unwrap()])
             .creation_flags(0x08000000) // CREATE_NO_WINDOW - hide the intermediate cmd window
             .spawn();
 
@@ -334,26 +344,25 @@ pub async fn get_session_status(project_path: String) -> Result<SessionInfo, Str
             use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
             use windows::core::PCWSTR;
 
-            let title_patterns = vec![
-                "Claude Code - Vibe Hub",
-                "Claude Code",
-                "claude",
-            ];
+            // Extract project name for unique window title
+            let project_name = std::path::Path::new(&project_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("Project");
+
+            let window_title = format!("Claude Code - {}", project_name);
 
             let mut window_found = false;
 
             unsafe {
-                for pattern in title_patterns {
-                    let window_title: Vec<u16> = pattern
-                        .encode_utf16()
-                        .chain(std::iter::once(0))
-                        .collect();
+                let title_wide: Vec<u16> = window_title
+                    .encode_utf16()
+                    .chain(std::iter::once(0))
+                    .collect();
 
-                    if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(window_title.as_ptr())) {
-                        if !hwnd.is_invalid() {
-                            window_found = true;
-                            break;
-                        }
+                if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(title_wide.as_ptr())) {
+                    if !hwnd.is_invalid() {
+                        window_found = true;
                     }
                 }
             }
@@ -400,27 +409,25 @@ pub async fn focus_claude_terminal(project_path: String) -> Result<(), String> {
         use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, SetForegroundWindow};
         use windows::core::PCWSTR;
 
-        // Try multiple window title patterns
-        let title_patterns = vec![
-            "Claude Code - Vibe Hub", // Primary title set in batch file
-            "Claude Code",
-            "claude",
-        ];
+        // Extract project name for unique window title
+        let project_name = std::path::Path::new(&project_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("Project");
+
+        let window_title = format!("Claude Code - {}", project_name);
 
         unsafe {
-            // Try each title pattern
-            for pattern in title_patterns {
-                let window_title: Vec<u16> = pattern
-                    .encode_utf16()
-                    .chain(std::iter::once(0))
-                    .collect();
+            let title_wide: Vec<u16> = window_title
+                .encode_utf16()
+                .chain(std::iter::once(0))
+                .collect();
 
-                if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(window_title.as_ptr())) {
-                    if !hwnd.is_invalid() {
-                        let _ = SetForegroundWindow(hwnd);
-                        log_to_file(&format!("Found and focused window with title: {}", pattern));
-                        return Ok(());
-                    }
+            if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(title_wide.as_ptr())) {
+                if !hwnd.is_invalid() {
+                    let _ = SetForegroundWindow(hwnd);
+                    log_to_file(&format!("Found and focused window with title: {}", window_title));
+                    return Ok(());
                 }
             }
 
@@ -431,7 +438,7 @@ pub async fn focus_claude_terminal(project_path: String) -> Result<(), String> {
                 log_to_file(&format!("Window not found, removed session for: {}", project_path));
             }
 
-            Err("Claude terminal window not found. It may have been closed.".to_string())
+            Err(format!("Claude terminal window '{}' not found. It may have been closed.", window_title))
         }
     }
 
