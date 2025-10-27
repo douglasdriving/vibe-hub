@@ -35,6 +35,7 @@ interface ProjectStore {
   addIssue: (projectPath: string, issue: Omit<Issue, 'id' | 'createdAt' | 'completedAt'>) => Promise<void>;
   updateIssue: (projectPath: string, issueId: string, updates: Partial<Issue>) => Promise<void>;
   deleteIssue: (projectPath: string, issueId: string) => Promise<void>;
+  toggleIssueComplete: (projectPath: string, issueId: string) => Promise<void>;
   loadIssues: (projectPath: string) => Promise<void>;
 
   updateProjectMetadata: (projectPath: string, data: { description: string; techStack: string[]; deploymentUrl?: string }) => Promise<void>;
@@ -310,6 +311,27 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       await tauri.deleteIssue(projectPath, issueId);
       const { issues } = get();
       set({ issues: issues.filter(i => i.id !== issueId) });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Toggle issue complete/incomplete
+  toggleIssueComplete: async (projectPath: string, issueId: string) => {
+    try {
+      const { issues } = get();
+      const issue = issues.find(i => i.id === issueId);
+      if (!issue) return;
+
+      const newStatus = issue.status === 'completed' ? 'pending' : 'completed';
+      await tauri.updateIssue(projectPath, issueId, { status: newStatus });
+
+      const updatedIssues = issues.map(i =>
+        i.id === issueId
+          ? { ...i, status: newStatus, completedAt: newStatus === 'completed' ? new Date().toISOString() : null }
+          : i
+      );
+      set({ issues: updatedIssues });
     } catch (error) {
       throw error;
     }

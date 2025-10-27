@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
+import { Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings, CheckCircle } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
@@ -29,6 +29,7 @@ export function ProjectDetail() {
     updateFeedback,
     deleteFeedback,
     deleteIssue,
+    toggleIssueComplete,
     launchClaudeCode,
     openInExplorer,
     openDeploymentUrl,
@@ -156,6 +157,16 @@ export function ProjectDetail() {
 
     try {
       await deleteIssue(currentProject.path, issueId);
+    } catch {
+      // Silently handle error
+    }
+  };
+
+  const handleToggleIssueComplete = async (issueId: string) => {
+    if (!currentProject) return;
+
+    try {
+      await toggleIssueComplete(currentProject.path, issueId);
     } catch {
       // Silently handle error
     }
@@ -829,7 +840,11 @@ export function ProjectDetail() {
                               <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
                                 {PRIORITY_LABELS[issue.priority]}
                               </span>
-                              <button onClick={() => handleDeleteIssue(issue.id)} className="text-red-300 hover:text-red-100 ml-2">
+                              <button onClick={() => handleToggleIssueComplete(issue.id)} className="text-green-300 hover:text-green-100">
+                                <CheckCircle size={14} className="inline mr-1" />
+                                Complete
+                              </button>
+                              <button onClick={() => handleDeleteIssue(issue.id)} className="text-red-300 hover:text-red-100">
                                 <Trash2 size={14} className="inline mr-1" />
                                 Delete
                               </button>
@@ -899,6 +914,10 @@ export function ProjectDetail() {
                               <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
                                 {PRIORITY_LABELS[issue.priority]}
                               </span>
+                              <button onClick={() => handleToggleIssueComplete(issue.id)} className="text-yellow-300 hover:text-yellow-100">
+                                <CheckCircle size={14} className="inline mr-1" />
+                                Reopen
+                              </button>
                             </div>
                           </div>
                         </div>
