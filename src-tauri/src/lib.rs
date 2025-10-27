@@ -54,6 +54,8 @@ pub fn run() {
             launcher::open_in_fork,
             launcher::get_debug_log_path,
             launcher::log_debug,
+            launcher::get_session_status,
+            launcher::focus_claude_terminal,
             // Prompts commands
             prompts::get_prompt,
             // NPM commands

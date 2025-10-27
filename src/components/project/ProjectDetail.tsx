@@ -6,6 +6,7 @@ import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
 import { EditMetadataModal } from './EditMetadataModal';
 import { ProjectSetupCard } from './ProjectSetupCard';
+import { ClaudeSessionPanel } from './ClaudeSessionPanel';
 import type { FeedbackItem } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
@@ -516,6 +517,15 @@ export function ProjectDetail() {
             </Button>
           </div>
         </div>
+
+        {/* Claude Session Panel */}
+        {!isSetupStatus(currentProject.status) && (
+          <ClaudeSessionPanel
+            projectPath={currentProject.path}
+            textColor={currentProject.textColor}
+            bgColor={currentProject.color}
+          />
+        )}
 
         {/* Project Info */}
         <div className="mb-6">

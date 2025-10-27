@@ -1,9 +1,34 @@
 use std::process::Command;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::collections::HashMap;
+use std::sync::Mutex;
+use serde::Serialize;
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
+
+// Global session tracking
+lazy_static::lazy_static! {
+    static ref SESSIONS: Mutex<HashMap<String, SessionInfo>> = Mutex::new(HashMap::new());
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionInfo {
+    pub project_path: String,
+    pub status: String, // "running", "idle", "not_started"
+    pub pid: Option<u32>,
+}
+
+impl SessionInfo {
+    fn new(project_path: String, pid: Option<u32>) -> Self {
+        Self {
+            project_path,
+            status: "running".to_string(),
+            pid,
+        }
+    }
+}
 
 pub fn log_to_file(message: &str) {
     let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
@@ -46,6 +71,15 @@ pub async fn log_debug(message: String) -> Result<(), String> {
 pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<(), String> {
     log_to_file(&format!("launch_claude_code called with path: {}", project_path));
     log_to_file(&format!("Prompt length: {} chars", prompt.len()));
+
+    // Register session
+    {
+        let mut sessions = SESSIONS.lock().unwrap();
+        sessions.insert(
+            project_path.clone(),
+            SessionInfo::new(project_path.clone(), None),
+        );
+    }
 
     #[cfg(target_os = "windows")]
     {
@@ -282,5 +316,54 @@ pub async fn open_in_fork(project_path: String) -> Result<(), String> {
             .map_err(|e| format!("Failed to open Fork: {}. Make sure Fork is installed.", e))?;
 
         Ok(())
+    }
+}
+
+#[tauri::command]
+pub async fn get_session_status(project_path: String) -> Result<SessionInfo, String> {
+    let sessions = SESSIONS.lock().unwrap();
+
+    if let Some(session) = sessions.get(&project_path) {
+        Ok(session.clone())
+    } else {
+        // Return not_started status if no session exists
+        Ok(SessionInfo {
+            project_path: project_path.clone(),
+            status: "not_started".to_string(),
+            pid: None,
+        })
+    }
+}
+
+#[tauri::command]
+pub async fn focus_claude_terminal(_project_path: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, SetForegroundWindow};
+        use windows::core::PCWSTR;
+
+        // Try to find the Claude Code window by title
+        // The window title should contain "Claude Code" (from the start command)
+        let window_title: Vec<u16> = "Claude Code"
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect();
+
+        unsafe {
+            let hwnd = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(window_title.as_ptr()))
+                .map_err(|e| format!("Failed to find window: {}", e))?;
+
+            if !hwnd.is_invalid() {
+                let _ = SetForegroundWindow(hwnd);
+                Ok(())
+            } else {
+                Err("Claude Code window not found. The terminal may have been closed.".to_string())
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Focus terminal is only supported on Windows".to_string())
     }
 }

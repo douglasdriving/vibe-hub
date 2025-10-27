@@ -291,3 +291,17 @@ export async function openInFork(projectPath: string): Promise<void> {
 export async function getDebugLogPath(): Promise<string> {
   return await invoke('get_debug_log_path');
 }
+
+export interface SessionInfo {
+  projectPath: string;
+  status: 'running' | 'idle' | 'not_started';
+  pid: number | null;
+}
+
+export async function getSessionStatus(projectPath: string): Promise<SessionInfo> {
+  return await invoke('get_session_status', { projectPath });
+}
+
+export async function focusClaudeTerminal(projectPath: string): Promise<void> {
+  return await invoke('focus_claude_terminal', { projectPath });
+}
