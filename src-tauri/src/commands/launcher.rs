@@ -102,13 +102,13 @@ pub async fn launch_claude_code(project_path: String, prompt: String) -> Result<
             // Read the prompt from the file and pass it as a command-line argument
             // Using @file syntax to read from file
             format!(
-                "@echo off\ncd /d \"{}\"\nclaude \"@{}\"\npause",
+                "@echo off\ntitle Claude Code - Vibe Hub\ncd /d \"{}\"\nclaude \"@{}\"\npause",
                 project_path,
                 prompt_file.display()
             )
         } else {
             format!(
-                "@echo off\ncd /d \"{}\"\nclaude\npause",
+                "@echo off\ntitle Claude Code - Vibe Hub\ncd /d \"{}\"\nclaude\npause",
                 project_path
             )
         };
@@ -336,29 +336,44 @@ pub async fn get_session_status(project_path: String) -> Result<SessionInfo, Str
 }
 
 #[tauri::command]
-pub async fn focus_claude_terminal(_project_path: String) -> Result<(), String> {
+pub async fn focus_claude_terminal(project_path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, SetForegroundWindow};
         use windows::core::PCWSTR;
 
-        // Try to find the Claude Code window by title
-        // The window title should contain "Claude Code" (from the start command)
-        let window_title: Vec<u16> = "Claude Code"
-            .encode_utf16()
-            .chain(std::iter::once(0))
-            .collect();
+        // Try multiple window title patterns
+        let title_patterns = vec![
+            "Claude Code - Vibe Hub", // Primary title set in batch file
+            "Claude Code",
+            "claude",
+        ];
 
         unsafe {
-            let hwnd = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(window_title.as_ptr()))
-                .map_err(|e| format!("Failed to find window: {}", e))?;
+            // Try each title pattern
+            for pattern in title_patterns {
+                let window_title: Vec<u16> = pattern
+                    .encode_utf16()
+                    .chain(std::iter::once(0))
+                    .collect();
 
-            if !hwnd.is_invalid() {
-                let _ = SetForegroundWindow(hwnd);
-                Ok(())
-            } else {
-                Err("Claude Code window not found. The terminal may have been closed.".to_string())
+                if let Ok(hwnd) = FindWindowW(PCWSTR::null(), PCWSTR::from_raw(window_title.as_ptr())) {
+                    if !hwnd.is_invalid() {
+                        let _ = SetForegroundWindow(hwnd);
+                        log_to_file(&format!("Found and focused window with title: {}", pattern));
+                        return Ok(());
+                    }
+                }
             }
+
+            // If we couldn't find the window, clean up the session
+            {
+                let mut sessions = SESSIONS.lock().unwrap();
+                sessions.remove(&project_path);
+                log_to_file(&format!("Window not found, removed session for: {}", project_path));
+            }
+
+            Err("Claude terminal window not found. It may have been closed.".to_string())
         }
     }
 

@@ -40,7 +40,8 @@ export function ClaudeSessionPanel({ projectPath, textColor = '#FFFFFF', bgColor
       await tauri.focusClaudeTerminal(projectPath);
     } catch (error) {
       console.error('Failed to focus terminal:', error);
-      alert('Could not focus Claude terminal. The window may have been closed.');
+      // Terminal likely closed - reload session status to reflect this
+      loadSessionStatus();
     }
   };
 
