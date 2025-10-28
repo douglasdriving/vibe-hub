@@ -89,7 +89,7 @@ export function ReviewModal({ isOpen, onClose, feedbackText, reviewNotes, onSubm
               id="answer"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              className="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:outline-none min-h-[120px] resize-y"
+              className="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:outline-none min-h-[120px] resize-y text-gray-900 bg-white"
               placeholder="Provide clarification to help refine this feedback..."
               autoFocus
             />

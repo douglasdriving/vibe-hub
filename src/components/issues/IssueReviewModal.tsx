@@ -124,7 +124,7 @@ export function IssueReviewModal({ isOpen, onClose, issue, onApprove, onReportBu
                 id="bugNotes"
                 value={bugNotes}
                 onChange={(e) => setBugNotes(e.target.value)}
-                className="w-full border-2 border-red-300 rounded-lg p-3 focus:border-red-500 focus:outline-none min-h-[120px] resize-y"
+                className="w-full border-2 border-red-300 rounded-lg p-3 focus:border-red-500 focus:outline-none min-h-[120px] resize-y text-gray-900 bg-white"
                 placeholder="Describe the bugs or issues you found with this implementation..."
                 autoFocus
               />
