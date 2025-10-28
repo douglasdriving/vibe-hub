@@ -1,20 +1,30 @@
 import { useEffect, useState, useRef } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { ProjectDetail } from './components/project/ProjectDetail';
 import { Sidebar } from './components/common/Sidebar';
+import { NewProjectModal } from './components/project/NewProjectModal';
 import { useSettingsStore } from './store/settingsStore';
 import { useProjectStore } from './store/projectStore';
 import { generateFeedbackRefinementPrompt } from './services/clipboard';
 import * as tauri from './services/tauri';
 
-function App() {
+function AppContent() {
   const { loadSettings, settings } = useSettingsStore();
-  const { loadProjects } = useProjectStore();
+  const { loadProjects, createProject } = useProjectStore();
   const [isAutoRefining, setIsAutoRefining] = useState(false);
   const [autoRefineStatus, setAutoRefineStatus] = useState('');
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const hasRunAutoRefine = useRef(false);
+  const navigate = useNavigate();
+
+  const handleCreateProject = async (projectName: string, summary?: string) => {
+    const projectPath = await createProject(projectName, summary);
+    if (projectPath) {
+      navigate(`/project/${encodeURIComponent(projectPath)}`);
+    }
+  };
 
   useEffect(() => {
     // Load settings on app start
@@ -102,34 +112,47 @@ function App() {
   }, [settings, loadProjects]);
 
   return (
-    <HashRouter>
-      <div className="flex h-screen overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar />
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar onNewProjectClick={() => setIsNewProjectModalOpen(true)} />
 
-        {/* Main content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Auto-refine status banner */}
-          {isAutoRefining && autoRefineStatus && (
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 shadow-lg">
-              <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  <span className="font-semibold">{autoRefineStatus}</span>
-                </div>
+      {/* Main content */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Auto-refine status banner */}
+        {isAutoRefining && autoRefineStatus && (
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 shadow-lg">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                <span className="font-semibold">{autoRefineStatus}</span>
               </div>
             </div>
-          )}
-
-          <div className="px-2 sm:px-4 lg:px-8">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/settings" element={<SettingsPanel />} />
-              <Route path="/project/:id" element={<ProjectDetail />} />
-            </Routes>
           </div>
+        )}
+
+        <div className="px-2 sm:px-4 lg:px-8">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/settings" element={<SettingsPanel />} />
+            <Route path="/project/:id" element={<ProjectDetail />} />
+          </Routes>
         </div>
       </div>
+
+      {/* New Project Modal */}
+      <NewProjectModal
+        isOpen={isNewProjectModalOpen}
+        onClose={() => setIsNewProjectModalOpen(false)}
+        onCreate={handleCreateProject}
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <HashRouter>
+      <AppContent />
     </HashRouter>
   );
 }

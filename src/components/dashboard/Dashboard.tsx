@@ -1,18 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Settings, RefreshCw, Plus } from 'lucide-react';
+import { useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { ProjectCard } from './ProjectCard';
 import { Button } from '../common/Button';
-import { NewProjectModal } from '../project/NewProjectModal';
 import { APP_NAME } from '../../utils/constants';
 
 export function Dashboard() {
-  const navigate = useNavigate();
-  const { projects, isLoading, loadProjects, createProject } = useProjectStore();
+  const { projects, isLoading, loadProjects } = useProjectStore();
   const { settings } = useSettingsStore();
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
   useEffect(() => {
     if (settings?.projectsDirectory) {
@@ -24,17 +20,6 @@ export function Dashboard() {
     loadProjects();
   };
 
-  const handleSettings = () => {
-    navigate('/settings');
-  };
-
-  const handleCreateProject = async (projectName: string, summary?: string) => {
-    const projectPath = await createProject(projectName, summary);
-    if (projectPath) {
-      navigate(`/project/${encodeURIComponent(projectPath)}`);
-    }
-  };
-
   // Empty state - no projects directory configured
   if (!settings?.projectsDirectory) {
     return (
@@ -44,10 +29,9 @@ export function Dashboard() {
           <p className="text-gray-600 mb-6">
             Welcome! Please configure your projects directory to get started.
           </p>
-          <Button onClick={handleSettings}>
-            <Settings size={18} className="inline mr-2" />
-            Open Settings
-          </Button>
+          <p className="text-gray-500 text-sm">
+            Use the Settings button in the sidebar to configure your projects directory.
+          </p>
         </div>
       </div>
     );
@@ -61,17 +45,9 @@ export function Dashboard() {
           <div className="px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <h1 className="text-6xl uppercase text-purple-700 font-bold" style={{ textShadow: '3px 3px 0px rgba(0,0,0,1)' }}>{APP_NAME}</h1>
             <div className="flex gap-2">
-              <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
-                <Plus size={16} className="inline mr-2" />
-                New Project
-              </Button>
               <Button variant="secondary" size="sm" onClick={handleRefresh}>
                 <RefreshCw size={16} className="inline mr-2" />
                 Refresh
-              </Button>
-              <Button variant="secondary" size="sm" onClick={handleSettings}>
-                <Settings size={16} className="inline mr-2" />
-                Settings
               </Button>
             </div>
           </div>
@@ -87,12 +63,6 @@ export function Dashboard() {
             </p>
           </div>
         </main>
-
-        <NewProjectModal
-          isOpen={isNewProjectModalOpen}
-          onClose={() => setIsNewProjectModalOpen(false)}
-          onCreate={handleCreateProject}
-        />
       </div>
     );
   }
@@ -114,10 +84,6 @@ export function Dashboard() {
             <h1 className="text-6xl uppercase text-purple-700 font-bold" style={{ textShadow: '3px 3px 0px rgba(0,0,0,1)' }}>{APP_NAME}</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="primary" size="sm" onClick={() => setIsNewProjectModalOpen(true)}>
-              <Plus size={16} className="inline mr-2" />
-              New Project
-            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -126,10 +92,6 @@ export function Dashboard() {
             >
               <RefreshCw size={16} className={`inline mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
-            </Button>
-            <Button variant="secondary" size="sm" onClick={handleSettings}>
-              <Settings size={16} className="inline mr-2" />
-              Settings
             </Button>
           </div>
         </div>
@@ -172,12 +134,6 @@ export function Dashboard() {
           </div>
         )}
       </main>
-
-      <NewProjectModal
-        isOpen={isNewProjectModalOpen}
-        onClose={() => setIsNewProjectModalOpen(false)}
-        onCreate={handleCreateProject}
-      />
     </div>
   );
 }

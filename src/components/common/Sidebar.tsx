@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home } from 'lucide-react';
+import { Home, Settings, Plus } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import type { Project } from '../../store/types';
 import { useEffect, useState } from 'react';
@@ -128,13 +128,21 @@ function ProjectIcon({ projectName, projectPath, color, iconPath, pendingCount, 
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  onNewProjectClick: () => void;
+}
+
+export function Sidebar({ onNewProjectClick }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { projects } = useProjectStore();
 
   const handleHomeClick = () => {
     navigate('/');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   const handleProjectClick = (projectPath: string) => {
@@ -148,6 +156,7 @@ export function Sidebar() {
   };
 
   const isOnDashboard = location.pathname === '/';
+  const isOnSettings = location.pathname === '/settings';
   const currentProjectPath = location.pathname.startsWith('/project/')
     ? decodeURIComponent(location.pathname.replace('/project/', ''))
     : null;
@@ -163,6 +172,26 @@ export function Sidebar() {
         title="Dashboard"
       >
         <Home size={24} />
+      </button>
+
+      {/* Settings button */}
+      <button
+        onClick={handleSettingsClick}
+        className={`p-4 text-white hover:bg-gray-800 transition-colors flex items-center justify-center ${
+          isOnSettings ? 'bg-gray-800' : ''
+        }`}
+        title="Settings"
+      >
+        <Settings size={24} />
+      </button>
+
+      {/* New Project button */}
+      <button
+        onClick={onNewProjectClick}
+        className="p-4 text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
+        title="New Project"
+      >
+        <Plus size={24} />
       </button>
 
       {/* Divider */}
