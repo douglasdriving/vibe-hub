@@ -5,9 +5,10 @@ import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
 import { ReviewModal } from '../feedback/ReviewModal';
+import { IssueReviewModal } from '../issues/IssueReviewModal';
 import { EditMetadataModal } from './EditMetadataModal';
 import { ProjectSetupCard } from './ProjectSetupCard';
-import type { FeedbackItem } from '../../store/types';
+import type { FeedbackItem, Issue } from '../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { isSetupStatus, generateCleanupPrompt } from '../../utils/prompts';
@@ -28,6 +29,7 @@ export function ProjectDetail() {
     addFeedback,
     updateFeedback,
     deleteFeedback,
+    updateIssue,
     deleteIssue,
     toggleIssueComplete,
     launchClaudeCode,
@@ -38,8 +40,10 @@ export function ProjectDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMetadataModalOpen, setIsEditMetadataModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isIssueReviewModalOpen, setIsIssueReviewModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [reviewingFeedback, setReviewingFeedback] = useState<FeedbackItem | undefined>();
+  const [reviewingIssue, setReviewingIssue] = useState<Issue | undefined>();
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
@@ -200,6 +204,39 @@ export function ProjectDetail() {
       await toggleIssueComplete(currentProject.path, issueId);
     } catch {
       // Silently handle error
+    }
+  };
+
+  const handleReviewIssue = (issue: Issue) => {
+    setReviewingIssue(issue);
+    setIsIssueReviewModalOpen(true);
+  };
+
+  const handleApproveIssue = async () => {
+    if (!currentProject || !reviewingIssue) return;
+
+    try {
+      await updateIssue(currentProject.path, reviewingIssue.id, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+      });
+      setReviewingIssue(undefined);
+    } catch (error) {
+      console.error('Error approving issue:', error);
+    }
+  };
+
+  const handleReportBug = async (bugNotes: string) => {
+    if (!currentProject || !reviewingIssue) return;
+
+    try {
+      await updateIssue(currentProject.path, reviewingIssue.id, {
+        status: 'pending',
+        reviewNotes: bugNotes,
+      });
+      setReviewingIssue(undefined);
+    } catch (error) {
+      console.error('Error reporting bug:', error);
     }
   };
 
@@ -845,7 +882,7 @@ export function ProjectDetail() {
             <div>
               <div className="flex items-center justify-end mb-6">
                 <div className="flex gap-2">
-                  {issues.filter(i => i.status !== 'completed').length > 0 && (
+                  {issues.filter(i => i.status === 'pending' || i.status === 'in-progress').length > 0 && (
                     <Button
                       variant="secondary"
                       onClick={handleFixAllIssues}
@@ -865,35 +902,99 @@ export function ProjectDetail() {
                   <p className="mt-2">Refine raw feedback items to create issues.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {issues
-                    .filter(i => i.status !== 'completed')
-                    .sort((a, b) => a.priority - b.priority)
-                    .map((issue) => (
-                      <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h3 className="text-white font-bold text-lg mb-2">{issue.title}</h3>
-                            <p className="text-white/90 mb-3">{issue.description}</p>
-                            {/* Subtasks are hidden from UI - they're implementation details for Claude */}
-                            <div className="flex items-center gap-4 text-sm">
-                              <span className="text-white/80">Est: {issue.timeEstimate}</span>
-                              <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
-                                {PRIORITY_LABELS[issue.priority]}
-                              </span>
-                              <button onClick={() => handleToggleIssueComplete(issue.id)} className="text-green-300 hover:text-green-100">
-                                <CheckCircle size={14} className="inline mr-1" />
-                                Complete
-                              </button>
-                              <button onClick={() => handleDeleteIssue(issue.id)} className="text-red-300 hover:text-red-100">
-                                <Trash2 size={14} className="inline mr-1" />
-                                Delete
-                              </button>
+                <div className="space-y-6">
+                  {/* For Review Issues */}
+                  {issues.filter(i => i.status === 'for-review').length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-bold mb-3 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
+                        Ready for Review ({issues.filter(i => i.status === 'for-review').length})
+                      </h3>
+                      <div className="space-y-3">
+                        {issues
+                          .filter(i => i.status === 'for-review')
+                          .sort((a, b) => a.priority - b.priority)
+                          .map((issue) => (
+                            <div
+                              key={issue.id}
+                              onClick={() => handleReviewIssue(issue)}
+                              className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-500 shadow-lg cursor-pointer hover:scale-[1.02] transition-transform"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h3 className="text-white font-bold text-lg">{issue.title}</h3>
+                                    <span className="bg-white text-teal-700 px-2 py-1 rounded text-xs font-bold uppercase">Review</span>
+                                  </div>
+                                  <p className="text-white/90 mb-3">{issue.description}</p>
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <span className="text-white/80">Est: {issue.timeEstimate}</span>
+                                    <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
+                                      {PRIORITY_LABELS[issue.priority]}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* Pending/In-Progress Issues */}
+                  {issues.filter(i => i.status === 'pending' || i.status === 'in-progress').length > 0 && (
+                    <div>
+                      {issues.filter(i => i.status === 'for-review').length > 0 && (
+                        <h3 className="text-xl font-bold mb-3 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
+                          Pending Issues ({issues.filter(i => i.status === 'pending' || i.status === 'in-progress').length})
+                        </h3>
+                      )}
+                      <div className="space-y-3">
+                        {issues
+                          .filter(i => i.status === 'pending' || i.status === 'in-progress')
+                          .sort((a, b) => {
+                            // Prioritize issues with reviewNotes (bug reports)
+                            if (a.reviewNotes && !b.reviewNotes) return -1;
+                            if (!a.reviewNotes && b.reviewNotes) return 1;
+                            return a.priority - b.priority;
+                          })
+                          .map((issue) => (
+                            <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h3 className="text-white font-bold text-lg">{issue.title}</h3>
+                                    {issue.reviewNotes && (
+                                      <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold uppercase">Bug Reported</span>
+                                    )}
+                                  </div>
+                                  <p className="text-white/90 mb-3">{issue.description}</p>
+                                  {issue.reviewNotes && (
+                                    <div className="bg-red-900/50 border-2 border-red-400 rounded p-2 mb-3">
+                                      <p className="text-xs font-bold text-red-200 mb-1">BUG REPORT:</p>
+                                      <p className="text-white/90 text-sm">{issue.reviewNotes}</p>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <span className="text-white/80">Est: {issue.timeEstimate}</span>
+                                    <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
+                                      {PRIORITY_LABELS[issue.priority]}
+                                    </span>
+                                    <button onClick={() => handleToggleIssueComplete(issue.id)} className="text-green-300 hover:text-green-100">
+                                      <CheckCircle size={14} className="inline mr-1" />
+                                      Complete
+                                    </button>
+                                    <button onClick={() => handleDeleteIssue(issue.id)} className="text-red-300 hover:text-red-100">
+                                      <Trash2 size={14} className="inline mr-1" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1014,6 +1115,23 @@ export function ProjectDetail() {
           feedbackText={reviewingFeedback.text}
           reviewNotes={reviewingFeedback.reviewNotes || ''}
           onSubmit={handleSubmitReview}
+        />
+      )}
+
+      {reviewingIssue && (
+        <IssueReviewModal
+          isOpen={isIssueReviewModalOpen}
+          onClose={() => {
+            setIsIssueReviewModalOpen(false);
+            setReviewingIssue(undefined);
+          }}
+          issue={{
+            title: reviewingIssue.title,
+            description: reviewingIssue.description,
+            subtasks: reviewingIssue.subtasks,
+          }}
+          onApprove={handleApproveIssue}
+          onReportBug={handleReportBug}
         />
       )}
     </div>

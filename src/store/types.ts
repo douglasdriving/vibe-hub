@@ -42,9 +42,10 @@ export interface Issue {
   subtasks: string[];            // List of subtasks
   timeEstimate: string;          // Estimated time (e.g., "2 hours", "1 day")
   priority: 1 | 2 | 3 | 4 | 5;  // Priority level
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in-progress' | 'for-review' | 'completed';
   createdAt: string;             // ISO 8601 timestamp
   completedAt?: string;          // ISO 8601 timestamp
+  reviewNotes?: string;          // Bug reports or notes from testing/review
 }
 
 // Project Metadata (from vibe-hub.json)

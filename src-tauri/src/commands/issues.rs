@@ -105,6 +105,7 @@ pub async fn add_issue(
         status: issue.status,
         created_at: chrono::Utc::now().to_rfc3339(),
         completed_at: None,
+        review_notes: None,
     };
 
     issues_file.issues.push(new_issue.clone());
@@ -155,6 +156,9 @@ pub async fn update_issue(
     }
     if let Some(completed_at) = updates.completed_at {
         issue.completed_at = Some(completed_at);
+    }
+    if let Some(review_notes) = updates.review_notes {
+        issue.review_notes = Some(review_notes);
     }
 
     write_issues_file(path, &issues_file)?;
@@ -264,6 +268,7 @@ pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Resul
             status: "completed".to_string(),
             created_at: feedback.created_at.clone(),
             completed_at: feedback.completed_at,
+            review_notes: None,
         };
 
         issues_file.issues.push(issue);

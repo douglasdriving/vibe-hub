@@ -15,11 +15,18 @@ pub struct Issue {
     #[serde(alias = "timeEstimate", rename = "timeEstimate", default = "default_time_estimate")]
     pub time_estimate: String,
     pub priority: u8,
-    pub status: String,
+    pub status: String, // 'pending' | 'in-progress' | 'for-review' | 'completed'
     #[serde(alias = "createdAt", rename = "createdAt")]
     pub created_at: String,
     #[serde(alias = "completedAt", rename = "completedAt")]
     pub completed_at: Option<String>,
+    #[serde(
+        alias = "reviewNotes",
+        rename = "reviewNotes",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub review_notes: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,6 +49,7 @@ pub struct UpdateIssue {
     pub priority: Option<u8>,
     pub status: Option<String>,
     pub completed_at: Option<String>,
+    pub review_notes: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
