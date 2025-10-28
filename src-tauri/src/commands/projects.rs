@@ -17,6 +17,7 @@ fn git_command() -> std::process::Command {
 const VIBE_DIR: &str = ".vibe";
 const FEEDBACK_FILE: &str = "feedback.json";
 const ISSUES_FILE: &str = "issues.json";
+const ISSUES_ARCHIVE_FILE: &str = "issues-archive.json";
 const METADATA_FILE: &str = "metadata.md";
 
 // Project pipeline documents
@@ -90,6 +91,62 @@ fn migrate_to_vibe_folder(project_path: &Path) -> Result<(), String> {
     if is_git_repo(project_path) {
         let _ = ensure_vibe_in_gitignore(project_path);
     }
+
+    Ok(())
+}
+
+/// Auto-migrate completed issues from issues.json to issues-archive.json
+/// This is called automatically during project scanning to keep files small
+fn migrate_completed_issues_internal(project_path: &Path) -> Result<(), String> {
+    let issues_path = project_path.join(VIBE_DIR).join(ISSUES_FILE);
+    let archive_path = project_path.join(VIBE_DIR).join(ISSUES_ARCHIVE_FILE);
+
+    // Only migrate if issues.json exists
+    if !issues_path.exists() {
+        return Ok(());
+    }
+
+    // Read current issues
+    let contents = fs::read_to_string(&issues_path)
+        .map_err(|e| format!("Failed to read issues file: {}", e))?;
+    let mut issues_file: IssueFile = serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse issues file: {}", e))?;
+
+    // Read archive (or create empty)
+    let mut archive_file: IssueFile = if archive_path.exists() {
+        let archive_contents = fs::read_to_string(&archive_path)
+            .map_err(|e| format!("Failed to read archive file: {}", e))?;
+        serde_json::from_str(&archive_contents)
+            .map_err(|e| format!("Failed to parse archive file: {}", e))?
+    } else {
+        IssueFile::default()
+    };
+
+    // Split into pending and completed
+    let (still_pending, newly_completed): (Vec<_>, Vec<_>) = issues_file.issues
+        .into_iter()
+        .partition(|i| i.status != "completed");
+
+    // If no completed issues, nothing to do
+    if newly_completed.is_empty() {
+        return Ok(());
+    }
+
+    // Move completed to archive
+    archive_file.issues.extend(newly_completed);
+
+    // Write back
+    issues_file.issues = still_pending;
+
+    let issues_json = serde_json::to_string_pretty(&issues_file)
+        .map_err(|e| format!("Failed to serialize issues: {}", e))?;
+    fs::write(&issues_path, issues_json)
+        .map_err(|e| format!("Failed to write issues file: {}", e))?;
+
+    let archive_json = serde_json::to_string_pretty(&archive_file)
+        .map_err(|e| format!("Failed to serialize archive: {}", e))?;
+    fs::write(&archive_path, archive_json)
+        .map_err(|e| format!("Failed to write archive file: {}", e))?;
 
     Ok(())
 }
@@ -420,6 +477,9 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             // Auto-create metadata file if it doesn't exist
             let _ = ensure_metadata_file(&path);
+
+            // Auto-migrate completed issues to archive for better performance
+            let _ = migrate_completed_issues_internal(&path);
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);

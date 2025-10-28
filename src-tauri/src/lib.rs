@@ -54,6 +54,7 @@ pub fn run() {
             issues::update_issue,
             issues::delete_issue,
             issues::migrate_completed_feedback_to_issues,
+            issues::migrate_completed_issues,
             // Launcher commands
             launcher::launch_claude_code,
             launcher::open_in_explorer,

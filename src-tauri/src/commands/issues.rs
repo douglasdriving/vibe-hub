@@ -372,3 +372,34 @@ pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Resul
 
     Ok(migration_count)
 }
+
+/// Migrate completed issues from issues.json to issues-archive.json
+/// This helps keep the main issues file small for better performance
+#[tauri::command]
+pub async fn migrate_completed_issues(project_path: String) -> Result<usize, String> {
+    let path = Path::new(&project_path);
+
+    let mut pending_file = read_issues_file(path)?;
+    let mut archive_file = read_issues_archive_file(path)?;
+
+    // Split issues into pending and completed
+    let (still_pending, newly_completed): (Vec<_>, Vec<_>) = pending_file.issues
+        .into_iter()
+        .partition(|i| i.status != "completed");
+
+    let migration_count = newly_completed.len();
+
+    if migration_count == 0 {
+        return Ok(0);
+    }
+
+    // Move completed issues to archive
+    archive_file.issues.extend(newly_completed);
+
+    // Update files
+    pending_file.issues = still_pending;
+    write_issues_file(path, &pending_file)?;
+    write_issues_archive_file(path, &archive_file)?;
+
+    Ok(migration_count)
+}
