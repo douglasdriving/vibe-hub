@@ -160,6 +160,12 @@ export async function migrateCompletedFeedbackToIssues(
   return await invoke('migrate_completed_feedback_to_issues', { projectPath });
 }
 
+export async function migrateCompletedIssues(
+  projectPath: string
+): Promise<number> {
+  return await invoke('migrate_completed_issues', { projectPath });
+}
+
 // Debug logging
 export async function logDebug(message: string): Promise<void> {
   try {
