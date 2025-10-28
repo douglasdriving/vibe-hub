@@ -837,7 +837,26 @@ export function ProjectDetail() {
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <p className="text-white">{item.text}</p>
+                            {(() => {
+                              // Check if feedback has user clarification
+                              const clarificationMarker = '\n\nUser clarification: ';
+                              const hasClarification = item.text.includes(clarificationMarker);
+
+                              if (hasClarification) {
+                                const [originalText, clarification] = item.text.split(clarificationMarker);
+                                return (
+                                  <>
+                                    <p className="text-white">{originalText}</p>
+                                    <div className="mt-3 p-3 bg-white/20 rounded-lg border-2 border-white/40">
+                                      <p className="text-white/90 text-xs font-bold mb-1">USER CLARIFICATION:</p>
+                                      <p className="text-white">{clarification}</p>
+                                    </div>
+                                  </>
+                                );
+                              }
+
+                              return <p className="text-white">{item.text}</p>;
+                            })()}
                             {item.status === 'needs-review' && item.reviewNotes && (
                               <div className="mt-2 p-2 bg-white/20 rounded border border-white/30">
                                 <p className="text-white/90 text-sm font-semibold">Click to answer clarification question</p>
