@@ -59,6 +59,27 @@ pub async fn select_directory(app: AppHandle) -> Result<Option<String>, String> 
 }
 
 #[tauri::command]
+pub async fn select_image_file(app: AppHandle, default_path: Option<String>) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let mut dialog = app.dialog()
+        .file()
+        .add_filter("Images", &["png", "jpg", "jpeg", "svg", "gif", "webp"]);
+
+    // Set default directory if provided
+    if let Some(path) = default_path {
+        dialog = dialog.set_directory(path);
+    }
+
+    let file = dialog.blocking_pick_file();
+
+    match file {
+        Some(path) => Ok(Some(path.to_string())),
+        None => Ok(None),
+    }
+}
+
+#[tauri::command]
 pub async fn enable_autostart(app: AppHandle) -> Result<(), String> {
     use tauri_plugin_autostart::ManagerExt;
     app.autolaunch().enable()

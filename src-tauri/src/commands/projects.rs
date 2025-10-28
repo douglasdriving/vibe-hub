@@ -129,11 +129,11 @@ fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
         .map_err(|e| format!("Failed to parse issues file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None, None, None, None);
+        return (None, String::new(), None, Vec::new(), None, None, None, None, None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -147,6 +147,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut color: Option<String> = None;
     let mut text_color: Option<String> = None;
     let mut platform: Option<String> = None;
+    let mut icon_path: Option<String> = None;
     let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
@@ -188,6 +189,12 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         // Parse TextColor: field
         if trimmed.starts_with("TextColor:") {
             text_color = Some(trimmed.trim_start_matches("TextColor:").trim().to_string());
+            continue;
+        }
+
+        // Parse IconPath: field
+        if trimmed.starts_with("IconPath:") {
+            icon_path = Some(trimmed.trim_start_matches("IconPath:").trim().to_string());
             continue;
         }
 
@@ -244,7 +251,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         let _ = fs::write(&metadata_path, updated_contents);
     }
 
-    (name, description, deployment_url, tech_stack, status, color, text_color, platform)
+    (name, description, deployment_url, tech_stack, status, color, text_color, platform, icon_path)
 }
 
 fn assign_project_color(project_name: &str) -> String {
@@ -416,7 +423,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
@@ -456,7 +463,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 status,
                 color: Some(color),
                 text_color: Some(text_color),
-                icon_path: None, // TODO: Read from metadata file
+                icon_path,
                 last_modified: get_last_modified(&path),
                 feedback_count,
                 highest_feedback_priority,
@@ -498,7 +505,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
 
@@ -537,7 +544,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         status,
         color: Some(color),
         text_color: Some(text_color),
-        icon_path: None, // TODO: Read from metadata file
+        icon_path,
         last_modified: get_last_modified(path),
         feedback_count,
         highest_feedback_priority,
@@ -601,6 +608,7 @@ pub async fn update_all_metadata(
     platform: Option<String>,
     status: String,
     deployment_url: Option<String>,
+    icon_path: Option<String>,
 ) -> Result<(), String> {
     let path = Path::new(&project_path);
     let vibe_dir = path.join(VIBE_DIR);
@@ -621,6 +629,7 @@ pub async fn update_all_metadata(
 
     let mut existing_color: Option<String> = None;
     let mut existing_text_color: Option<String> = None;
+    let mut existing_icon_path: Option<String> = None;
 
     if let Some(contents) = &existing_contents {
         for line in contents.lines() {
@@ -629,6 +638,8 @@ pub async fn update_all_metadata(
                 existing_color = Some(trimmed.trim_start_matches("Color:").trim().to_string());
             } else if trimmed.starts_with("TextColor:") {
                 existing_text_color = Some(trimmed.trim_start_matches("TextColor:").trim().to_string());
+            } else if trimmed.starts_with("IconPath:") {
+                existing_icon_path = Some(trimmed.trim_start_matches("IconPath:").trim().to_string());
             }
         }
     }
@@ -637,6 +648,13 @@ pub async fn update_all_metadata(
     let folder_name = get_project_name(path);
     let color = existing_color.unwrap_or_else(|| assign_project_color(&folder_name));
     let text_color = existing_text_color.unwrap_or_else(|| calculate_text_color(&color));
+
+    // Use provided icon_path if present, otherwise preserve existing
+    let final_icon_path = if icon_path.is_some() {
+        icon_path
+    } else {
+        existing_icon_path
+    };
 
     // Build the metadata file
     let mut content = String::new();
@@ -647,6 +665,9 @@ pub async fn update_all_metadata(
     content.push_str(&format!("Status: {}\n", status));
     if let Some(plat) = platform {
         content.push_str(&format!("Platform: {}\n", plat));
+    }
+    if let Some(icon) = final_icon_path {
+        content.push_str(&format!("IconPath: {}\n", icon));
     }
     content.push_str(&format!("Color: {}\n", color));
     content.push_str(&format!("TextColor: {}\n\n", text_color));
@@ -1642,4 +1663,75 @@ pub async fn get_project_docs(project_path: String) -> Result<Vec<DocumentFile>,
     docs.sort_by(|a, b| b.modified_timestamp.cmp(&a.modified_timestamp));
 
     Ok(docs)
+}
+
+#[tauri::command]
+pub async fn get_icon_data_url(icon_path: String) -> Result<String, String> {
+    use std::fs;
+    use std::path::Path;
+    use base64::Engine;
+
+    let path = Path::new(&icon_path);
+
+    // Read the file
+    let bytes = fs::read(path)
+        .map_err(|e| format!("Failed to read icon file: {}", e))?;
+
+    // Determine mime type from extension
+    let extension = path.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("png")
+        .to_lowercase();
+
+    let mime_type = match extension.as_str() {
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "svg" => "image/svg+xml",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        _ => "image/png",
+    };
+
+    // Convert to base64
+    let base64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+
+    Ok(format!("data:{};base64,{}", mime_type, base64))
+}
+
+#[tauri::command]
+pub async fn upload_project_icon(
+    project_path: String,
+    source_image_path: String,
+) -> Result<String, String> {
+    let project_root = Path::new(&project_path);
+    let vibe_dir = project_root.join(VIBE_DIR);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    // Determine file extension from source
+    let source_path = Path::new(&source_image_path);
+    let extension = source_path.extension()
+        .and_then(|e| e.to_str())
+        .ok_or("Invalid image file extension")?;
+
+    // Validate image format
+    let valid_extensions = ["png", "jpg", "jpeg", "svg", "gif", "webp"];
+    if !valid_extensions.contains(&extension.to_lowercase().as_str()) {
+        return Err(format!("Unsupported image format: {}", extension));
+    }
+
+    // Destination: .vibe/icon.{extension}
+    let icon_filename = format!("icon.{}", extension);
+    let dest_path = vibe_dir.join(&icon_filename);
+
+    // Copy the file
+    fs::copy(source_path, &dest_path)
+        .map_err(|e| format!("Failed to copy icon file: {}", e))?;
+
+    // Return the relative path from project root
+    Ok(format!(".vibe/{}", icon_filename))
 }

@@ -37,8 +37,20 @@ function App() {
         // Get current projects from store
         const currentProjects = useProjectStore.getState().projects;
 
-        // Filter projects with pending feedback
-        const projectsWithFeedback = currentProjects.filter(p => p.feedbackCount > 0);
+        // Filter projects with pending feedback (not issues)
+        // We need to check if they actually have feedback items, not just feedbackCount > 0
+        const projectsWithFeedback: typeof currentProjects = [];
+        for (const project of currentProjects) {
+          try {
+            const feedback = await tauri.getFeedback(project.path);
+            const pendingFeedback = feedback.filter(f => f.status === 'pending');
+            if (pendingFeedback.length > 0) {
+              projectsWithFeedback.push(project);
+            }
+          } catch (error) {
+            console.error(`Failed to check feedback for ${project.name}:`, error);
+          }
+        }
 
         if (projectsWithFeedback.length === 0) {
           setAutoRefineStatus('No projects with pending feedback found');

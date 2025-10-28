@@ -2,6 +2,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import type { Project } from '../../store/types';
+import { useEffect, useState } from 'react';
+import * as tauri from '../../services/tauri';
 
 // Status sort order (workflow order)
 const STATUS_ORDER = [
@@ -64,33 +66,67 @@ function hashStringToColor(str: string): string {
 
 interface ProjectIconProps {
   projectName: string;
+  projectPath: string;
   color: string;
+  iconPath: string | null;
   pendingCount: number;
   isActive: boolean;
   onClick: () => void;
 }
 
-function ProjectIcon({ projectName, color, pendingCount, isActive, onClick }: ProjectIconProps) {
+function ProjectIcon({ projectName, projectPath, color, iconPath, pendingCount, isActive, onClick }: ProjectIconProps) {
   const initial = projectName.charAt(0).toUpperCase();
+  const [iconUrl, setIconUrl] = useState<string | null>(null);
+
+  // Load icon as base64 data URL
+  useEffect(() => {
+    if (iconPath) {
+      const iconPathNormalized = iconPath.replace(/\//g, '\\');
+      const fullIconPath = `${projectPath}\\${iconPathNormalized}`;
+      console.log('[Sidebar] Project:', projectName, 'Icon path:', iconPath, 'Full path:', fullIconPath);
+
+      tauri.getIconDataUrl(fullIconPath)
+        .then(dataUrl => {
+          console.log('[Sidebar] Got data URL, length:', dataUrl.length);
+          setIconUrl(dataUrl);
+        })
+        .catch(err => {
+          console.error('[Sidebar] Failed to load icon:', err);
+          setIconUrl(null);
+        });
+    } else {
+      setIconUrl(null);
+    }
+  }, [iconPath, projectPath, projectName]);
 
   return (
-    <button
-      onClick={onClick}
-      className={`relative w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all hover:scale-110 ${
-        isActive ? 'ring-4 ring-white' : ''
-      }`}
-      style={{ backgroundColor: color }}
-      title={projectName}
-    >
-      {initial}
+    <div className="relative">
+      <button
+        onClick={onClick}
+        className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all hover:scale-110 overflow-hidden ${
+          isActive ? 'ring-4 ring-white' : ''
+        }`}
+        style={{ backgroundColor: color }}
+        title={projectName}
+      >
+        {iconUrl ? (
+          <img
+            src={iconUrl}
+            alt={projectName}
+            className="w-full h-full object-cover rounded-full"
+          />
+        ) : (
+          initial
+        )}
+      </button>
 
       {/* Pending count badge */}
       {pendingCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10">
           {pendingCount > 9 ? '9+' : pendingCount}
         </span>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -166,7 +202,9 @@ export function Sidebar() {
                 <div key={project.id} className="flex justify-center px-2">
                   <ProjectIcon
                     projectName={project.displayName || project.name}
+                    projectPath={project.path}
                     color={project.color || hashStringToColor(project.name)}
+                    iconPath={project.iconPath || null}
                     pendingCount={pendingCount}
                     isActive={isActive}
                     onClick={() => handleProjectClick(project.path)}

@@ -350,6 +350,7 @@ export function ProjectDetail() {
     platform: string;
     status: string;
     deploymentUrl: string;
+    iconPath: string | null;
   }) => {
     if (!currentProject) return;
 
@@ -360,7 +361,8 @@ export function ProjectDetail() {
         data.description,
         data.platform || null,
         data.status,
-        data.deploymentUrl || null
+        data.deploymentUrl || null,
+        data.iconPath
       );
 
       // Refresh the project to reflect changes immediately

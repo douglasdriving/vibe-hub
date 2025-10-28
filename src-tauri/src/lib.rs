@@ -15,6 +15,7 @@ pub fn run() {
             settings::get_settings,
             settings::update_settings,
             settings::select_directory,
+            settings::select_image_file,
             settings::enable_autostart,
             settings::disable_autostart,
             settings::is_autostart_enabled,
@@ -37,6 +38,8 @@ pub fn run() {
             projects::get_project_docs,
             projects::get_cleanup_stats,
             projects::get_project_stats,
+            projects::upload_project_icon,
+            projects::get_icon_data_url,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,

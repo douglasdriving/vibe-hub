@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
+import { Upload, Trash2 } from 'lucide-react';
 import type { Project } from '../../store/types';
 import { STATUS_LABELS } from '../../store/types';
+import * as tauri from '../../services/tauri';
 
 interface EditMetadataModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ interface EditMetadataModalProps {
     platform: string;
     status: string;
     deploymentUrl: string;
+    iconPath: string | null;
   }) => Promise<void>;
   project: Project;
 }
@@ -24,6 +27,8 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
   const [platform, setPlatform] = useState('');
   const [status, setStatus] = useState('');
   const [deploymentUrl, setDeploymentUrl] = useState('');
+  const [iconPath, setIconPath] = useState<string | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -34,9 +39,65 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
       setPlatform(project.platform || '');
       setStatus(project.status);
       setDeploymentUrl(project.deploymentUrl || '');
+      setIconPath(project.iconPath || null);
+      // Set preview if icon exists
+      if (project.iconPath) {
+        // Construct absolute path properly
+        const iconPathNormalized = project.iconPath.replace(/\//g, '\\');
+        const fullIconPath = `${project.path}\\${iconPathNormalized}`;
+        console.log('[EditMetadataModal] Full icon path:', fullIconPath);
+
+        // Use base64 data URL instead of asset protocol
+        tauri.getIconDataUrl(fullIconPath)
+          .then(dataUrl => {
+            console.log('[EditMetadataModal] Got data URL, length:', dataUrl.length);
+            setIconPreview(dataUrl);
+          })
+          .catch(err => {
+            console.error('[EditMetadataModal] Failed to load icon:', err);
+            setIconPreview(null);
+          });
+      } else {
+        setIconPreview(null);
+      }
       setError('');
     }
   }, [isOpen, project]);
+
+  const handleFileSelect = async () => {
+    try {
+      setError('');
+
+      console.log('[EditMetadataModal] Project path:', project.path);
+
+      // Use Tauri dialog to select image file, starting in project root
+      const selectedPath = await tauri.selectImageFile(project.path);
+      if (!selectedPath) return; // User cancelled
+
+      console.log('[EditMetadataModal] Selected file:', selectedPath);
+
+      // Upload the icon
+      const newIconPath = await tauri.uploadProjectIcon(project.path, selectedPath);
+      console.log('[EditMetadataModal] Uploaded icon path:', newIconPath);
+      setIconPath(newIconPath);
+
+      // Set preview using base64 data URL
+      const iconPathNormalized = newIconPath.replace(/\//g, '\\');
+      const fullIconPath = `${project.path}\\${iconPathNormalized}`;
+      console.log('[EditMetadataModal] Full path for preview:', fullIconPath);
+      const dataUrl = await tauri.getIconDataUrl(fullIconPath);
+      console.log('[EditMetadataModal] Got data URL, length:', dataUrl.length);
+      setIconPreview(dataUrl);
+    } catch (err) {
+      console.error('[EditMetadataModal] Error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload icon');
+    }
+  };
+
+  const handleRemoveIcon = () => {
+    setIconPath(null);
+    setIconPreview(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +117,7 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
         platform: platform.trim(),
         status,
         deploymentUrl: deploymentUrl.trim(),
+        iconPath,
       });
       onClose();
     } catch (err) {
@@ -97,6 +159,49 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Project Name"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-1">
+            Project Icon
+          </label>
+          <div className="flex items-center gap-3">
+            {iconPreview ? (
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300 flex-shrink-0">
+                  <img
+                    src={iconPreview}
+                    alt="Project icon"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleRemoveIcon}
+                  disabled={isSaving}
+                >
+                  <Trash2 size={16} className="mr-2" />
+                  Remove Icon
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleFileSelect}
+                  disabled={isSaving}
+                >
+                  <Upload size={16} className="mr-2" />
+                  Upload Icon
+                </Button>
+                <p className="text-xs text-gray-500 mt-1">
+                  PNG, JPG, SVG, GIF, or WebP (max 5MB)
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div>

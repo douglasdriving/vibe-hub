@@ -62,7 +62,8 @@ export async function updateAllMetadata(
   description: string,
   platform: string | null,
   status: string,
-  deploymentUrl: string | null
+  deploymentUrl: string | null,
+  iconPath: string | null
 ): Promise<void> {
   return await invoke('update_all_metadata', {
     projectPath,
@@ -70,7 +71,8 @@ export async function updateAllMetadata(
     description,
     platform,
     status,
-    deploymentUrl
+    deploymentUrl,
+    iconPath
   });
 }
 
@@ -206,6 +208,10 @@ export async function selectDirectory(): Promise<string | null> {
   return await invoke('select_directory');
 }
 
+export async function selectImageFile(defaultPath?: string): Promise<string | null> {
+  return await invoke('select_image_file', { defaultPath: defaultPath || null });
+}
+
 export async function enableAutostart(): Promise<void> {
   return await invoke('enable_autostart');
 }
@@ -269,6 +275,17 @@ export interface ProjectStats {
 
 export async function getProjectStats(projectPath: string): Promise<ProjectStats> {
   return await invoke('get_project_stats', { projectPath });
+}
+
+export async function uploadProjectIcon(
+  projectPath: string,
+  sourceImagePath: string
+): Promise<string> {
+  return await invoke('upload_project_icon', { projectPath, sourceImagePath });
+}
+
+export async function getIconDataUrl(iconPath: string): Promise<string> {
+  return await invoke('get_icon_data_url', { iconPath });
 }
 
 // Prompts commands
