@@ -37,7 +37,6 @@ export function ProjectDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMetadataModalOpen, setIsEditMetadataModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
@@ -53,23 +52,17 @@ export function ProjectDetail() {
     console.log('[ProjectDetail] URL id param:', id);
     console.log('[ProjectDetail] Decoded projectPath:', projectPath);
     console.log('[ProjectDetail] currentProject:', currentProject);
-    console.log('[ProjectDetail] hasLoaded:', hasLoaded);
 
-    // Only load project if we haven't loaded it yet, or if the path changed
-    if (projectPath && (!currentProject || currentProject.path !== projectPath || !hasLoaded)) {
-      console.log('[ProjectDetail] Conditions met, calling setCurrentProject with:', projectPath);
+    // Always refresh project data when navigating to a project page
+    // This ensures data is up-to-date even when returning to the same project
+    if (projectPath) {
+      console.log('[ProjectDetail] Loading project data for:', projectPath);
       try {
         setCurrentProject(projectPath);
-        setHasLoaded(true);
         console.log('[ProjectDetail] setCurrentProject called successfully');
       } catch (error) {
         console.error('[ProjectDetail] Error calling setCurrentProject:', error);
       }
-    } else {
-      console.log('[ProjectDetail] Conditions NOT met, skipping load');
-      console.log('[ProjectDetail] - projectPath exists?', !!projectPath);
-      console.log('[ProjectDetail] - currentProject path matches?', currentProject?.path === projectPath);
-      console.log('[ProjectDetail] - hasLoaded?', hasLoaded);
     }
   }, [projectPath]);
 
