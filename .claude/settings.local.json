@@ -34,7 +34,10 @@
       "Bash(taskkill /F /PID 29888)",
       "Bash(cmd /c \"taskkill /F /PID 29888\")",
       "Bash(powershell -Command \"Stop-Process -Id 29888 -Force\")",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /F /PID 28140\")",
+      "Bash(powershell -Command \"Stop-Process -Id 28140 -Force\")"
     ],
     "deny": [],
     "ask": []

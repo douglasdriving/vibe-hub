@@ -13,6 +13,7 @@ export interface Project {
   status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'technical-testing' | 'design-testing' | 'deployment' | 'deployed'; // Project status
   color?: string;                // Project color for UI (synth-wave palette)
   textColor?: string;            // Text color for contrast with background (#000000 or #FFFFFF)
+  iconPath?: string;             // Custom project icon path (relative to project root)
   lastModified?: string;         // From git or filesystem (ISO 8601)
   feedbackCount: number;         // Calculated
   highestFeedbackPriority?: 1 | 2 | 3 | 4 | 5; // Highest priority of pending feedback (1 is highest)
