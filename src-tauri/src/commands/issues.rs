@@ -6,6 +6,7 @@ use chrono;
 
 const VIBE_DIR: &str = ".vibe";
 const ISSUES_FILE: &str = "issues.json";
+const ISSUES_ARCHIVE_FILE: &str = "issues-archive.json";
 const FEEDBACK_ARCHIVE_FILE: &str = "feedback-archive.json";
 
 fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
@@ -20,6 +21,20 @@ fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
 
     serde_json::from_str(&contents)
         .map_err(|e| format!("Failed to parse issues file: {}", e))
+}
+
+fn read_issues_archive_file(project_path: &Path) -> Result<IssueFile, String> {
+    let archive_path = project_path.join(VIBE_DIR).join(ISSUES_ARCHIVE_FILE);
+
+    if !archive_path.exists() {
+        return Ok(IssueFile::default());
+    }
+
+    let contents = fs::read_to_string(&archive_path)
+        .map_err(|e| format!("Failed to read issues archive file: {}", e))?;
+
+    serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse issues archive file: {}", e))
 }
 
 fn write_issues_file(project_path: &Path, issues_file: &IssueFile) -> Result<(), String> {
@@ -37,6 +52,25 @@ fn write_issues_file(project_path: &Path, issues_file: &IssueFile) -> Result<(),
 
     fs::write(&issues_path, json)
         .map_err(|e| format!("Failed to write issues file: {}", e))?;
+
+    Ok(())
+}
+
+fn write_issues_archive_file(project_path: &Path, issues_file: &IssueFile) -> Result<(), String> {
+    let vibe_dir = project_path.join(VIBE_DIR);
+    let archive_path = vibe_dir.join(ISSUES_ARCHIVE_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    let json = serde_json::to_string_pretty(issues_file)
+        .map_err(|e| format!("Failed to serialize issues archive: {}", e))?;
+
+    fs::write(&archive_path, json)
+        .map_err(|e| format!("Failed to write issues archive file: {}", e))?;
 
     Ok(())
 }
@@ -77,10 +111,16 @@ fn write_archived_feedback(project_path: &Path, feedback_file: &FeedbackFile) ->
 #[tauri::command]
 pub async fn get_issues(project_path: String) -> Result<Vec<Issue>, String> {
     let path = Path::new(&project_path);
-    let issues_file = read_issues_file(path)?;
+
+    // Read both pending and archived issues
+    let pending_file = read_issues_file(path)?;
+    let archive_file = read_issues_archive_file(path)?;
+
+    // Merge all issues
+    let mut issues = pending_file.issues;
+    issues.extend(archive_file.issues);
 
     // Sort by priority (1 = highest priority)
-    let mut issues = issues_file.issues;
     issues.sort_by(|a, b| a.priority.cmp(&b.priority));
 
     Ok(issues)
@@ -121,11 +161,25 @@ pub async fn update_issue(
     updates: UpdateIssue,
 ) -> Result<(), String> {
     let path = Path::new(&project_path);
-    let mut issues_file = read_issues_file(path)?;
+    let mut pending_file = read_issues_file(path)?;
+    let mut archive_file = read_issues_archive_file(path)?;
 
-    let issue = issues_file.issues.iter_mut()
-        .find(|i| i.id == issue_id)
+    // Try to find issue in pending file first
+    let mut issue_in_pending = pending_file.issues.iter_mut()
+        .find(|i| i.id == issue_id);
+
+    // If not in pending, try archive
+    let mut issue_in_archive = if issue_in_pending.is_none() {
+        archive_file.issues.iter_mut().find(|i| i.id == issue_id)
+    } else {
+        None
+    };
+
+    let issue = issue_in_pending.as_mut()
+        .or(issue_in_archive.as_mut())
         .ok_or("Issue not found")?;
+
+    let old_status = issue.status.clone();
 
     // Update fields only if provided
     if let Some(title) = updates.title {
@@ -143,7 +197,7 @@ pub async fn update_issue(
     if let Some(priority) = updates.priority {
         issue.priority = priority;
     }
-    if let Some(status) = updates.status {
+    if let Some(status) = updates.status.clone() {
         // If marking as completed, set completedAt timestamp
         if status == "completed" && issue.completed_at.is_none() {
             issue.completed_at = Some(chrono::Utc::now().to_rfc3339());
@@ -152,7 +206,7 @@ pub async fn update_issue(
         else if status != "completed" {
             issue.completed_at = None;
         }
-        issue.status = status;
+        issue.status = status.clone();
     }
     if let Some(completed_at) = updates.completed_at {
         issue.completed_at = Some(completed_at);
@@ -161,7 +215,29 @@ pub async fn update_issue(
         issue.review_notes = Some(review_notes);
     }
 
-    write_issues_file(path, &issues_file)?;
+    let new_status = issue.status.clone();
+
+    // If status changed to/from completed, move issue between files
+    let status_changed = updates.status.is_some() && old_status != new_status;
+    if status_changed {
+        if new_status == "completed" && old_status != "completed" {
+            // Move from pending to archive
+            if let Some(idx) = pending_file.issues.iter().position(|i| i.id == issue_id) {
+                let issue = pending_file.issues.remove(idx);
+                archive_file.issues.push(issue);
+            }
+        } else if new_status != "completed" && old_status == "completed" {
+            // Move from archive to pending
+            if let Some(idx) = archive_file.issues.iter().position(|i| i.id == issue_id) {
+                let issue = archive_file.issues.remove(idx);
+                pending_file.issues.push(issue);
+            }
+        }
+    }
+
+    // Write both files
+    write_issues_file(path, &pending_file)?;
+    write_issues_archive_file(path, &archive_file)?;
 
     Ok(())
 }
@@ -169,30 +245,40 @@ pub async fn update_issue(
 #[tauri::command]
 pub async fn delete_issue(project_path: String, issue_id: String) -> Result<(), String> {
     let path = Path::new(&project_path);
-    let mut issues_file = read_issues_file(path)?;
+    let mut pending_file = read_issues_file(path)?;
+    let mut archive_file = read_issues_archive_file(path)?;
 
     // Find the issue to get its original feedback ID before deleting
-    let original_feedback_id = issues_file.issues
+    let original_feedback_id = pending_file.issues
         .iter()
         .find(|i| i.id == issue_id)
-        .and_then(|i| i.original_feedback_id.clone());
+        .and_then(|i| i.original_feedback_id.clone())
+        .or_else(|| {
+            archive_file.issues
+                .iter()
+                .find(|i| i.id == issue_id)
+                .and_then(|i| i.original_feedback_id.clone())
+        });
 
-    // Remove the issue from issues.json
-    issues_file.issues.retain(|i| i.id != issue_id);
-    write_issues_file(path, &issues_file)?;
+    // Remove the issue from both files
+    pending_file.issues.retain(|i| i.id != issue_id);
+    archive_file.issues.retain(|i| i.id != issue_id);
+
+    write_issues_file(path, &pending_file)?;
+    write_issues_archive_file(path, &archive_file)?;
 
     // If the issue was linked to archived feedback, clean up the link
     if let Some(feedback_id) = original_feedback_id {
-        let mut archive_file = read_archived_feedback(path)?;
+        let mut feedback_archive = read_archived_feedback(path)?;
 
         // Find the archived feedback item and remove this issue ID from its refinedIntoIssueIds array
-        if let Some(feedback_item) = archive_file.feedback.iter_mut().find(|f| f.id == feedback_id) {
+        if let Some(feedback_item) = feedback_archive.feedback.iter_mut().find(|f| f.id == feedback_id) {
             if let Some(ref mut issue_ids) = feedback_item.refined_into_issue_ids {
                 issue_ids.retain(|id| id != &issue_id);
             }
         }
 
-        write_archived_feedback(path, &archive_file)?;
+        write_archived_feedback(path, &feedback_archive)?;
     }
 
     Ok(())
