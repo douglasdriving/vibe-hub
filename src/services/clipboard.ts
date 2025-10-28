@@ -1,4 +1,3 @@
-import type { FeedbackItem } from '../store/types';
 import * as tauri from './tauri';
 
 /**
@@ -25,18 +24,6 @@ export async function generateIssueFixPrompt(
     PROJECT_NAME: projectName,
     PROJECT_PATH: projectPath
   });
-}
-
-/**
- * @deprecated Use generateFeedbackRefinementPrompt or generateIssueFixPrompt instead
- */
-export async function generateClaudePrompt(
-  projectName: string,
-  projectPath: string,
-  _feedbackItems?: FeedbackItem[]
-): Promise<string> {
-  // Default to issueFix for backward compatibility
-  return generateIssueFixPrompt(projectName, projectPath);
 }
 
 /**

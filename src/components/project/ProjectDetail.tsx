@@ -55,15 +55,9 @@ export function ProjectDetail() {
   const projectPath = id ? decodeURIComponent(id) : null;
 
   useEffect(() => {
-    console.log('[ProjectDetail] useEffect triggered');
-    console.log('[ProjectDetail] URL id param:', id);
-    console.log('[ProjectDetail] Decoded projectPath:', projectPath);
-    console.log('[ProjectDetail] currentProject:', currentProject);
-
     // Always refresh project data when navigating to a project page
     // This ensures data is up-to-date even when returning to the same project
     if (projectPath) {
-      console.log('[ProjectDetail] Loading project data for:', projectPath);
       try {
         // First, migrate any completed feedback to issues
         tauri.migrateCompletedFeedbackToIssues(projectPath).then((count) => {
@@ -75,7 +69,6 @@ export function ProjectDetail() {
         });
 
         setCurrentProject(projectPath);
-        console.log('[ProjectDetail] setCurrentProject called successfully');
       } catch (error) {
         console.error('[ProjectDetail] Error calling setCurrentProject:', error);
       }

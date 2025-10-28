@@ -83,11 +83,9 @@ function ProjectIcon({ projectName, projectPath, color, iconPath, pendingCount, 
     if (iconPath) {
       const iconPathNormalized = iconPath.replace(/\//g, '\\');
       const fullIconPath = `${projectPath}\\${iconPathNormalized}`;
-      console.log('[Sidebar] Project:', projectName, 'Icon path:', iconPath, 'Full path:', fullIconPath);
 
       tauri.getIconDataUrl(fullIconPath)
         .then(dataUrl => {
-          console.log('[Sidebar] Got data URL, length:', dataUrl.length);
           setIconUrl(dataUrl);
         })
         .catch(err => {
@@ -140,14 +138,10 @@ export function Sidebar() {
   };
 
   const handleProjectClick = (projectPath: string) => {
-    console.log('[Sidebar] Project clicked:', projectPath);
     const encodedPath = encodeURIComponent(projectPath);
-    console.log('[Sidebar] Encoded path:', encodedPath);
     const targetUrl = `/project/${encodedPath}`;
-    console.log('[Sidebar] Navigating to:', targetUrl);
     try {
       navigate(targetUrl);
-      console.log('[Sidebar] Navigation called successfully');
     } catch (error) {
       console.error('[Sidebar] Navigation error:', error);
     }

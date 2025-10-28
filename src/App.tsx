@@ -11,7 +11,7 @@ import * as tauri from './services/tauri';
 
 function App() {
   const { loadSettings, settings } = useSettingsStore();
-  const { projects, loadProjects } = useProjectStore();
+  const { loadProjects } = useProjectStore();
   const [isAutoRefining, setIsAutoRefining] = useState(false);
   const [autoRefineStatus, setAutoRefineStatus] = useState('');
   const hasRunAutoRefine = useRef(false);

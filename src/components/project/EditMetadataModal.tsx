@@ -45,12 +45,10 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
         // Construct absolute path properly
         const iconPathNormalized = project.iconPath.replace(/\//g, '\\');
         const fullIconPath = `${project.path}\\${iconPathNormalized}`;
-        console.log('[EditMetadataModal] Full icon path:', fullIconPath);
 
         // Use base64 data URL instead of asset protocol
         tauri.getIconDataUrl(fullIconPath)
           .then(dataUrl => {
-            console.log('[EditMetadataModal] Got data URL, length:', dataUrl.length);
             setIconPreview(dataUrl);
           })
           .catch(err => {
@@ -68,25 +66,18 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
     try {
       setError('');
 
-      console.log('[EditMetadataModal] Project path:', project.path);
-
       // Use Tauri dialog to select image file, starting in project root
       const selectedPath = await tauri.selectImageFile(project.path);
       if (!selectedPath) return; // User cancelled
 
-      console.log('[EditMetadataModal] Selected file:', selectedPath);
-
       // Upload the icon
       const newIconPath = await tauri.uploadProjectIcon(project.path, selectedPath);
-      console.log('[EditMetadataModal] Uploaded icon path:', newIconPath);
       setIconPath(newIconPath);
 
       // Set preview using base64 data URL
       const iconPathNormalized = newIconPath.replace(/\//g, '\\');
       const fullIconPath = `${project.path}\\${iconPathNormalized}`;
-      console.log('[EditMetadataModal] Full path for preview:', fullIconPath);
       const dataUrl = await tauri.getIconDataUrl(fullIconPath);
-      console.log('[EditMetadataModal] Got data URL, length:', dataUrl.length);
       setIconPreview(dataUrl);
     } catch (err) {
       console.error('[EditMetadataModal] Error:', err);

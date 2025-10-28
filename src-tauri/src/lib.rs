@@ -1,5 +1,6 @@
 mod models;
 mod commands;
+mod utils;
 
 use commands::{settings, projects, feedback, issues, launcher, prompts, npm};
 

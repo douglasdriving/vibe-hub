@@ -48,23 +48,6 @@ export interface Issue {
   reviewNotes?: string;          // Bug reports or notes from testing/review
 }
 
-// Project Metadata (from vibe-hub.json)
-export interface ProjectMetadata {
-  name?: string;
-  description?: string;
-  platform?: string;
-  isLocalFirst?: boolean;
-  isOpenSource?: boolean;
-  hasBackend?: boolean;
-  deploymentUrl?: string;
-  status?: string;
-}
-
-// Feedback File Structure
-export interface FeedbackFile {
-  feedback: FeedbackItem[];
-}
-
 // Settings
 export interface Settings {
   projectsDirectory: string;
@@ -127,17 +110,3 @@ export const STATUS_COLORS: Record<'initialized' | 'idea' | 'designed' | 'tech-s
   'deployment': 'bg-teal-400',
   'deployed': 'bg-green-500',
 };
-
-// Synth-wave color palette for project cards
-export const SYNTHWAVE_COLORS = [
-  '#FF006E', // Hot pink
-  '#8338EC', // Purple
-  '#3A86FF', // Blue
-  '#FB5607', // Orange
-  '#FFBE0B', // Yellow
-  '#FF006E', // Magenta
-  '#06FFA5', // Cyan
-  '#FF1654', // Red-pink
-  '#7209B7', // Deep purple
-  '#F72585', // Pink
-];

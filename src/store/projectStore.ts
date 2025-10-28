@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Project, FeedbackItem, Issue } from './types';
 import * as tauri from '../services/tauri';
-import { generateClaudePrompt } from '../services/clipboard';
+import { generateIssueFixPrompt } from '../services/clipboard';
 
 interface ProjectStore {
   // State
@@ -141,23 +141,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   // Set current project and load its feedback, issues, and archived feedback
   setCurrentProject: async (projectPath: string) => {
-    console.log('[projectStore] setCurrentProject called with:', projectPath);
     set({ isLoading: true, error: null });
     try {
       const { projects } = get();
-      console.log('[projectStore] Total projects in store:', projects.length);
-      console.log('[projectStore] Looking for project with path:', projectPath);
 
       const project = projects.find(p => p.path === projectPath);
 
       if (!project) {
-        console.error('[projectStore] Project NOT found!');
-        console.log('[projectStore] Available project paths:', projects.map(p => p.path));
+        console.error('[projectStore] Project not found:', projectPath);
         throw new Error('Project not found');
       }
-
-      console.log('[projectStore] Project found:', project.name);
-      console.log('[projectStore] Loading feedback, issues, and archived feedback...');
 
       const [feedback, issues, archivedFeedback] = await Promise.all([
         tauri.getFeedback(project.path),
@@ -165,14 +158,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         tauri.getArchivedFeedback(project.path)
       ]);
 
-      console.log('[projectStore] Loaded:', {
-        feedbackCount: feedback.length,
-        issuesCount: issues.length,
-        archivedCount: archivedFeedback.length
-      });
-
       set({ currentProject: project, feedback, issues, archivedFeedback, isLoading: false });
-      console.log('[projectStore] setCurrentProject completed successfully');
     } catch (error) {
       console.error('[projectStore] setCurrentProject error:', error);
       set({ error: (error as Error).message, isLoading: false });
@@ -370,7 +356,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       // Only generate a prompt if feedback items are specified
       if (feedbackIds && feedbackIds.length > 0) {
         const { currentProject } = get();
-        prompt = await generateClaudePrompt(
+        prompt = await generateIssueFixPrompt(
           currentProject?.name || 'Project',
           projectPath
         );

@@ -174,11 +174,9 @@ export async function launchClaudeCode(
   projectPath: string,
   prompt: string
 ): Promise<void> {
-  console.log('[tauri.ts] launchClaudeCode called with:', { projectPath, promptLength: prompt.length });
   await logDebug('[tauri.ts] launchClaudeCode called with path: ' + projectPath);
   try {
     await invoke('launch_claude_code', { projectPath, prompt });
-    console.log('[tauri.ts] launchClaudeCode invoke completed successfully');
     await logDebug('[tauri.ts] launchClaudeCode completed successfully');
   } catch (error) {
     console.error('[tauri.ts] launchClaudeCode invoke failed:', error);

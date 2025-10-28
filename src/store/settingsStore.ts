@@ -17,104 +17,98 @@ interface SettingsStore {
   selectDirectory: () => Promise<string | null>;
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
-  // Initial state
-  settings: null,
-  isLoading: false,
+// Default settings fallback
+const DEFAULT_SETTINGS: Settings = {
+  projectsDirectory: '',
+  soundEffectsEnabled: true,
+  launchOnStartup: false,
+  autoRefineOnStartup: false
+};
 
-  // Load settings from backend
-  loadSettings: async () => {
-    set({ isLoading: true });
-    try {
-      const settings = await tauri.getSettings();
-
-      // Apply sound effects setting
-      soundEffects.setEnabled(settings.soundEffectsEnabled ?? true);
-
-      set({ settings, isLoading: false });
-    } catch (error) {
-      set({ isLoading: false });
-      throw error;
-    }
-  },
-
-  // Update projects directory
-  updateProjectsDirectory: async (path: string) => {
-    const { settings } = useSettingsStore.getState();
-
-    // If no settings exist, create new one
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
+export const useSettingsStore = create<SettingsStore>((set, get) => {
+  // Helper function to update a setting
+  const updateSetting = async <K extends keyof Settings>(
+    key: K,
+    value: Settings[K],
+    beforeUpdate?: () => Promise<void>
+  ) => {
+    const { settings } = get();
+    const currentSettings = settings || DEFAULT_SETTINGS;
 
     try {
-      const newSettings = { ...currentSettings, projectsDirectory: path };
+      // Run optional pre-update hook
+      if (beforeUpdate) {
+        await beforeUpdate();
+      }
+
+      const newSettings = { ...currentSettings, [key]: value };
       await tauri.updateSettings(newSettings);
       set({ settings: newSettings });
     } catch (error) {
       throw error;
     }
-  },
+  };
 
-  // Update sound effects enabled
-  updateSoundEffectsEnabled: async (enabled: boolean) => {
-    const { settings } = useSettingsStore.getState();
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
+  return {
+    // Initial state
+    settings: null,
+    isLoading: false,
 
-    try {
-      const newSettings = { ...currentSettings, soundEffectsEnabled: enabled };
-      await tauri.updateSettings(newSettings);
+    // Load settings from backend
+    loadSettings: async () => {
+      set({ isLoading: true });
+      try {
+        const settings = await tauri.getSettings();
+
+        // Apply sound effects setting
+        soundEffects.setEnabled(settings.soundEffectsEnabled ?? true);
+
+        set({ settings, isLoading: false });
+      } catch (error) {
+        set({ isLoading: false });
+        throw error;
+      }
+    },
+
+    // Update projects directory
+    updateProjectsDirectory: async (path: string) => {
+      await updateSetting('projectsDirectory', path);
+    },
+
+    // Update sound effects enabled
+    updateSoundEffectsEnabled: async (enabled: boolean) => {
+      await updateSetting('soundEffectsEnabled', enabled);
       soundEffects.setEnabled(enabled);
-      set({ settings: newSettings });
-    } catch (error) {
-      throw error;
-    }
-  },
+    },
 
-  // Update launch on startup
-  updateLaunchOnStartup: async (enabled: boolean) => {
-    const { settings } = useSettingsStore.getState();
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
+    // Update launch on startup
+    updateLaunchOnStartup: async (enabled: boolean) => {
+      await updateSetting('launchOnStartup', enabled, async () => {
+        // Enable or disable autostart before updating settings
+        if (enabled) {
+          await tauri.enableAutostart();
+        } else {
+          await tauri.disableAutostart();
+        }
+      });
+    },
 
-    try {
-      // Enable or disable autostart
-      if (enabled) {
-        await tauri.enableAutostart();
-      } else {
-        await tauri.disableAutostart();
+    // Update auto-refine on startup
+    updateAutoRefineOnStartup: async (enabled: boolean) => {
+      await updateSetting('autoRefineOnStartup', enabled);
+    },
+
+    // Open directory picker
+    selectDirectory: async () => {
+      try {
+        const path = await tauri.selectDirectory();
+        if (path) {
+          await get().updateProjectsDirectory(path);
+        }
+        return path;
+      } catch (error) {
+        throw error;
       }
-
-      // Update settings
-      const newSettings = { ...currentSettings, launchOnStartup: enabled };
-      await tauri.updateSettings(newSettings);
-      set({ settings: newSettings });
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Update auto-refine on startup
-  updateAutoRefineOnStartup: async (enabled: boolean) => {
-    const { settings } = useSettingsStore.getState();
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
-
-    try {
-      const newSettings = { ...currentSettings, autoRefineOnStartup: enabled };
-      await tauri.updateSettings(newSettings);
-      set({ settings: newSettings });
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Open directory picker
-  selectDirectory: async () => {
-    try {
-      const path = await tauri.selectDirectory();
-      if (path) {
-        await useSettingsStore.getState().updateProjectsDirectory(path);
-      }
-      return path;
-    } catch (error) {
-      throw error;
-    }
-  },
-}));
+    },
+  };
+});
