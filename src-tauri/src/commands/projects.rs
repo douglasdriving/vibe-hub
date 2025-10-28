@@ -456,7 +456,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 status,
                 color: Some(color),
                 text_color: Some(text_color),
-                icon_path: metadata.icon_path,
+                icon_path: None, // TODO: Read from metadata file
                 last_modified: get_last_modified(&path),
                 feedback_count,
                 highest_feedback_priority,
@@ -537,7 +537,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         status,
         color: Some(color),
         text_color: Some(text_color),
-        icon_path: metadata.icon_path,
+        icon_path: None, // TODO: Read from metadata file
         last_modified: get_last_modified(path),
         feedback_count,
         highest_feedback_priority,
