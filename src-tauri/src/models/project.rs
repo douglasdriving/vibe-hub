@@ -16,6 +16,7 @@ pub struct Project {
     pub status: String, // "initialized", "idea", "designed", "tech-spec-ready", "metadata-ready", "mvp-implemented", "technical-testing", "design-testing", "deployment", "deployed"
     pub color: Option<String>, // Project color for UI
     pub text_color: Option<String>, // Text color for contrast with background
+    pub icon_path: Option<String>, // Custom project icon path (relative to project root)
     pub last_modified: Option<String>,
     pub feedback_count: usize,
     pub highest_feedback_priority: Option<u8>, // 1-5, None if no pending feedback
@@ -38,6 +39,7 @@ pub struct ProjectMetadata {
     pub has_backend: Option<bool>,
     pub deployment_url: Option<String>,
     pub status: Option<String>,
+    pub icon_path: Option<String>,
 }
 
 impl Default for ProjectMetadata {
@@ -51,6 +53,7 @@ impl Default for ProjectMetadata {
             has_backend: None,
             deployment_url: None,
             status: None,
+            icon_path: None,
         }
     }
 }
