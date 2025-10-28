@@ -168,8 +168,9 @@ export function ProjectDetail() {
     if (!currentProject || !reviewingFeedback) return;
 
     try {
-      // Append the answer to the feedback text for refinement
-      const updatedText = `${reviewingFeedback.text}\n\nUser clarification: ${answer}`;
+      // Append both the question and answer to the feedback text for refinement
+      const question = reviewingFeedback.reviewNotes || 'Clarification needed';
+      const updatedText = `${reviewingFeedback.text}\n\nClarification Q: ${question}\nClarification A: ${answer}`;
 
       // Update the feedback item with the clarification
       await updateFeedback(currentProject.path, reviewingFeedback.id, {
@@ -838,12 +839,34 @@ export function ProjectDetail() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             {(() => {
-                              // Check if feedback has user clarification
-                              const clarificationMarker = '\n\nUser clarification: ';
-                              const hasClarification = item.text.includes(clarificationMarker);
+                              // Check if feedback has user clarification (new format)
+                              const newClarificationMarker = '\n\nClarification Q: ';
+                              const oldClarificationMarker = '\n\nUser clarification: ';
 
-                              if (hasClarification) {
-                                const [originalText, clarification] = item.text.split(clarificationMarker);
+                              if (item.text.includes(newClarificationMarker)) {
+                                // New format with both question and answer
+                                const [originalText, clarificationSection] = item.text.split(newClarificationMarker);
+                                const [question, answer] = clarificationSection.split('\nClarification A: ');
+
+                                return (
+                                  <>
+                                    <p className="text-white">{originalText}</p>
+                                    <div className="mt-3 p-3 bg-white/20 rounded-lg border-2 border-white/40">
+                                      <p className="text-white/90 text-xs font-bold mb-2">CLARIFICATION:</p>
+                                      <div className="mb-2">
+                                        <p className="text-white/80 text-sm font-semibold">Q:</p>
+                                        <p className="text-white text-sm ml-2">{question}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-white/80 text-sm font-semibold">A:</p>
+                                        <p className="text-white text-sm ml-2">{answer}</p>
+                                      </div>
+                                    </div>
+                                  </>
+                                );
+                              } else if (item.text.includes(oldClarificationMarker)) {
+                                // Old format (backward compatibility)
+                                const [originalText, clarification] = item.text.split(oldClarificationMarker);
                                 return (
                                   <>
                                     <p className="text-white">{originalText}</p>
