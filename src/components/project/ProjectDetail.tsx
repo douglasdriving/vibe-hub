@@ -62,11 +62,7 @@ export function ProjectDetail() {
     if (projectPath) {
       try {
         // First, migrate any completed feedback to issues
-        tauri.migrateCompletedFeedbackToIssues(projectPath).then((count) => {
-          if (count > 0) {
-            console.log(`[ProjectDetail] Migrated ${count} completed feedback items to issues`);
-          }
-        }).catch((error) => {
+        tauri.migrateCompletedFeedbackToIssues(projectPath).catch((error) => {
           console.error('[ProjectDetail] Migration error:', error);
         });
 
