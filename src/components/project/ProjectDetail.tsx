@@ -854,10 +854,17 @@ export function ProjectDetail() {
                   {feedback
                     .filter(f => f.status === 'completed')
                     .sort((a, b) => {
-                      if (!a.completedAt && !b.completedAt) return 0;
-                      if (!a.completedAt) return 1;
-                      if (!b.completedAt) return -1;
-                      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+                      // Handle missing or invalid completedAt dates
+                      const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+                      const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+
+                      // Items without valid dates go to the end
+                      if (!aTime && !bTime) return 0;
+                      if (!aTime) return 1;
+                      if (!bTime) return -1;
+
+                      // Sort by newest first (descending)
+                      return bTime - aTime;
                     })
                     .map((item) => (
                       <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg opacity-60">
@@ -878,10 +885,17 @@ export function ProjectDetail() {
                   {issues
                     .filter(i => i.status === 'completed')
                     .sort((a, b) => {
-                      if (!a.completedAt && !b.completedAt) return 0;
-                      if (!a.completedAt) return 1;
-                      if (!b.completedAt) return -1;
-                      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+                      // Handle missing or invalid completedAt dates
+                      const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+                      const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+
+                      // Items without valid dates go to the end
+                      if (!aTime && !bTime) return 0;
+                      if (!aTime) return 1;
+                      if (!bTime) return -1;
+
+                      // Sort by newest first (descending)
+                      return bTime - aTime;
                     })
                     .map((issue) => (
                       <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg opacity-60">

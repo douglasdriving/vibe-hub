@@ -26,7 +26,15 @@
       "Read(//c/Users/**)",
       "Bash(cmd /c \"dir %TEMP%\\vibe-hub-*.* 2>nul\")",
       "Read(//e/projects/vibe/friend-gifting/.vibe/**)",
-      "Bash(cmd /c \"dir E:\\projects\\vibe\\friend-gifting\\.vibe\")"
+      "Bash(cmd /c \"dir E:\\projects\\vibe\\friend-gifting\\.vibe\")",
+      "Bash(git restore:*)",
+      "Bash(npm run dev)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /F /PID 29888)",
+      "Bash(cmd /c \"taskkill /F /PID 29888\")",
+      "Bash(powershell -Command \"Stop-Process -Id 29888 -Force\")",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
