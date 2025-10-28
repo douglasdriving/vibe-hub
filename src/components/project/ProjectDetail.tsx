@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings, CheckCircle } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
+import { useProjectData } from './hooks/useProjectData';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
 import { ReviewModal } from '../feedback/ReviewModal';
@@ -44,12 +45,10 @@ export function ProjectDetail() {
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [reviewingFeedback, setReviewingFeedback] = useState<FeedbackItem | undefined>();
   const [reviewingIssue, setReviewingIssue] = useState<Issue | undefined>();
-  const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
-  const [githubUrl, setGithubUrl] = useState<string | null>(null);
-  const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
-  const [cleanupStats, setCleanupStats] = useState<tauri.CleanupStats | null>(null);
-  const [projectStats, setProjectStats] = useState<tauri.ProjectStats | null>(null);
   const [activeTab, setActiveTab] = useState<'feedback' | 'issues' | 'completed' | 'archived'>('feedback');
+
+  // Load project data using custom hook
+  const { availableScripts, githubUrl, docs, cleanupStats, projectStats } = useProjectData(currentProject);
 
   // Decode the project path from URL
   const projectPath = id ? decodeURIComponent(id) : null;
@@ -75,44 +74,6 @@ export function ProjectDetail() {
     }
   }, [projectPath]);
 
-  useEffect(() => {
-    // Detect available npm scripts when project loads
-    if (currentProject) {
-      tauri.detectNpmScripts(currentProject.path).then(scripts => {
-        setAvailableScripts(scripts);
-      }).catch(() => {
-        // Silently handle error
-      });
-
-      // Get GitHub URL
-      tauri.getGithubUrl(currentProject.path).then(url => {
-        setGithubUrl(url);
-      }).catch(() => {
-        // Silently handle error
-      });
-
-      // Get project documentation files
-      tauri.getProjectDocs(currentProject.path).then(docs => {
-        setDocs(docs);
-      }).catch(() => {
-        // Silently handle error
-      });
-
-      // Get cleanup stats
-      tauri.getCleanupStats(currentProject.path).then(stats => {
-        setCleanupStats(stats);
-      }).catch(() => {
-        // Silently handle error
-      });
-
-      // Get project statistics
-      tauri.getProjectStats(currentProject.path).then(stats => {
-        setProjectStats(stats);
-      }).catch(() => {
-        // Silently handle error
-      });
-    }
-  }, [currentProject]);
 
   const handleAddFeedback = () => {
     setEditingFeedback(undefined);
