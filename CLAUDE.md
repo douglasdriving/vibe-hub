@@ -37,6 +37,27 @@ npm run test:coverage # Run tests with coverage
 cd src-tauri && cargo test  # Run Rust tests
 ```
 
+### Utility Scripts for Claude Workflows
+
+These scripts reduce token usage by fetching only the data Claude needs:
+
+```bash
+# Get pending issues only (excludes 108+ completed issues from archive)
+python scripts/get-pending-issues.py
+
+# Get raw pending feedback only (excludes archived feedback)
+python scripts/get-raw-feedback.py
+
+# Get high-level project summary without loading full issue/feedback data
+python scripts/get-project-summary.py
+```
+
+**Usage in Claude sessions:**
+Instead of reading entire files, use these scripts to get targeted data. For example:
+- When refining feedback, use `get-raw-feedback.py` instead of reading feedback.json directly
+- When fixing issues, use `get-pending-issues.py` instead of reading the full issues.json
+- For quick project status checks, use `get-project-summary.py`
+
 ## Architecture
 
 ### Tech Stack
