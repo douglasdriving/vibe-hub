@@ -10,7 +10,8 @@
     "tauri": "tauri",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "analyze-files": "python scripts/analyze-file-lengths.py"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
