@@ -7,7 +7,7 @@ import * as tauri from '../../services/tauri';
 
 export function SettingsPanel() {
   const navigate = useNavigate();
-  const { settings, selectDirectory, updateSoundEffectsEnabled } = useSettingsStore();
+  const { settings, selectDirectory, updateSoundEffectsEnabled, updateLaunchOnStartup } = useSettingsStore();
 
   const handleSelectDirectory = async () => {
     try {
@@ -24,6 +24,14 @@ export function SettingsPanel() {
   const handleToggleSoundEffects = async () => {
     try {
       await updateSoundEffectsEnabled(!settings?.soundEffectsEnabled);
+    } catch {
+      // Silently handle error
+    }
+  };
+
+  const handleToggleLaunchOnStartup = async () => {
+    try {
+      await updateLaunchOnStartup(!settings?.launchOnStartup);
     } catch {
       // Silently handle error
     }
@@ -123,6 +131,36 @@ export function SettingsPanel() {
             </div>
             <div className="ml-3 text-gray-700 font-medium">
               {settings?.soundEffectsEnabled ? 'Enabled' : 'Disabled'}
+            </div>
+          </label>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Startup
+          </h2>
+
+          <p className="text-gray-600 text-sm mb-4">
+            Launch {APP_NAME} automatically when Windows starts. This is useful if you use the app daily.
+          </p>
+
+          <label className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={settings?.launchOnStartup ?? false}
+                onChange={handleToggleLaunchOnStartup}
+                className="sr-only"
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors ${
+                settings?.launchOnStartup ? 'bg-blue-600' : 'bg-gray-300'
+              }`}></div>
+              <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
+                settings?.launchOnStartup ? 'transform translate-x-6' : ''
+              }`}></div>
+            </div>
+            <div className="ml-3 text-gray-700 font-medium">
+              {settings?.launchOnStartup ? 'Enabled' : 'Disabled'}
             </div>
           </label>
         </div>

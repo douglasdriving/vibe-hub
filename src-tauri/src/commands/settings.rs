@@ -57,3 +57,24 @@ pub async fn select_directory(app: AppHandle) -> Result<Option<String>, String> 
         None => Ok(None),
     }
 }
+
+#[tauri::command]
+pub async fn enable_autostart(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().enable()
+        .map_err(|e| format!("Failed to enable autostart: {}", e))
+}
+
+#[tauri::command]
+pub async fn disable_autostart(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().disable()
+        .map_err(|e| format!("Failed to disable autostart: {}", e))
+}
+
+#[tauri::command]
+pub async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled()
+        .map_err(|e| format!("Failed to check autostart status: {}", e))
+}

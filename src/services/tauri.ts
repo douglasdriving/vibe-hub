@@ -200,6 +200,18 @@ export async function selectDirectory(): Promise<string | null> {
   return await invoke('select_directory');
 }
 
+export async function enableAutostart(): Promise<void> {
+  return await invoke('enable_autostart');
+}
+
+export async function disableAutostart(): Promise<void> {
+  return await invoke('disable_autostart');
+}
+
+export async function isAutostartEnabled(): Promise<boolean> {
+  return await invoke('is_autostart_enabled');
+}
+
 // Spec file detection commands
 export async function checkSpecFilesExist(projectPath: string): Promise<[boolean, boolean]> {
   return await invoke('check_spec_files_exist', { projectPath });

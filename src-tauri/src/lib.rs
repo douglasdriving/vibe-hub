@@ -9,11 +9,15 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec![])))
         .invoke_handler(tauri::generate_handler![
             // Settings commands
             settings::get_settings,
             settings::update_settings,
             settings::select_directory,
+            settings::enable_autostart,
+            settings::disable_autostart,
+            settings::is_autostart_enabled,
             // Project commands
             projects::scan_projects,
             projects::get_project_detail,

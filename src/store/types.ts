@@ -66,6 +66,7 @@ export interface FeedbackFile {
 export interface Settings {
   projectsDirectory: string;
   soundEffectsEnabled: boolean;
+  launchOnStartup: boolean;
 }
 
 // Priority Labels
