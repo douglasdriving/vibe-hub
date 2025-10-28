@@ -7,7 +7,7 @@ import * as tauri from '../../services/tauri';
 
 export function SettingsPanel() {
   const navigate = useNavigate();
-  const { settings, selectDirectory, updateSoundEffectsEnabled, updateLaunchOnStartup } = useSettingsStore();
+  const { settings, selectDirectory, updateSoundEffectsEnabled, updateLaunchOnStartup, updateAutoRefineOnStartup } = useSettingsStore();
 
   const handleSelectDirectory = async () => {
     try {
@@ -32,6 +32,14 @@ export function SettingsPanel() {
   const handleToggleLaunchOnStartup = async () => {
     try {
       await updateLaunchOnStartup(!settings?.launchOnStartup);
+    } catch {
+      // Silently handle error
+    }
+  };
+
+  const handleToggleAutoRefineOnStartup = async () => {
+    try {
+      await updateAutoRefineOnStartup(!settings?.autoRefineOnStartup);
     } catch {
       // Silently handle error
     }
@@ -161,6 +169,36 @@ export function SettingsPanel() {
             </div>
             <div className="ml-3 text-gray-700 font-medium">
               {settings?.launchOnStartup ? 'Enabled' : 'Disabled'}
+            </div>
+          </label>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Automation
+          </h2>
+
+          <p className="text-gray-600 text-sm mb-4">
+            Automatically refine all pending feedback items across all projects when {APP_NAME} starts. This runs Claude's refinement workflow to convert raw feedback into actionable issues.
+          </p>
+
+          <label className="flex items-center cursor-pointer">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={settings?.autoRefineOnStartup ?? false}
+                onChange={handleToggleAutoRefineOnStartup}
+                className="sr-only"
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors ${
+                settings?.autoRefineOnStartup ? 'bg-blue-600' : 'bg-gray-300'
+              }`}></div>
+              <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
+                settings?.autoRefineOnStartup ? 'transform translate-x-6' : ''
+              }`}></div>
+            </div>
+            <div className="ml-3 text-gray-700 font-medium">
+              {settings?.autoRefineOnStartup ? 'Enabled' : 'Disabled'}
             </div>
           </label>
         </div>

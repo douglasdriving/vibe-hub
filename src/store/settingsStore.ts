@@ -13,6 +13,7 @@ interface SettingsStore {
   updateProjectsDirectory: (path: string) => Promise<void>;
   updateSoundEffectsEnabled: (enabled: boolean) => Promise<void>;
   updateLaunchOnStartup: (enabled: boolean) => Promise<void>;
+  updateAutoRefineOnStartup: (enabled: boolean) => Promise<void>;
   selectDirectory: () => Promise<string | null>;
 }
 
@@ -42,7 +43,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     const { settings } = useSettingsStore.getState();
 
     // If no settings exist, create new one
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false };
+    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
 
     try {
       const newSettings = { ...currentSettings, projectsDirectory: path };
@@ -56,7 +57,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   // Update sound effects enabled
   updateSoundEffectsEnabled: async (enabled: boolean) => {
     const { settings } = useSettingsStore.getState();
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false };
+    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
 
     try {
       const newSettings = { ...currentSettings, soundEffectsEnabled: enabled };
@@ -71,7 +72,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   // Update launch on startup
   updateLaunchOnStartup: async (enabled: boolean) => {
     const { settings } = useSettingsStore.getState();
-    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false };
+    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
 
     try {
       // Enable or disable autostart
@@ -83,6 +84,20 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
 
       // Update settings
       const newSettings = { ...currentSettings, launchOnStartup: enabled };
+      await tauri.updateSettings(newSettings);
+      set({ settings: newSettings });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update auto-refine on startup
+  updateAutoRefineOnStartup: async (enabled: boolean) => {
+    const { settings } = useSettingsStore.getState();
+    const currentSettings = settings || { projectsDirectory: '', soundEffectsEnabled: true, launchOnStartup: false, autoRefineOnStartup: false };
+
+    try {
+      const newSettings = { ...currentSettings, autoRefineOnStartup: enabled };
       await tauri.updateSettings(newSettings);
       set({ settings: newSettings });
     } catch (error) {

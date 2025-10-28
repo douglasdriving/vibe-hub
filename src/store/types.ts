@@ -70,6 +70,7 @@ export interface Settings {
   projectsDirectory: string;
   soundEffectsEnabled: boolean;
   launchOnStartup: boolean;
+  autoRefineOnStartup: boolean;
 }
 
 // Priority Labels
