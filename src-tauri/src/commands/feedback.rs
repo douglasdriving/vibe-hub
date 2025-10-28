@@ -143,6 +143,7 @@ pub async fn add_feedback(
         created_at: chrono::Utc::now().to_rfc3339(),
         completed_at: None,
         refined_into_issue_ids: None,
+        review_notes: None,
     };
 
     feedback_file.feedback.push(new_feedback.clone());
@@ -190,6 +191,9 @@ pub async fn update_feedback(
     }
     if let Some(refined_into_issue_ids) = updates.refined_into_issue_ids {
         item.refined_into_issue_ids = Some(refined_into_issue_ids);
+    }
+    if let Some(review_notes) = updates.review_notes {
+        item.review_notes = Some(review_notes);
     }
 
     let new_status = item.status.clone();

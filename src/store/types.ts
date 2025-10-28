@@ -26,10 +26,11 @@ export interface FeedbackItem {
   id: string;                    // UUID
   text: string;                  // Feedback content
   priority: 1 | 2 | 3 | 4 | 5;  // Priority level
-  status: 'pending' | 'completed' | 'refined';
+  status: 'pending' | 'needs-review' | 'refined' | 'completed';
   createdAt: string;             // ISO 8601 timestamp
   completedAt?: string;          // ISO 8601 timestamp
   refinedIntoIssueIds?: string[]; // IDs of issues this feedback was refined into
+  reviewNotes?: string;          // Questions/clarifications needed for review
 }
 
 // Issue Model (refined feedback ready for implementation)

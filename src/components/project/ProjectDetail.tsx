@@ -4,6 +4,7 @@ import { Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hamme
 import { useProjectStore } from '../../store/projectStore';
 import { Button } from '../common/Button';
 import { FeedbackModal } from '../feedback/FeedbackModal';
+import { ReviewModal } from '../feedback/ReviewModal';
 import { EditMetadataModal } from './EditMetadataModal';
 import { ProjectSetupCard } from './ProjectSetupCard';
 import type { FeedbackItem } from '../../store/types';
@@ -36,7 +37,9 @@ export function ProjectDetail() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMetadataModalOpen, setIsEditMetadataModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
+  const [reviewingFeedback, setReviewingFeedback] = useState<FeedbackItem | undefined>();
   const [availableScripts, setAvailableScripts] = useState<tauri.AvailableScripts | null>(null);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
   const [docs, setDocs] = useState<tauri.DocumentFile[]>([]);
@@ -149,6 +152,33 @@ export function ProjectDetail() {
       await deleteFeedback(currentProject.path, feedbackId);
     } catch {
       // Silently handle error
+    }
+  };
+
+  const handleReviewFeedback = (item: FeedbackItem) => {
+    setReviewingFeedback(item);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSubmitReview = async (answer: string) => {
+    if (!currentProject || !reviewingFeedback) return;
+
+    try {
+      // Append the answer to the feedback text for refinement
+      const updatedText = `${reviewingFeedback.text}\n\nUser clarification: ${answer}`;
+
+      // Update the feedback item with the clarification
+      await updateFeedback(currentProject.path, reviewingFeedback.id, {
+        text: updatedText,
+        status: 'pending', // Reset to pending so it can be refined again
+        reviewNotes: undefined, // Clear review notes
+      });
+
+      setIsReviewModalOpen(false);
+      setReviewingFeedback(undefined);
+    } catch (error) {
+      console.error('Error submitting review answer:', error);
+      throw error;
     }
   };
 
@@ -743,7 +773,7 @@ export function ProjectDetail() {
                 </div>
               </div>
 
-              {feedback.filter(f => f.status === 'pending').length === 0 ? (
+              {feedback.filter(f => f.status === 'pending' || f.status === 'needs-review').length === 0 ? (
                 <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
                   <p>No raw feedback items.</p>
                   <p className="mt-2">Click "Add Feedback" to create one.</p>
@@ -751,21 +781,48 @@ export function ProjectDetail() {
               ) : (
                 <div className="space-y-3">
                   {feedback
-                    .filter(f => f.status === 'pending')
-                    .sort((a, b) => a.priority - b.priority)
+                    .filter(f => f.status === 'pending' || f.status === 'needs-review')
+                    .sort((a, b) => {
+                      // Sort needs-review first, then by priority
+                      if (a.status === 'needs-review' && b.status !== 'needs-review') return -1;
+                      if (a.status !== 'needs-review' && b.status === 'needs-review') return 1;
+                      return a.priority - b.priority;
+                    })
                     .map((item) => (
-                      <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg">
+                      <div
+                        key={item.id}
+                        className={`border-4 border-black rounded-lg p-4 shadow-lg ${
+                          item.status === 'needs-review'
+                            ? 'bg-gradient-to-br from-orange-500 via-yellow-500 to-amber-500 cursor-pointer hover:scale-[1.02] transition-transform'
+                            : 'bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600'
+                        }`}
+                        onClick={() => item.status === 'needs-review' ? handleReviewFeedback(item) : undefined}
+                      >
                         <div className="flex items-start justify-between gap-4">
-                          <p className="text-white flex-1">{item.text}</p>
-                          <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
-                            {PRIORITY_LABELS[item.priority]}
-                          </span>
+                          <div className="flex-1">
+                            <p className="text-white">{item.text}</p>
+                            {item.status === 'needs-review' && item.reviewNotes && (
+                              <div className="mt-2 p-2 bg-white/20 rounded border border-white/30">
+                                <p className="text-white/90 text-sm font-semibold">Click to answer clarification question</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2 items-end">
+                            {item.status === 'needs-review' && (
+                              <span className="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded uppercase">
+                                Needs Review
+                              </span>
+                            )}
+                            <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
+                              {PRIORITY_LABELS[item.priority]}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex items-center gap-4 mt-2">
                           {formatDate(item.createdAt) && (
                             <span className="text-white/80">{formatDate(item.createdAt)}</span>
                           )}
-                          <div className="flex gap-2">
+                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                             <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
                               <Edit size={14} className="inline mr-1" />
                               Edit
@@ -946,6 +1003,19 @@ export function ProjectDetail() {
         onSave={handleSaveMetadata}
         project={currentProject}
       />
+
+      {reviewingFeedback && (
+        <ReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => {
+            setIsReviewModalOpen(false);
+            setReviewingFeedback(undefined);
+          }}
+          feedbackText={reviewingFeedback.text}
+          reviewNotes={reviewingFeedback.reviewNotes || ''}
+          onSubmit={handleSubmitReview}
+        />
+      )}
     </div>
   );
 }
