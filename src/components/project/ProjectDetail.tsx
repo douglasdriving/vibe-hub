@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Terminal, Folder, ExternalLink, Edit, Trash2, Wrench, Play, Hammer, Code, Github, GitBranch, Settings, CheckCircle } from 'lucide-react';
+import { Terminal, Folder, ExternalLink, Wrench, Play, Hammer, Code, Github, GitBranch, Settings } from 'lucide-react';
 import { useProjectStore } from '../../store/projectStore';
 import { useProjectData } from './hooks/useProjectData';
 import { Button } from '../common/Button';
@@ -9,8 +9,11 @@ import { ReviewModal } from '../feedback/ReviewModal';
 import { IssueReviewModal } from '../issues/IssueReviewModal';
 import { EditMetadataModal } from './EditMetadataModal';
 import { ProjectSetupCard } from './ProjectSetupCard';
+import { FeedbackTab } from './tabs/FeedbackTab';
+import { IssuesTab } from './tabs/IssuesTab';
+import { CompletedTab } from './tabs/CompletedTab';
 import type { FeedbackItem, Issue } from '../../store/types';
-import { PRIORITY_LABELS, PRIORITY_COLORS, STATUS_LABELS, STATUS_COLORS } from '../../store/types';
+import { STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { isSetupStatus, generateCleanupPrompt } from '../../utils/prompts';
 import { generateFeedbackRefinementPrompt, generateIssueFixPrompt } from '../../services/clipboard';
@@ -742,348 +745,51 @@ export function ProjectDetail() {
 
           {/* Feedback Tab */}
           {activeTab === 'feedback' && (
-            <div>
-              <div className="flex items-center justify-end mb-6">
-                <div className="flex gap-2">
-                  {feedback.filter(f => f.status === 'pending').length > 0 && (
-                    <Button
-                      variant="secondary"
-                      onClick={handleRefineAllFeedback}
-                      invertedBgColor={currentProject.textColor}
-                      invertedTextColor={currentProject.color}
-                    >
-                      <Wrench size={18} className="inline mr-2" />
-                      Refine All
-                    </Button>
-                  )}
-                  <Button
-                    onClick={handleAddFeedback}
-                    invertedBgColor={currentProject.textColor}
-                    invertedTextColor={currentProject.color}
-                  >
-                    <Plus size={18} className="inline mr-2" />
-                    Add Feedback
-                  </Button>
-                </div>
-              </div>
-
-              {feedback.filter(f => f.status === 'pending' || f.status === 'needs-review').length === 0 ? (
-                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
-                  <p>No raw feedback items.</p>
-                  <p className="mt-2">Click "Add Feedback" to create one.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {feedback
-                    .filter(f => f.status === 'pending' || f.status === 'needs-review')
-                    .sort((a, b) => {
-                      // Sort needs-review first, then by priority
-                      if (a.status === 'needs-review' && b.status !== 'needs-review') return -1;
-                      if (a.status !== 'needs-review' && b.status === 'needs-review') return 1;
-                      return a.priority - b.priority;
-                    })
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className={`border-4 border-black rounded-lg p-4 shadow-lg ${
-                          item.status === 'needs-review'
-                            ? 'bg-gradient-to-br from-orange-500 via-yellow-500 to-amber-500 cursor-pointer hover:scale-[1.02] transition-transform'
-                            : 'bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600'
-                        }`}
-                        onClick={() => item.status === 'needs-review' ? handleReviewFeedback(item) : undefined}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            {(() => {
-                              // Check if feedback has user clarification (new format)
-                              const newClarificationMarker = '\n\nClarification Q: ';
-                              const oldClarificationMarker = '\n\nUser clarification: ';
-
-                              if (item.text.includes(newClarificationMarker)) {
-                                // New format with both question and answer
-                                const [originalText, clarificationSection] = item.text.split(newClarificationMarker);
-                                const [question, answer] = clarificationSection.split('\nClarification A: ');
-
-                                return (
-                                  <>
-                                    <p className="text-white">{originalText}</p>
-                                    <div className="mt-3 p-3 bg-white/20 rounded-lg border-2 border-white/40">
-                                      <p className="text-white/90 text-xs font-bold mb-2">CLARIFICATION:</p>
-                                      <div className="mb-2">
-                                        <p className="text-white/80 text-sm font-semibold">Q:</p>
-                                        <p className="text-white text-sm ml-2">{question}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-white/80 text-sm font-semibold">A:</p>
-                                        <p className="text-white text-sm ml-2">{answer}</p>
-                                      </div>
-                                    </div>
-                                  </>
-                                );
-                              } else if (item.text.includes(oldClarificationMarker)) {
-                                // Old format (backward compatibility)
-                                const [originalText, clarification] = item.text.split(oldClarificationMarker);
-                                return (
-                                  <>
-                                    <p className="text-white">{originalText}</p>
-                                    <div className="mt-3 p-3 bg-white/20 rounded-lg border-2 border-white/40">
-                                      <p className="text-white/90 text-xs font-bold mb-1">USER CLARIFICATION:</p>
-                                      <p className="text-white">{clarification}</p>
-                                    </div>
-                                  </>
-                                );
-                              }
-
-                              return <p className="text-white">{item.text}</p>;
-                            })()}
-                            {item.status === 'needs-review' && item.reviewNotes && (
-                              <div className="mt-2 p-2 bg-white/20 rounded border border-white/30">
-                                <p className="text-white/90 text-sm font-semibold">Click to answer clarification question</p>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-col gap-2 items-end">
-                            {item.status === 'needs-review' && (
-                              <span className="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded uppercase">
-                                Needs Review
-                              </span>
-                            )}
-                            <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
-                              {PRIORITY_LABELS[item.priority]}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 mt-2">
-                          {formatDate(item.createdAt) && (
-                            <span className="text-white/80">{formatDate(item.createdAt)}</span>
-                          )}
-                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                            <button onClick={() => handleEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
-                              <Edit size={14} className="inline mr-1" />
-                              Edit
-                            </button>
-                            <button onClick={() => handleDeleteFeedback(item.id)} className="text-red-300 hover:text-red-100">
-                              <Trash2 size={14} className="inline mr-1" />
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+            <FeedbackTab
+              feedback={feedback}
+              currentProject={currentProject}
+              onAddFeedback={handleAddFeedback}
+              onEditFeedback={handleEditFeedback}
+              onDeleteFeedback={handleDeleteFeedback}
+              onReviewFeedback={handleReviewFeedback}
+              onRefineAll={handleRefineAllFeedback}
+            />
           )}
 
           {/* Issues Tab */}
           {activeTab === 'issues' && (
-            <div>
-              <div className="flex items-center justify-end mb-6">
-                <div className="flex gap-2">
-                  {issues.filter(i => i.status === 'pending' || i.status === 'in-progress').length > 0 && (
-                    <Button
-                      variant="secondary"
-                      onClick={handleFixAllIssues}
-                      invertedBgColor={currentProject.textColor}
-                      invertedTextColor={currentProject.color}
-                    >
-                      <Hammer size={18} className="inline mr-2" />
-                      Fix All
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {issues.filter(i => i.status !== 'completed').length === 0 ? (
-                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
-                  <p>No issues yet.</p>
-                  <p className="mt-2">Refine raw feedback items to create issues.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* For Review Issues */}
-                  {issues.filter(i => i.status === 'for-review').length > 0 && (
-                    <div>
-                      <h3 className="text-xl font-bold mb-3 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
-                        Ready for Review ({issues.filter(i => i.status === 'for-review').length})
-                      </h3>
-                      <div className="space-y-3">
-                        {issues
-                          .filter(i => i.status === 'for-review')
-                          .sort((a, b) => a.priority - b.priority)
-                          .map((issue) => (
-                            <div
-                              key={issue.id}
-                              onClick={() => handleReviewIssue(issue)}
-                              className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-500 shadow-lg cursor-pointer hover:scale-[1.02] transition-transform"
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <h3 className="text-white font-bold text-lg">{issue.title}</h3>
-                                    <span className="bg-white text-teal-700 px-2 py-1 rounded text-xs font-bold uppercase">Review</span>
-                                  </div>
-                                  <p className="text-white/90 mb-3">{issue.description}</p>
-                                  <div className="flex items-center gap-4 text-sm">
-                                    <span className="text-white/80">Est: {issue.timeEstimate}</span>
-                                    <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
-                                      {PRIORITY_LABELS[issue.priority]}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Pending/In-Progress Issues */}
-                  {issues.filter(i => i.status === 'pending' || i.status === 'in-progress').length > 0 && (
-                    <div>
-                      {issues.filter(i => i.status === 'for-review').length > 0 && (
-                        <h3 className="text-xl font-bold mb-3 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
-                          Pending Issues ({issues.filter(i => i.status === 'pending' || i.status === 'in-progress').length})
-                        </h3>
-                      )}
-                      <div className="space-y-3">
-                        {issues
-                          .filter(i => i.status === 'pending' || i.status === 'in-progress')
-                          .sort((a, b) => {
-                            // Prioritize issues with reviewNotes (bug reports)
-                            if (a.reviewNotes && !b.reviewNotes) return -1;
-                            if (!a.reviewNotes && b.reviewNotes) return 1;
-                            return a.priority - b.priority;
-                          })
-                          .map((issue) => (
-                            <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <h3 className="text-white font-bold text-lg">{issue.title}</h3>
-                                    {issue.reviewNotes && (
-                                      <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold uppercase">Bug Reported</span>
-                                    )}
-                                  </div>
-                                  <p className="text-white/90 mb-3">{issue.description}</p>
-                                  {issue.reviewNotes && (
-                                    <div className="bg-red-900/50 border-2 border-red-400 rounded p-2 mb-3">
-                                      <p className="text-xs font-bold text-red-200 mb-1">BUG REPORT:</p>
-                                      <p className="text-white/90 text-sm">{issue.reviewNotes}</p>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-4 text-sm">
-                                    <span className="text-white/80">Est: {issue.timeEstimate}</span>
-                                    <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
-                                      {PRIORITY_LABELS[issue.priority]}
-                                    </span>
-                                    <button onClick={() => handleToggleIssueComplete(issue.id)} className="text-green-300 hover:text-green-100">
-                                      <CheckCircle size={14} className="inline mr-1" />
-                                      Complete
-                                    </button>
-                                    <button onClick={() => handleDeleteIssue(issue.id)} className="text-red-300 hover:text-red-100">
-                                      <Trash2 size={14} className="inline mr-1" />
-                                      Delete
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <IssuesTab
+              issues={issues}
+              currentProject={currentProject}
+              onFixAll={handleFixAllIssues}
+              onReviewIssue={handleReviewIssue}
+              onToggleComplete={handleToggleIssueComplete}
+              onDeleteIssue={handleDeleteIssue}
+            />
           )}
 
           {/* Completed Tab */}
           {activeTab === 'completed' && (
-            <div>
-              {issues.filter(i => i.status === 'completed').length === 0 ? (
-                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
-                  <p>No completed items yet.</p>
-                  <p className="mt-2">Completed issues will appear here.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {/* Completed Issues */}
-                  {issues
-                    .filter(i => i.status === 'completed')
-                    .sort((a, b) => {
-                      // Handle missing or invalid completedAt dates
-                      const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
-                      const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
-
-                      // Items without valid dates go to the end
-                      if (!aTime && !bTime) return 0;
-                      if (!aTime) return 1;
-                      if (!bTime) return -1;
-
-                      // Sort by newest first (descending)
-                      return bTime - aTime;
-                    })
-                    .map((issue) => (
-                      <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg opacity-60">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h3 className="text-white font-bold text-lg mb-2 line-through">{issue.title}</h3>
-                            <p className="text-white/90 mb-3 line-through">{issue.description}</p>
-                            <div className="flex items-center gap-4 text-sm">
-                              {issue.completedAt && formatDate(issue.completedAt) && (
-                                <span className="text-white/80">Completed: {formatDate(issue.completedAt)}</span>
-                              )}
-                              <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
-                                {PRIORITY_LABELS[issue.priority]}
-                              </span>
-                              <button onClick={() => handleToggleIssueComplete(issue.id)} className="text-yellow-300 hover:text-yellow-100">
-                                <CheckCircle size={14} className="inline mr-1" />
-                                Reopen
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+            <CompletedTab
+              issues={issues}
+              feedback={feedback}
+              archivedFeedback={archivedFeedback}
+              currentProject={currentProject}
+              onToggleIssueComplete={handleToggleIssueComplete}
+              activeTab="completed"
+            />
           )}
 
           {/* Archived Tab */}
           {activeTab === 'archived' && (
-            <div>
-              {archivedFeedback.length === 0 ? (
-                <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
-                  <p>No archived feedback.</p>
-                  <p className="mt-2">Refined feedback items will appear here.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {archivedFeedback
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((item) => (
-                      <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 shadow-lg opacity-70">
-                        <div className="flex items-start justify-between gap-4">
-                          <p className="text-white flex-1">{item.text}</p>
-                          <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
-                            {PRIORITY_LABELS[item.priority]}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 mt-2">
-                          {formatDate(item.createdAt) && (
-                            <span className="text-white/80">Created: {formatDate(item.createdAt)}</span>
-                          )}
-                          {item.refinedIntoIssueIds && item.refinedIntoIssueIds.length > 0 && (
-                            <span className="text-white/80">→ {item.refinedIntoIssueIds.length} issue(s)</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+            <CompletedTab
+              issues={issues}
+              feedback={feedback}
+              archivedFeedback={archivedFeedback}
+              currentProject={currentProject}
+              onToggleIssueComplete={handleToggleIssueComplete}
+              activeTab="archived"
+            />
           )}
         </div>
         )}
