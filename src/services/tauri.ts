@@ -152,6 +152,12 @@ export async function deleteIssue(
   return await invoke('delete_issue', { projectPath, issueId });
 }
 
+export async function migrateCompletedFeedbackToIssues(
+  projectPath: string
+): Promise<number> {
+  return await invoke('migrate_completed_feedback_to_issues', { projectPath });
+}
+
 // Debug logging
 export async function logDebug(message: string): Promise<void> {
   try {

@@ -193,3 +193,91 @@ pub async fn delete_issue(project_path: String, issue_id: String) -> Result<(), 
 
     Ok(())
 }
+
+const FEEDBACK_FILE: &str = "feedback.json";
+const FEEDBACK_COMPLETED_FILE: &str = "feedback-completed.json";
+
+fn read_feedback_file(project_path: &Path, filename: &str) -> Result<FeedbackFile, String> {
+    let feedback_path = project_path.join(VIBE_DIR).join(filename);
+
+    if !feedback_path.exists() {
+        return Ok(FeedbackFile::default());
+    }
+
+    let contents = fs::read_to_string(&feedback_path)
+        .map_err(|e| format!("Failed to read feedback file: {}", e))?;
+
+    serde_json::from_str(&contents)
+        .map_err(|e| format!("Failed to parse feedback file: {}", e))
+}
+
+fn write_feedback_file(project_path: &Path, filename: &str, feedback_file: &FeedbackFile) -> Result<(), String> {
+    let vibe_dir = project_path.join(VIBE_DIR);
+    let feedback_path = vibe_dir.join(filename);
+
+    let json = serde_json::to_string_pretty(feedback_file)
+        .map_err(|e| format!("Failed to serialize feedback: {}", e))?;
+
+    fs::write(&feedback_path, json)
+        .map_err(|e| format!("Failed to write feedback file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Result<usize, String> {
+    let path = Path::new(&project_path);
+
+    // Read existing issues
+    let mut issues_file = read_issues_file(path)?;
+
+    // Read completed feedback from both possible locations
+    let mut pending_feedback = read_feedback_file(path, FEEDBACK_FILE)?;
+    let completed_feedback_file = read_feedback_file(path, FEEDBACK_COMPLETED_FILE)?;
+
+    // Collect all completed feedback items
+    let mut completed_feedback: Vec<_> = completed_feedback_file.feedback;
+
+    // Also check pending feedback for any completed items
+    let (still_pending, also_completed): (Vec<_>, Vec<_>) = pending_feedback.feedback
+        .into_iter()
+        .partition(|f| f.status != "completed");
+
+    completed_feedback.extend(also_completed);
+
+    let migration_count = completed_feedback.len();
+
+    if migration_count == 0 {
+        return Ok(0);
+    }
+
+    // Convert each completed feedback item to an issue
+    for feedback in completed_feedback {
+        let issue = Issue {
+            id: Uuid::new_v4().to_string(),
+            original_feedback_id: Some(feedback.id.clone()),
+            title: feedback.text.clone(),
+            description: format!("Migrated from completed feedback: {}", feedback.text),
+            subtasks: vec![],
+            time_estimate: "Unknown".to_string(),
+            priority: feedback.priority,
+            status: "completed".to_string(),
+            created_at: feedback.created_at.clone(),
+            completed_at: feedback.completed_at,
+        };
+
+        issues_file.issues.push(issue);
+    }
+
+    // Write updated issues file
+    write_issues_file(path, &issues_file)?;
+
+    // Clear completed feedback files
+    pending_feedback.feedback = still_pending;
+    write_feedback_file(path, FEEDBACK_FILE, &pending_feedback)?;
+
+    let empty_feedback = FeedbackFile { feedback: vec![] };
+    write_feedback_file(path, FEEDBACK_COMPLETED_FILE, &empty_feedback)?;
+
+    Ok(migration_count)
+}

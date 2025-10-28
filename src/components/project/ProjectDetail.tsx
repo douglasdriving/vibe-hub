@@ -58,6 +58,15 @@ export function ProjectDetail() {
     if (projectPath) {
       console.log('[ProjectDetail] Loading project data for:', projectPath);
       try {
+        // First, migrate any completed feedback to issues
+        tauri.migrateCompletedFeedbackToIssues(projectPath).then((count) => {
+          if (count > 0) {
+            console.log(`[ProjectDetail] Migrated ${count} completed feedback items to issues`);
+          }
+        }).catch((error) => {
+          console.error('[ProjectDetail] Migration error:', error);
+        });
+
         setCurrentProject(projectPath);
         console.log('[ProjectDetail] setCurrentProject called successfully');
       } catch (error) {
@@ -836,44 +845,13 @@ export function ProjectDetail() {
           {/* Completed Tab */}
           {activeTab === 'completed' && (
             <div>
-              {feedback.filter(f => f.status === 'completed').length === 0 && issues.filter(i => i.status === 'completed').length === 0 ? (
+              {issues.filter(i => i.status === 'completed').length === 0 ? (
                 <div className="text-center py-12" style={{ color: currentProject.textColor || '#FFFFFF', opacity: 0.7 }}>
                   <p>No completed items yet.</p>
-                  <p className="mt-2">Completed feedback and issues will appear here.</p>
+                  <p className="mt-2">Completed issues will appear here.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* Completed Feedback */}
-                  {feedback
-                    .filter(f => f.status === 'completed')
-                    .sort((a, b) => {
-                      // Handle missing or invalid completedAt dates
-                      const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
-                      const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
-
-                      // Items without valid dates go to the end
-                      if (!aTime && !bTime) return 0;
-                      if (!aTime) return 1;
-                      if (!bTime) return -1;
-
-                      // Sort by newest first (descending)
-                      return bTime - aTime;
-                    })
-                    .map((item) => (
-                      <div key={item.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg opacity-60">
-                        <div className="flex items-start justify-between gap-4">
-                          <p className="text-white flex-1 line-through">{item.text}</p>
-                          <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
-                            {PRIORITY_LABELS[item.priority]}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 mt-2">
-                          {item.completedAt && formatDate(item.completedAt) && (
-                            <span className="text-white/80">Completed: {formatDate(item.completedAt)}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
                   {/* Completed Issues */}
                   {issues
                     .filter(i => i.status === 'completed')
