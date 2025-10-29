@@ -41,7 +41,8 @@ export interface Issue {
   title: string;                 // Short summary
   description: string;           // Detailed description
   subtasks: string[];            // List of subtasks
-  timeEstimate: string;          // Estimated time (e.g., "2 hours", "1 day")
+  timeEstimate?: string;         // Estimated time (DEPRECATED - kept for backwards compatibility)
+  complexity: 1 | 2 | 3 | 4 | 5; // Complexity rating (1=Trivial, 2=Simple, 3=Moderate, 4=Complex, 5=Very Complex)
   priority: 1 | 2 | 3 | 4 | 5;  // Priority level
   status: 'pending' | 'in-progress' | 'for-review' | 'completed';
   createdAt: string;             // ISO 8601 timestamp
@@ -82,6 +83,24 @@ export const PRIORITY_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
   3: 'bg-yellow-500',
   4: 'bg-blue-500',
   5: 'bg-gray-500',
+};
+
+// Complexity Labels
+export const COMPLEXITY_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: 'Trivial',
+  2: 'Simple',
+  3: 'Moderate',
+  4: 'Complex',
+  5: 'Very Complex',
+};
+
+// Complexity Colors (Tailwind classes)
+export const COMPLEXITY_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: 'bg-green-500',
+  2: 'bg-teal-500',
+  3: 'bg-blue-500',
+  4: 'bg-purple-500',
+  5: 'bg-pink-500',
 };
 
 // Status Labels

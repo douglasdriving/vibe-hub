@@ -1,7 +1,7 @@
 import { Hammer, Trash2, CheckCircle } from 'lucide-react';
 import { Button } from '../../common/Button';
 import type { Issue, Project } from '../../../store/types';
-import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../../store/types';
+import { PRIORITY_LABELS, PRIORITY_COLORS, COMPLEXITY_LABELS, COMPLEXITY_COLORS } from '../../../store/types';
 
 interface IssuesTabProps {
   issues: Issue[];
@@ -72,7 +72,9 @@ export function IssuesTab({
                           </div>
                           <p className="text-white/90 mb-3">{issue.description}</p>
                           <div className="flex items-center gap-4 text-sm">
-                            <span className="text-white/80">Est: {issue.timeEstimate}</span>
+                            <span className={`${COMPLEXITY_COLORS[issue.complexity]} text-white px-2 py-1 rounded font-semibold`}>
+                              {COMPLEXITY_LABELS[issue.complexity]}
+                            </span>
                             <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
                               {PRIORITY_LABELS[issue.priority]}
                             </span>
@@ -119,7 +121,9 @@ export function IssuesTab({
                             </div>
                           )}
                           <div className="flex items-center gap-4 text-sm">
-                            <span className="text-white/80">Est: {issue.timeEstimate}</span>
+                            <span className={`${COMPLEXITY_COLORS[issue.complexity]} text-white px-2 py-1 rounded font-semibold`}>
+                              {COMPLEXITY_LABELS[issue.complexity]}
+                            </span>
                             <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
                               {PRIORITY_LABELS[issue.priority]}
                             </span>

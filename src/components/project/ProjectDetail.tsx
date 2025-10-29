@@ -370,7 +370,7 @@ export function ProjectDetail() {
                   <h3 className="font-bold text-red-900 mb-2">Issue File Format Error</h3>
                   <p className="text-sm text-red-800 mb-2">
                     The <code className="bg-red-100 px-1 rounded">.vibe/issues.json</code> file has an incorrect format.
-                    It may be missing required fields like <code className="bg-red-100 px-1 rounded">timeEstimate</code>.
+                    It may be missing required fields like <code className="bg-red-100 px-1 rounded">complexity</code>.
                   </p>
                   <p className="text-sm text-red-800">
                     Please check the file or delete it to reset. See the console for more details.

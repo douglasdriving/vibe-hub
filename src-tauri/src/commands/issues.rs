@@ -141,6 +141,7 @@ pub async fn add_issue(
         description: issue.description,
         subtasks: issue.subtasks,
         time_estimate: issue.time_estimate,
+        complexity: issue.complexity,
         priority: issue.priority,
         status: issue.status,
         created_at: chrono::Utc::now().to_rfc3339(),
@@ -192,7 +193,10 @@ pub async fn update_issue(
         issue.subtasks = subtasks;
     }
     if let Some(time_estimate) = updates.time_estimate {
-        issue.time_estimate = time_estimate;
+        issue.time_estimate = Some(time_estimate);
+    }
+    if let Some(complexity) = updates.complexity {
+        issue.complexity = complexity;
     }
     if let Some(priority) = updates.priority {
         issue.priority = priority;
@@ -349,7 +353,8 @@ pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Resul
             title: feedback.text.clone(),
             description: format!("Migrated from completed feedback: {}", feedback.text),
             subtasks: vec![],
-            time_estimate: "Unknown".to_string(),
+            time_estimate: Some("Unknown".to_string()),
+            complexity: 3, // Default to moderate complexity for migrated items
             priority: feedback.priority,
             status: "completed".to_string(),
             created_at: feedback.created_at.clone(),

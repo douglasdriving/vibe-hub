@@ -4,6 +4,10 @@ fn default_time_estimate() -> String {
     "Not estimated".to_string()
 }
 
+fn default_complexity() -> u8 {
+    3 // Default to "Moderate" complexity
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Issue {
     pub id: String,
@@ -12,8 +16,10 @@ pub struct Issue {
     pub title: String,
     pub description: String,
     pub subtasks: Vec<String>,
-    #[serde(alias = "timeEstimate", rename = "timeEstimate", default = "default_time_estimate")]
-    pub time_estimate: String,
+    #[serde(alias = "timeEstimate", rename = "timeEstimate", skip_serializing_if = "Option::is_none", default)]
+    pub time_estimate: Option<String>,
+    #[serde(default = "default_complexity")]
+    pub complexity: u8,
     pub priority: u8,
     pub status: String, // 'pending' | 'in-progress' | 'for-review' | 'completed'
     #[serde(alias = "createdAt", rename = "createdAt")]
@@ -35,7 +41,8 @@ pub struct NewIssue {
     pub title: String,
     pub description: String,
     pub subtasks: Vec<String>,
-    pub time_estimate: String,
+    pub time_estimate: Option<String>,
+    pub complexity: u8,
     pub priority: u8,
     pub status: String,
 }
@@ -46,6 +53,7 @@ pub struct UpdateIssue {
     pub description: Option<String>,
     pub subtasks: Option<Vec<String>>,
     pub time_estimate: Option<String>,
+    pub complexity: Option<u8>,
     pub priority: Option<u8>,
     pub status: Option<String>,
     pub completed_at: Option<String>,
