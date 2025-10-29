@@ -163,10 +163,9 @@ fn ensure_utility_scripts(project_path: &Path) -> Result<(), String> {
     }
 
     // Get vibe-hub's own .vibe/scripts directory (template location)
-    // This assumes vibe-hub is in the parent of the projects directory
+    // This assumes vibe-hub is a sibling directory in the same projects folder
     let vibe_hub_scripts = project_path
         .parent()
-        .and_then(|p| p.parent())
         .map(|p| p.join("vibe-hub").join(VIBE_DIR).join("scripts"));
 
     if let Some(template_scripts) = vibe_hub_scripts {
