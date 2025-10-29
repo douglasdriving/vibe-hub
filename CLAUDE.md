@@ -52,6 +52,9 @@ python .vibe/scripts/get-raw-feedback.py
 
 # Get high-level project summary without loading full issue/feedback data
 python .vibe/scripts/get-project-summary.py
+
+# Analyze file lengths to identify files over 500 lines needing refactoring
+python .vibe/scripts/analyze-file-lengths.py
 ```
 
 **Usage in Claude sessions:**
@@ -59,6 +62,7 @@ When Claude is launched in ANY project managed by Vibe Hub, these scripts will b
 - When refining feedback: `python .vibe/scripts/get-raw-feedback.py`
 - When fixing issues: `python .vibe/scripts/get-pending-issues.py`
 - For quick status checks: `python .vibe/scripts/get-project-summary.py`
+- Before committing code: `python .vibe/scripts/analyze-file-lengths.py`
 
 The scripts are automatically updated from the template in vibe-hub's `.vibe/scripts/` during project scanning.
 

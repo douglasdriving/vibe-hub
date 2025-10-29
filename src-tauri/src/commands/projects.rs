@@ -172,7 +172,7 @@ fn ensure_utility_scripts(project_path: &Path) -> Result<(), String> {
     if let Some(template_scripts) = vibe_hub_scripts {
         if template_scripts.exists() {
             // Copy each script file
-            let script_files = ["get-pending-issues.py", "get-raw-feedback.py", "get-project-summary.py"];
+            let script_files = ["get-pending-issues.py", "get-raw-feedback.py", "get-project-summary.py", "analyze-file-lengths.py"];
 
             for script_name in script_files {
                 let template_file = template_scripts.join(script_name);
