@@ -24,6 +24,13 @@ pub struct FeedbackItem {
         default
     )]
     pub review_notes: Option<String>,
+    #[serde(
+        alias = "relatedIssueId",
+        rename = "relatedIssueId",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub related_issue_id: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -33,6 +40,7 @@ pub struct NewFeedbackItem {
     pub priority: u8,
     pub status: String,
     pub completed_at: Option<String>,
+    pub related_issue_id: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,6 +51,7 @@ pub struct UpdateFeedbackItem {
     pub completed_at: Option<String>,
     pub refined_into_issue_ids: Option<Vec<String>>,
     pub review_notes: Option<String>,
+    pub related_issue_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

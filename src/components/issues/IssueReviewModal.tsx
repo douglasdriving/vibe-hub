@@ -9,6 +9,7 @@ interface IssueReviewModalProps {
     title: string;
     description: string;
     subtasks: string[];
+    status: string;
   };
   onApprove: () => Promise<void>;
   onReportBug: (bugNotes: string) => Promise<void>;
@@ -98,8 +99,8 @@ export function IssueReviewModal({ isOpen, onClose, issue, onApprove, onReportBu
             </div>
           </div>
 
-          {/* Subtasks */}
-          {issue.subtasks.length > 0 && (
+          {/* Subtasks - Hidden when status is for-review */}
+          {issue.subtasks.length > 0 && issue.status !== 'for-review' && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Subtasks:

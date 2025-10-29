@@ -31,6 +31,7 @@ export interface FeedbackItem {
   completedAt?: string;          // ISO 8601 timestamp
   refinedIntoIssueIds?: string[]; // IDs of issues this feedback was refined into
   reviewNotes?: string;          // Questions/clarifications needed for review
+  relatedIssueId?: string;       // ID of the issue this bug report is related to
 }
 
 // Issue Model (refined feedback ready for implementation)

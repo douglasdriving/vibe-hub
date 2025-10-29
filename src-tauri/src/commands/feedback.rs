@@ -144,6 +144,7 @@ pub async fn add_feedback(
         completed_at: None,
         refined_into_issue_ids: None,
         review_notes: None,
+        related_issue_id: feedback.related_issue_id,
     };
 
     feedback_file.feedback.push(new_feedback.clone());
@@ -194,6 +195,9 @@ pub async fn update_feedback(
     }
     if let Some(review_notes) = updates.review_notes {
         item.review_notes = Some(review_notes);
+    }
+    if let Some(related_issue_id) = updates.related_issue_id {
+        item.related_issue_id = Some(related_issue_id);
     }
 
     let new_status = item.status.clone();

@@ -184,9 +184,12 @@ export function ProjectDetail() {
     if (!currentProject || !reviewingIssue) return;
 
     try {
-      await updateIssue(currentProject.path, reviewingIssue.id, {
+      // Create a new feedback item linked to this issue
+      await addFeedback(currentProject.path, {
+        text: `Bug report for "${reviewingIssue.title}": ${bugNotes}`,
+        priority: 1, // Bug reports are high priority
         status: 'pending',
-        reviewNotes: bugNotes,
+        relatedIssueId: reviewingIssue.id,
       });
       setReviewingIssue(undefined);
     } catch (error) {
@@ -829,6 +832,7 @@ export function ProjectDetail() {
             title: reviewingIssue.title,
             description: reviewingIssue.description,
             subtasks: reviewingIssue.subtasks,
+            status: reviewingIssue.status,
           }}
           onApprove={handleApproveIssue}
           onReportBug={handleReportBug}
