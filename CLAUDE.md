@@ -39,24 +39,28 @@ cd src-tauri && cargo test  # Run Rust tests
 
 ### Utility Scripts for Claude Workflows
 
+**Important**: These scripts are automatically copied to each project's `.vibe/scripts/` directory, so Claude can access them from any project.
+
 These scripts reduce token usage by fetching only the data Claude needs:
 
 ```bash
-# Get pending issues only (excludes 108+ completed issues from archive)
-python scripts/get-pending-issues.py
+# Get pending issues only (excludes completed issues from archive)
+python .vibe/scripts/get-pending-issues.py
 
 # Get raw pending feedback only (excludes archived feedback)
-python scripts/get-raw-feedback.py
+python .vibe/scripts/get-raw-feedback.py
 
 # Get high-level project summary without loading full issue/feedback data
-python scripts/get-project-summary.py
+python .vibe/scripts/get-project-summary.py
 ```
 
 **Usage in Claude sessions:**
-Instead of reading entire files, use these scripts to get targeted data. For example:
-- When refining feedback, use `get-raw-feedback.py` instead of reading feedback.json directly
-- When fixing issues, use `get-pending-issues.py` instead of reading the full issues.json
-- For quick project status checks, use `get-project-summary.py`
+When Claude is launched in ANY project managed by Vibe Hub, these scripts will be available in `.vibe/scripts/`. Use them to get targeted data instead of reading entire files:
+- When refining feedback: `python .vibe/scripts/get-raw-feedback.py`
+- When fixing issues: `python .vibe/scripts/get-pending-issues.py`
+- For quick status checks: `python .vibe/scripts/get-project-summary.py`
+
+The scripts are automatically updated from the template in vibe-hub's `.vibe/scripts/` during project scanning.
 
 ## Architecture
 

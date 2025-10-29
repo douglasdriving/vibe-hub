@@ -151,6 +151,60 @@ fn migrate_completed_issues_internal(project_path: &Path) -> Result<(), String> 
     Ok(())
 }
 
+/// Copy utility scripts to project's .vibe/scripts folder
+/// This ensures Claude has access to data-fetching scripts regardless of which project it's in
+fn ensure_utility_scripts(project_path: &Path) -> Result<(), String> {
+    let scripts_dir = project_path.join(VIBE_DIR).join("scripts");
+
+    // Create scripts directory if it doesn't exist
+    if !scripts_dir.exists() {
+        fs::create_dir(&scripts_dir)
+            .map_err(|e| format!("Failed to create scripts directory: {}", e))?;
+    }
+
+    // Get vibe-hub's own .vibe/scripts directory (template location)
+    // This assumes vibe-hub is in the parent of the projects directory
+    let vibe_hub_scripts = project_path
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.join("vibe-hub").join(VIBE_DIR).join("scripts"));
+
+    if let Some(template_scripts) = vibe_hub_scripts {
+        if template_scripts.exists() {
+            // Copy each script file
+            let script_files = ["get-pending-issues.py", "get-raw-feedback.py", "get-project-summary.py"];
+
+            for script_name in script_files {
+                let template_file = template_scripts.join(script_name);
+                let dest_file = scripts_dir.join(script_name);
+
+                if template_file.exists() {
+                    // Only copy if destination doesn't exist or is older
+                    let should_copy = !dest_file.exists() || {
+                        let template_modified = fs::metadata(&template_file)
+                            .and_then(|m| m.modified())
+                            .ok();
+                        let dest_modified = fs::metadata(&dest_file)
+                            .and_then(|m| m.modified())
+                            .ok();
+
+                        match (template_modified, dest_modified) {
+                            (Some(t), Some(d)) => t > d,
+                            _ => true,
+                        }
+                    };
+
+                    if should_copy {
+                        let _ = fs::copy(&template_file, &dest_file);
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn get_project_name(path: &Path) -> String {
     path.file_name()
         .and_then(|n| n.to_str())
@@ -480,6 +534,9 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             // Auto-migrate completed issues to archive for better performance
             let _ = migrate_completed_issues_internal(&path);
+
+            // Ensure utility scripts are available for Claude
+            let _ = ensure_utility_scripts(&path);
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
