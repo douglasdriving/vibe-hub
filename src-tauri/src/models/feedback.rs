@@ -31,6 +31,20 @@ pub struct FeedbackItem {
         default
     )]
     pub related_issue_id: Option<String>,
+    #[serde(
+        alias = "githubIssueNumber",
+        rename = "githubIssueNumber",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub github_issue_number: Option<u64>,
+    #[serde(
+        alias = "githubIssueUrl",
+        rename = "githubIssueUrl",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub github_issue_url: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -41,6 +55,8 @@ pub struct NewFeedbackItem {
     pub status: String,
     pub completed_at: Option<String>,
     pub related_issue_id: Option<String>,
+    pub github_issue_number: Option<u64>,
+    pub github_issue_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,6 +68,8 @@ pub struct UpdateFeedbackItem {
     pub refined_into_issue_ids: Option<Vec<String>>,
     pub review_notes: Option<String>,
     pub related_issue_id: Option<String>,
+    pub github_issue_number: Option<u64>,
+    pub github_issue_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

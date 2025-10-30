@@ -22,7 +22,8 @@ const DEFAULT_SETTINGS: Settings = {
   projectsDirectory: '',
   soundEffectsEnabled: true,
   launchOnStartup: false,
-  autoRefineOnStartup: false
+  autoRefineOnStartup: false,
+  githubIntegrationEnabled: false
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => {

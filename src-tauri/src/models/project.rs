@@ -13,6 +13,8 @@ pub struct Project {
     pub is_open_source: Option<bool>,
     pub has_backend: Option<bool>,
     pub deployment_url: Option<String>,
+    pub github_url: Option<String>, // GitHub repository URL
+    pub github_integration_enabled: bool, // Per-project toggle for GitHub sync
     pub status: String, // "initialized", "idea", "designed", "tech-spec-ready", "metadata-ready", "mvp-implemented", "technical-testing", "design-testing", "deployment", "deployed"
     pub color: Option<String>, // Project color for UI
     pub text_color: Option<String>, // Text color for contrast with background
@@ -38,6 +40,8 @@ pub struct ProjectMetadata {
     #[serde(rename = "hasBackend")]
     pub has_backend: Option<bool>,
     pub deployment_url: Option<String>,
+    pub github_url: Option<String>,
+    pub github_integration_enabled: Option<bool>,
     pub status: Option<String>,
     pub icon_path: Option<String>,
 }
@@ -52,6 +56,8 @@ impl Default for ProjectMetadata {
             is_open_source: None,
             has_backend: None,
             deployment_url: None,
+            github_url: None,
+            github_integration_enabled: None,
             status: None,
             icon_path: None,
         }

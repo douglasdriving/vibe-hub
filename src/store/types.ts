@@ -10,6 +10,8 @@ export interface Project {
   isOpenSource?: boolean;        // Is open source
   hasBackend?: boolean;          // Has backend server
   deploymentUrl?: string;        // Optional
+  githubUrl?: string;            // GitHub repository URL
+  githubIntegrationEnabled: boolean; // Per-project toggle for GitHub sync
   status: 'initialized' | 'idea' | 'designed' | 'tech-spec-ready' | 'metadata-ready' | 'mvp-implemented' | 'technical-testing' | 'design-testing' | 'deployment' | 'deployed'; // Project status
   color?: string;                // Project color for UI (synth-wave palette)
   textColor?: string;            // Text color for contrast with background (#000000 or #FFFFFF)
@@ -32,6 +34,8 @@ export interface FeedbackItem {
   refinedIntoIssueIds?: string[]; // IDs of issues this feedback was refined into
   reviewNotes?: string;          // Questions/clarifications needed for review
   relatedIssueId?: string;       // ID of the issue this bug report is related to
+  githubIssueNumber?: number;    // GitHub issue number (if synced)
+  githubIssueUrl?: string;       // GitHub issue URL (if synced)
 }
 
 // Issue Model (refined feedback ready for implementation)
@@ -57,6 +61,8 @@ export interface Settings {
   soundEffectsEnabled: boolean;
   launchOnStartup: boolean;
   autoRefineOnStartup: boolean;
+  githubToken?: string;
+  githubIntegrationEnabled: boolean;
 }
 
 // Priority Labels

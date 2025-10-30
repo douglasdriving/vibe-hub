@@ -145,6 +145,8 @@ pub async fn add_feedback(
         refined_into_issue_ids: None,
         review_notes: None,
         related_issue_id: feedback.related_issue_id,
+        github_issue_number: feedback.github_issue_number,
+        github_issue_url: feedback.github_issue_url,
     };
 
     feedback_file.feedback.push(new_feedback.clone());
@@ -198,6 +200,12 @@ pub async fn update_feedback(
     }
     if let Some(related_issue_id) = updates.related_issue_id {
         item.related_issue_id = Some(related_issue_id);
+    }
+    if let Some(github_issue_number) = updates.github_issue_number {
+        item.github_issue_number = Some(github_issue_number);
+    }
+    if let Some(github_issue_url) = updates.github_issue_url {
+        item.github_issue_url = Some(github_issue_url);
     }
 
     let new_status = item.status.clone();

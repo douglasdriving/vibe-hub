@@ -239,11 +239,11 @@ fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
         .map_err(|e| format!("Failed to parse issues file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, bool) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None, None, None, None, None);
+        return (None, String::new(), None, Vec::new(), None, None, None, None, None, None, false);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -252,12 +252,14 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut name: Option<String> = None;
     let mut description = String::new();
     let mut deployment_url: Option<String> = None;
+    let mut github_url: Option<String> = None;
     let mut tech_stack = Vec::new();
     let mut status: Option<String> = None;
     let mut color: Option<String> = None;
     let mut text_color: Option<String> = None;
     let mut platform: Option<String> = None;
     let mut icon_path: Option<String> = None;
+    let mut github_integration_enabled = false;
     let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
@@ -305,6 +307,19 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         // Parse IconPath: field
         if trimmed.starts_with("IconPath:") {
             icon_path = Some(trimmed.trim_start_matches("IconPath:").trim().to_string());
+            continue;
+        }
+
+        // Parse GitHub URL: field
+        if trimmed.starts_with("GitHub:") {
+            github_url = Some(trimmed.trim_start_matches("GitHub:").trim().to_string());
+            continue;
+        }
+
+        // Parse GitHub Integration Enabled: field
+        if trimmed.starts_with("GitHubIntegration:") {
+            let value = trimmed.trim_start_matches("GitHubIntegration:").trim().to_lowercase();
+            github_integration_enabled = value == "true" || value == "enabled" || value == "yes";
             continue;
         }
 
@@ -361,7 +376,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         let _ = fs::write(&metadata_path, updated_contents);
     }
 
-    (name, description, deployment_url, tech_stack, status, color, text_color, platform, icon_path)
+    (name, description, deployment_url, tech_stack, status, color, text_color, platform, icon_path, github_url, github_integration_enabled)
 }
 
 fn assign_project_color(project_name: &str) -> String {
@@ -539,7 +554,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path, github_url, github_integration_enabled) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
@@ -576,6 +591,8 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 is_open_source: None,
                 has_backend: None,
                 deployment_url,
+                github_url,
+                github_integration_enabled,
                 status,
                 color: Some(color),
                 text_color: Some(text_color),
@@ -621,7 +638,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path, github_url, github_integration_enabled) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
 
@@ -657,6 +674,8 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         is_open_source: None,
         has_backend: None,
         deployment_url,
+        github_url,
+        github_integration_enabled,
         status,
         color: Some(color),
         text_color: Some(text_color),
