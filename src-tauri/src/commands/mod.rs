@@ -5,3 +5,4 @@ pub mod issues;
 pub mod launcher;
 pub mod prompts;
 pub mod npm;
+pub mod watcher;

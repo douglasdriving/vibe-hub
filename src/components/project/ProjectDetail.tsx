@@ -73,6 +73,86 @@ export function ProjectDetail() {
     }
   }, [projectPath]);
 
+  // Auto-refresh on window focus
+  useEffect(() => {
+    if (!currentProject) return;
+
+    const handleWindowFocus = () => {
+      // Refresh project data when window gains focus
+      refreshProject(currentProject.id).catch((error) => {
+        console.error('[ProjectDetail] Failed to refresh on focus:', error);
+      });
+    };
+
+    // Listen for window focus events
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [currentProject, refreshProject]);
+
+  // Auto-refresh on file changes (polling with debouncing)
+  useEffect(() => {
+    if (!currentProject) return;
+
+    let lastFeedbackCheck: number | null = null;
+    let lastIssuesCheck: number | null = null;
+    let debounceTimer: NodeJS.Timeout | null = null;
+
+    // Initialize timestamps
+    const initializeTimestamps = async () => {
+      try {
+        const [feedbackTs, issuesTs] = await tauri.getProjectFilesTimestamps(currentProject.path);
+        lastFeedbackCheck = feedbackTs;
+        lastIssuesCheck = issuesTs;
+      } catch (error) {
+        console.error('[ProjectDetail] Failed to initialize timestamps:', error);
+      }
+    };
+
+    initializeTimestamps();
+
+    // Check for file modifications every 2 seconds
+    const checkInterval = setInterval(async () => {
+      try {
+        const result = await tauri.checkProjectFilesModified(
+          currentProject.path,
+          lastFeedbackCheck,
+          lastIssuesCheck
+        );
+
+        if (result.feedback_modified || result.issues_modified) {
+          // Debounce the refresh to avoid excessive updates
+          if (debounceTimer) {
+            clearTimeout(debounceTimer);
+          }
+
+          debounceTimer = setTimeout(async () => {
+            try {
+              await refreshProject(currentProject.id);
+              // Update timestamps after refresh
+              const [feedbackTs, issuesTs] = await tauri.getProjectFilesTimestamps(currentProject.path);
+              lastFeedbackCheck = feedbackTs;
+              lastIssuesCheck = issuesTs;
+            } catch (error) {
+              console.error('[ProjectDetail] Failed to refresh after file change:', error);
+            }
+          }, 500); // 500ms debounce
+        }
+      } catch (error) {
+        console.error('[ProjectDetail] Failed to check file modifications:', error);
+      }
+    }, 2000); // Check every 2 seconds
+
+    return () => {
+      clearInterval(checkInterval);
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [currentProject, refreshProject]);
+
 
   const handleAddFeedback = () => {
     setEditingFeedback(undefined);

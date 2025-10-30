@@ -2,7 +2,7 @@ mod models;
 mod commands;
 mod utils;
 
-use commands::{settings, projects, feedback, issues, launcher, prompts, npm};
+use commands::{settings, projects, feedback, issues, launcher, prompts, npm, watcher};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -71,6 +71,9 @@ pub fn run() {
             // NPM commands
             npm::detect_npm_scripts,
             npm::run_npm_script,
+            // Watcher commands
+            watcher::check_project_files_modified,
+            watcher::get_project_files_timestamps,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

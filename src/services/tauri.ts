@@ -344,3 +344,27 @@ export async function getSessionStatus(projectPath: string): Promise<SessionInfo
 export async function focusClaudeTerminal(projectPath: string): Promise<void> {
   return await invoke('focus_claude_terminal', { projectPath });
 }
+
+// Watcher commands
+export interface FileModificationInfo {
+  feedback_modified: boolean;
+  issues_modified: boolean;
+}
+
+export async function checkProjectFilesModified(
+  projectPath: string,
+  lastFeedbackCheck: number | null,
+  lastIssuesCheck: number | null
+): Promise<FileModificationInfo> {
+  return await invoke('check_project_files_modified', {
+    projectPath,
+    lastFeedbackCheck,
+    lastIssuesCheck
+  });
+}
+
+export async function getProjectFilesTimestamps(
+  projectPath: string
+): Promise<[number | null, number | null]> {
+  return await invoke('get_project_files_timestamps', { projectPath });
+}
