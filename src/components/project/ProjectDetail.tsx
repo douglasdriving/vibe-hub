@@ -16,7 +16,7 @@ import type { FeedbackItem, Issue } from '../../store/types';
 import { STATUS_LABELS, STATUS_COLORS } from '../../store/types';
 import { formatDate } from '../../utils/formatters';
 import { isSetupStatus, generateCleanupPrompt } from '../../utils/prompts';
-import { generateFeedbackRefinementPrompt, generateIssueFixPrompt } from '../../services/clipboard';
+import { generateFeedbackRefinementPrompt, generateIssueFixPrompt, generateAutomatedWorkflowPrompt } from '../../services/clipboard';
 import * as tauri from '../../services/tauri';
 
 export function ProjectDetail() {
@@ -318,6 +318,19 @@ export function ProjectDetail() {
       await tauri.launchClaudeCode(currentProject.path, prompt);
     } catch (error) {
       console.error('Failed to launch issue fix:', error);
+    }
+  };
+
+  const handleAutomatedWorkflow = async () => {
+    if (!currentProject) return;
+    try {
+      const prompt = await generateAutomatedWorkflowPrompt(
+        currentProject.name,
+        currentProject.path
+      );
+      await tauri.launchClaudeCode(currentProject.path, prompt);
+    } catch (error) {
+      console.error('Failed to launch automated workflow:', error);
     }
   };
 
@@ -860,6 +873,7 @@ export function ProjectDetail() {
               onDeleteFeedback={handleDeleteFeedback}
               onReviewFeedback={handleReviewFeedback}
               onRefineAll={handleRefineAllFeedback}
+              onAutomatedWorkflow={handleAutomatedWorkflow}
               onSyncGithub={handleSyncGithub}
             />
           )}

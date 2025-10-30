@@ -1,4 +1,4 @@
-import { Plus, Edit, Trash2, Wrench, Github } from 'lucide-react';
+import { Plus, Edit, Trash2, Wrench, Github, Zap } from 'lucide-react';
 import { Button } from '../../common/Button';
 import type { FeedbackItem, Project } from '../../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../../store/types';
@@ -12,6 +12,7 @@ interface FeedbackTabProps {
   onDeleteFeedback: (id: string) => void;
   onReviewFeedback: (item: FeedbackItem) => void;
   onRefineAll: () => void;
+  onAutomatedWorkflow: () => void;
   onSyncGithub?: () => void;
 }
 
@@ -23,6 +24,7 @@ export function FeedbackTab({
   onDeleteFeedback,
   onReviewFeedback,
   onRefineAll,
+  onAutomatedWorkflow,
   onSyncGithub,
 }: FeedbackTabProps) {
   const pendingFeedback = feedback.filter(f => f.status === 'pending' || f.status === 'needs-review');
@@ -31,6 +33,16 @@ export function FeedbackTab({
     <div>
       <div className="flex items-center justify-end mb-6">
         <div className="flex gap-2">
+          {feedback.filter(f => f.status === 'pending').length > 0 && (
+            <Button
+              onClick={onAutomatedWorkflow}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Zap size={18} className="inline mr-2" />
+              Let Claude Start Working
+            </Button>
+          )}
           {currentProject.githubUrl && currentProject.githubIntegrationEnabled && onSyncGithub && (
             <Button
               variant="secondary"

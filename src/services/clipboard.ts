@@ -27,6 +27,19 @@ export async function generateIssueFixPrompt(
 }
 
 /**
+ * Generate a Claude Code prompt for automated workflow (refine + fix)
+ */
+export async function generateAutomatedWorkflowPrompt(
+  projectName: string,
+  projectPath: string
+): Promise<string> {
+  return await tauri.getPrompt('automatedWorkflow', {
+    PROJECT_NAME: projectName,
+    PROJECT_PATH: projectPath
+  });
+}
+
+/**
  * Copy text to clipboard using the Clipboard API
  */
 export async function copyToClipboard(text: string): Promise<void> {
