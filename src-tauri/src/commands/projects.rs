@@ -554,7 +554,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
             let pending_feedback: Vec<_> = feedback_file.feedback.iter().filter(|f| f.status == "pending").collect();
 
             let issues_file = read_issues_file(&path).unwrap_or_default();
-            let pending_issues: Vec<_> = issues_file.issues.iter().filter(|i| i.status == "pending").collect();
+            let pending_issues: Vec<_> = issues_file.issues.iter().filter(|i| i.status == "pending" || i.status == "for-review").collect();
 
             // Combine feedback and issues count
             let feedback_count = pending_feedback.len() + pending_issues.len();
@@ -635,7 +635,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
     let pending_feedback: Vec<_> = feedback_file.feedback.iter().filter(|f| f.status == "pending").collect();
 
     let issues_file = read_issues_file(path).unwrap_or_default();
-    let pending_issues: Vec<_> = issues_file.issues.iter().filter(|i| i.status == "pending").collect();
+    let pending_issues: Vec<_> = issues_file.issues.iter().filter(|i| i.status == "pending" || i.status == "for-review").collect();
 
     // Combine feedback and issues count
     let feedback_count = pending_feedback.len() + pending_issues.len();
