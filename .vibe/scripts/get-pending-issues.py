@@ -11,7 +11,12 @@ Output: JSON array of pending issues
 
 import json
 import sys
+import io
 from pathlib import Path
+
+# Force UTF-8 encoding for stdout on Windows to handle Unicode characters
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def get_pending_issues(vibe_dir):
     """Read and return only pending issues (excludes completed)"""

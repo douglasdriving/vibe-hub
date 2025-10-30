@@ -11,8 +11,13 @@ Output: Report of files over 500 lines, sorted by size
 
 import os
 import sys
+import io
 from pathlib import Path
 from collections import defaultdict
+
+# Force UTF-8 encoding for stdout on Windows to handle Unicode characters
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def count_code_lines(file_path):
     """Count lines of code, excluding blank lines and comments"""

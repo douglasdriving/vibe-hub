@@ -11,7 +11,12 @@ Output: JSON array of pending feedback items
 
 import json
 import sys
+import io
 from pathlib import Path
+
+# Force UTF-8 encoding for stdout on Windows to handle Unicode characters
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def get_raw_feedback(vibe_dir):
     """Read and return only pending feedback"""
