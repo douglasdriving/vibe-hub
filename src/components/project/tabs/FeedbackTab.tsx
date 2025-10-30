@@ -1,4 +1,4 @@
-import { Plus, Edit, Trash2, Wrench } from 'lucide-react';
+import { Plus, Edit, Trash2, Wrench, Github } from 'lucide-react';
 import { Button } from '../../common/Button';
 import type { FeedbackItem, Project } from '../../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../../store/types';
@@ -130,6 +130,18 @@ export function FeedbackTab({
                       <span className="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded uppercase">
                         Needs Review
                       </span>
+                    )}
+                    {item.githubIssueNumber && (
+                      <a
+                        href={item.githubIssueUrl || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1 hover:bg-gray-700 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Github size={12} />
+                        #{item.githubIssueNumber}
+                      </a>
                     )}
                     <span className={`${PRIORITY_COLORS[item.priority]} text-white text-base px-2 py-1 rounded whitespace-nowrap`}>
                       {PRIORITY_LABELS[item.priority]}

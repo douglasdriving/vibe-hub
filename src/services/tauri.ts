@@ -368,3 +368,18 @@ export async function getProjectFilesTimestamps(
 ): Promise<[number | null, number | null]> {
   return await invoke('get_project_files_timestamps', { projectPath });
 }
+
+// GitHub commands
+export async function fetchGithubIssues(
+  projectPath: string,
+  githubUrl: string
+): Promise<number> {
+  return await invoke('fetch_github_issues', { projectPath, githubUrl });
+}
+
+export async function closeGithubIssue(
+  githubUrl: string,
+  issueNumber: number
+): Promise<void> {
+  return await invoke('close_github_issue', { githubUrl, issueNumber });
+}

@@ -14,6 +14,8 @@ interface SettingsStore {
   updateSoundEffectsEnabled: (enabled: boolean) => Promise<void>;
   updateLaunchOnStartup: (enabled: boolean) => Promise<void>;
   updateAutoRefineOnStartup: (enabled: boolean) => Promise<void>;
+  updateGithubToken: (token: string | undefined) => Promise<void>;
+  updateGithubIntegrationEnabled: (enabled: boolean) => Promise<void>;
   selectDirectory: () => Promise<string | null>;
 }
 
@@ -97,6 +99,16 @@ export const useSettingsStore = create<SettingsStore>((set, get) => {
     // Update auto-refine on startup
     updateAutoRefineOnStartup: async (enabled: boolean) => {
       await updateSetting('autoRefineOnStartup', enabled);
+    },
+
+    // Update GitHub token
+    updateGithubToken: async (token: string | undefined) => {
+      await updateSetting('githubToken', token);
+    },
+
+    // Update GitHub integration enabled
+    updateGithubIntegrationEnabled: async (enabled: boolean) => {
+      await updateSetting('githubIntegrationEnabled', enabled);
     },
 
     // Open directory picker

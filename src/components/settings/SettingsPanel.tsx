@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Folder, FileText } from 'lucide-react';
+import { ArrowLeft, Folder, FileText, Github } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { Button } from '../common/Button';
 import { APP_NAME } from '../../utils/constants';
 import * as tauri from '../../services/tauri';
+import { useState } from 'react';
 
 export function SettingsPanel() {
   const navigate = useNavigate();
-  const { settings, selectDirectory, updateSoundEffectsEnabled, updateLaunchOnStartup, updateAutoRefineOnStartup } = useSettingsStore();
+  const { settings, selectDirectory, updateSoundEffectsEnabled, updateLaunchOnStartup, updateAutoRefineOnStartup, updateGithubToken, updateGithubIntegrationEnabled } = useSettingsStore();
+  const [githubTokenInput, setGithubTokenInput] = useState(settings?.githubToken || '');
 
   const handleSelectDirectory = async () => {
     try {
@@ -42,6 +44,23 @@ export function SettingsPanel() {
       await updateAutoRefineOnStartup(!settings?.autoRefineOnStartup);
     } catch {
       // Silently handle error
+    }
+  };
+
+  const handleToggleGithubIntegration = async () => {
+    try {
+      await updateGithubIntegrationEnabled(!settings?.githubIntegrationEnabled);
+    } catch {
+      // Silently handle error
+    }
+  };
+
+  const handleSaveGithubToken = async () => {
+    try {
+      await updateGithubToken(githubTokenInput || undefined);
+      alert('GitHub token saved successfully!');
+    } catch {
+      alert('Failed to save GitHub token');
     }
   };
 
@@ -201,6 +220,60 @@ export function SettingsPanel() {
               {settings?.autoRefineOnStartup ? 'Enabled' : 'Disabled'}
             </div>
           </label>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Github size={20} />
+            GitHub Integration
+          </h2>
+
+          <p className="text-gray-600 text-sm mb-4">
+            Connect to GitHub to automatically sync issues from your repositories. When enabled, you can fetch open issues as feedback items and automatically close them when completed.
+          </p>
+
+          <div className="space-y-4">
+            <label className="flex items-center cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={settings?.githubIntegrationEnabled ?? false}
+                  onChange={handleToggleGithubIntegration}
+                  className="sr-only"
+                />
+                <div className={`block w-14 h-8 rounded-full transition-colors ${
+                  settings?.githubIntegrationEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                }`}></div>
+                <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
+                  settings?.githubIntegrationEnabled ? 'transform translate-x-6' : ''
+                }`}></div>
+              </div>
+              <div className="ml-3 text-gray-700 font-medium">
+                {settings?.githubIntegrationEnabled ? 'Enabled' : 'Disabled'}
+              </div>
+            </label>
+
+            {settings?.githubIntegrationEnabled && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  GitHub Personal Access Token
+                </label>
+                <p className="text-gray-600 text-xs mb-2">
+                  Create a token at <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">github.com/settings/tokens</a> with 'repo' scope
+                </p>
+                <input
+                  type="password"
+                  value={githubTokenInput}
+                  onChange={(e) => setGithubTokenInput(e.target.value)}
+                  placeholder="ghp_xxxxxxxxxxxx"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm mb-2"
+                />
+                <Button onClick={handleSaveGithubToken} variant="secondary" size="sm">
+                  Save Token
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">

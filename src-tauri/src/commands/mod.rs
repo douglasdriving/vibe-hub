@@ -6,3 +6,4 @@ pub mod launcher;
 pub mod prompts;
 pub mod npm;
 pub mod watcher;
+pub mod github;
