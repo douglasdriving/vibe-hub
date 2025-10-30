@@ -954,6 +954,7 @@ export function ProjectDetail() {
             description: reviewingIssue.description,
             subtasks: reviewingIssue.subtasks,
             status: reviewingIssue.status,
+            lastUserCritique: reviewingIssue.lastUserCritique,
           }}
           onApprove={handleApproveIssue}
           onReportBug={handleReportBug}
