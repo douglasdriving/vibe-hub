@@ -192,6 +192,19 @@ export function ProjectDetail() {
     }
   };
 
+  const handleSyncGithub = async () => {
+    if (!currentProject || !currentProject.githubUrl) return;
+
+    try {
+      const count = await tauri.fetchGithubIssues(currentProject.path, currentProject.githubUrl);
+      alert(`Successfully imported ${count} issue(s) from GitHub!`);
+      // Refresh project to show new feedback items
+      await refreshProject(currentProject.path);
+    } catch (error) {
+      alert(`Failed to sync from GitHub: ${error}`);
+    }
+  };
+
   const handleReviewFeedback = (item: FeedbackItem) => {
     setReviewingFeedback(item);
     setIsReviewModalOpen(true);
@@ -845,6 +858,7 @@ export function ProjectDetail() {
               onDeleteFeedback={handleDeleteFeedback}
               onReviewFeedback={handleReviewFeedback}
               onRefineAll={handleRefineAllFeedback}
+              onSyncGithub={handleSyncGithub}
             />
           )}
 

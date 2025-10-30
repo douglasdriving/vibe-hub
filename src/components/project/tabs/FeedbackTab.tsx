@@ -12,6 +12,7 @@ interface FeedbackTabProps {
   onDeleteFeedback: (id: string) => void;
   onReviewFeedback: (item: FeedbackItem) => void;
   onRefineAll: () => void;
+  onSyncGithub?: () => void;
 }
 
 export function FeedbackTab({
@@ -22,6 +23,7 @@ export function FeedbackTab({
   onDeleteFeedback,
   onReviewFeedback,
   onRefineAll,
+  onSyncGithub,
 }: FeedbackTabProps) {
   const pendingFeedback = feedback.filter(f => f.status === 'pending' || f.status === 'needs-review');
 
@@ -29,6 +31,17 @@ export function FeedbackTab({
     <div>
       <div className="flex items-center justify-end mb-6">
         <div className="flex gap-2">
+          {currentProject.githubUrl && currentProject.githubIntegrationEnabled && onSyncGithub && (
+            <Button
+              variant="secondary"
+              onClick={onSyncGithub}
+              invertedBgColor={currentProject.textColor}
+              invertedTextColor={currentProject.color}
+            >
+              <Github size={18} className="inline mr-2" />
+              Sync from GitHub
+            </Button>
+          )}
           {feedback.filter(f => f.status === 'pending').length > 0 && (
             <Button
               variant="secondary"
