@@ -188,12 +188,15 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
       set({ projects: updatedProjects });
 
-      // If this is the current project, update it and reload feedback
+      // If this is the current project, update it and reload feedback and issues
       const { currentProject } = get();
 
       if (currentProject?.path === project.path) {
-        const feedback = await tauri.getFeedback(updatedProject.path);
-        set({ currentProject: updatedProject, feedback });
+        const [feedback, issues] = await Promise.all([
+          tauri.getFeedback(updatedProject.path),
+          tauri.getIssues(updatedProject.path),
+        ]);
+        set({ currentProject: updatedProject, feedback, issues });
       }
     } catch {
       // Silently handle errors
