@@ -48,7 +48,7 @@ export function ProjectDetail() {
   const [editingFeedback, setEditingFeedback] = useState<FeedbackItem | undefined>();
   const [reviewingFeedback, setReviewingFeedback] = useState<FeedbackItem | undefined>();
   const [reviewingIssue, setReviewingIssue] = useState<Issue | undefined>();
-  const [activeTab, setActiveTab] = useState<'feedback' | 'issues' | 'completed' | 'archived'>('feedback');
+  const [activeTab, setActiveTab] = useState<'feedback' | 'pending-issues' | 'for-review' | 'completed' | 'archived'>('feedback');
 
   // Load project data using custom hook
   const { availableScripts, githubUrl, docs, cleanupStats, projectStats } = useProjectData(currentProject);
@@ -694,9 +694,9 @@ export function ProjectDetail() {
               Feedback ({feedback.filter(f => f.status === 'pending').length})
             </button>
             <button
-              onClick={() => setActiveTab('issues')}
+              onClick={() => setActiveTab('pending-issues')}
               className={`text-xl font-bold px-4 py-2 uppercase transition-colors ${
-                activeTab === 'issues'
+                activeTab === 'pending-issues'
                   ? 'border-b-4 border-white'
                   : 'opacity-60 hover:opacity-100'
               }`}
@@ -706,7 +706,22 @@ export function ProjectDetail() {
                 marginBottom: '-4px'
               }}
             >
-              Issues ({issues.filter(i => i.status !== 'completed').length})
+              Pending ({issues.filter(i => i.status === 'pending' || i.status === 'in-progress' || i.status === 'needs-rework').length})
+            </button>
+            <button
+              onClick={() => setActiveTab('for-review')}
+              className={`text-xl font-bold px-4 py-2 uppercase transition-colors ${
+                activeTab === 'for-review'
+                  ? 'border-b-4 border-white'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                color: currentProject.textColor || '#FFFFFF',
+                textShadow: '2px 2px 0px rgba(0,0,0,1)',
+                marginBottom: '-4px'
+              }}
+            >
+              For Review ({issues.filter(i => i.status === 'for-review').length})
             </button>
             <button
               onClick={() => setActiveTab('completed')}
@@ -753,10 +768,22 @@ export function ProjectDetail() {
             />
           )}
 
-          {/* Issues Tab */}
-          {activeTab === 'issues' && (
+          {/* Pending Issues Tab */}
+          {activeTab === 'pending-issues' && (
             <IssuesTab
-              issues={issues}
+              issues={issues.filter(i => i.status === 'pending' || i.status === 'in-progress' || i.status === 'needs-rework')}
+              currentProject={currentProject}
+              onFixAll={handleFixAllIssues}
+              onReviewIssue={handleReviewIssue}
+              onToggleComplete={handleToggleIssueComplete}
+              onDeleteIssue={handleDeleteIssue}
+            />
+          )}
+
+          {/* For Review Tab */}
+          {activeTab === 'for-review' && (
+            <IssuesTab
+              issues={issues.filter(i => i.status === 'for-review')}
               currentProject={currentProject}
               onFixAll={handleFixAllIssues}
               onReviewIssue={handleReviewIssue}
