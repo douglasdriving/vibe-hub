@@ -53,6 +53,7 @@ export interface Issue {
   completedAt?: string;          // ISO 8601 timestamp
   reviewNotes?: string;          // Bug reports or notes from testing/review (DEPRECATED - use bugReport instead)
   bugReport?: string;            // Bug reports from testing/review phase
+  lastUserCritique?: string;     // User's last critique when marking as needs-rework
 }
 
 // Settings

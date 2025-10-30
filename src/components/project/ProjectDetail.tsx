@@ -278,9 +278,11 @@ export function ProjectDetail() {
 
     try {
       // Update the issue with bug report and set status to needs-rework
+      // Store the bug report as lastUserCritique for display in next review
       await updateIssue(currentProject.path, reviewingIssue.id, {
         status: 'needs-rework',
         bugReport: bugNotes,
+        lastUserCritique: bugNotes,
       });
       setReviewingIssue(undefined);
     } catch (error) {

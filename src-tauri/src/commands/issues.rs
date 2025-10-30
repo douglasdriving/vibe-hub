@@ -148,6 +148,7 @@ pub async fn add_issue(
         completed_at: None,
         review_notes: None,
         bug_report: None,
+        last_user_critique: None,
     };
 
     issues_file.issues.push(new_issue.clone());
@@ -218,6 +219,12 @@ pub async fn update_issue(
     }
     if let Some(review_notes) = updates.review_notes {
         issue.review_notes = Some(review_notes);
+    }
+    if let Some(bug_report) = updates.bug_report {
+        issue.bug_report = Some(bug_report);
+    }
+    if let Some(last_user_critique) = updates.last_user_critique {
+        issue.last_user_critique = Some(last_user_critique);
     }
 
     let new_status = issue.status.clone();
@@ -362,6 +369,7 @@ pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Resul
             completed_at: feedback.completed_at,
             review_notes: None,
             bug_report: None,
+            last_user_critique: None,
         };
 
         issues_file.issues.push(issue);

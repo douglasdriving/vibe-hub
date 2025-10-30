@@ -40,6 +40,13 @@ pub struct Issue {
         default
     )]
     pub bug_report: Option<String>,
+    #[serde(
+        alias = "lastUserCritique",
+        rename = "lastUserCritique",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub last_user_critique: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -66,6 +73,7 @@ pub struct UpdateIssue {
     pub completed_at: Option<String>,
     pub review_notes: Option<String>,
     pub bug_report: Option<String>,
+    pub last_user_critique: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
