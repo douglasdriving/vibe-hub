@@ -1,9 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-fn default_time_estimate() -> String {
-    "Not estimated".to_string()
-}
-
 fn default_complexity() -> u8 {
     3 // Default to "Moderate" complexity
 }
