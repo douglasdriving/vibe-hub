@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 def get_pending_issues(vibe_dir):
-    """Read and return only pending issues"""
+    """Read and return only pending issues (excludes completed)"""
     issues_path = vibe_dir / "issues.json"
 
     if not issues_path.exists():
@@ -23,7 +23,15 @@ def get_pending_issues(vibe_dir):
     with open(issues_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    return data.get("issues", [])
+    all_issues = data.get("issues", [])
+
+    # Filter out completed issues - include pending, in-progress, for-review, and needs-rework
+    pending_issues = [
+        issue for issue in all_issues
+        if issue.get("status") != "completed"
+    ]
+
+    return pending_issues
 
 if __name__ == "__main__":
     # Project's .vibe directory (script is in .vibe/scripts/)

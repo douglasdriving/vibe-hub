@@ -22,13 +22,14 @@ export function IssuesTab({
 }: IssuesTabProps) {
   const pendingIssues = issues.filter(i => i.status !== 'completed');
   const reviewIssues = issues.filter(i => i.status === 'for-review');
+  const needsReworkIssues = issues.filter(i => i.status === 'needs-rework');
   const activeIssues = issues.filter(i => i.status === 'pending' || i.status === 'in-progress');
 
   return (
     <div>
       <div className="flex items-center justify-end mb-6">
         <div className="flex gap-2">
-          {activeIssues.length > 0 && (
+          {(activeIssues.length > 0 || needsReworkIssues.length > 0) && (
             <Button
               variant="secondary"
               onClick={onFixAll}
@@ -87,39 +88,69 @@ export function IssuesTab({
             </div>
           )}
 
+          {/* Needs Rework Issues */}
+          {needsReworkIssues.length > 0 && (
+            <div>
+              <h3 className="text-xl font-bold mb-3 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
+                Needs Rework ({needsReworkIssues.length})
+              </h3>
+              <div className="space-y-3">
+                {needsReworkIssues
+                  .sort((a, b) => a.priority - b.priority)
+                  .map((issue) => (
+                    <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 shadow-lg">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-white font-bold text-lg">{issue.title}</h3>
+                            <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold uppercase">Needs Rework</span>
+                          </div>
+                          <p className="text-white/90 mb-3">{issue.description}</p>
+                          {issue.bugReport && (
+                            <div className="bg-red-900/50 border-2 border-red-400 rounded p-3 mb-3">
+                              <p className="text-xs font-bold text-red-200 mb-1">BUG REPORT:</p>
+                              <p className="text-white text-sm">{issue.bugReport}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className={`${COMPLEXITY_COLORS[issue.complexity]} text-white px-2 py-1 rounded font-semibold`}>
+                              {COMPLEXITY_LABELS[issue.complexity]}
+                            </span>
+                            <span className={`${PRIORITY_COLORS[issue.priority]} text-white px-2 py-1 rounded`}>
+                              {PRIORITY_LABELS[issue.priority]}
+                            </span>
+                            <button onClick={() => onDeleteIssue(issue.id)} className="text-red-200 hover:text-white">
+                              <Trash2 size={14} className="inline mr-1" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {/* Pending/In-Progress Issues */}
           {activeIssues.length > 0 && (
             <div>
-              {reviewIssues.length > 0 && (
+              {(reviewIssues.length > 0 || needsReworkIssues.length > 0) && (
                 <h3 className="text-xl font-bold mb-3 uppercase" style={{ color: currentProject.textColor || '#FFFFFF', textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
                   Pending Issues ({activeIssues.length})
                 </h3>
               )}
               <div className="space-y-3">
                 {activeIssues
-                  .sort((a, b) => {
-                    // Prioritize issues with reviewNotes (bug reports)
-                    if (a.reviewNotes && !b.reviewNotes) return -1;
-                    if (!a.reviewNotes && b.reviewNotes) return 1;
-                    return a.priority - b.priority;
-                  })
+                  .sort((a, b) => a.priority - b.priority)
                   .map((issue) => (
                     <div key={issue.id} className="border-4 border-black rounded-lg p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="text-white font-bold text-lg">{issue.title}</h3>
-                            {issue.reviewNotes && (
-                              <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold uppercase">Bug Reported</span>
-                            )}
                           </div>
                           <p className="text-white/90 mb-3">{issue.description}</p>
-                          {issue.reviewNotes && (
-                            <div className="bg-red-900/50 border-2 border-red-400 rounded p-2 mb-3">
-                              <p className="text-xs font-bold text-red-200 mb-1">BUG REPORT:</p>
-                              <p className="text-white/90 text-sm">{issue.reviewNotes}</p>
-                            </div>
-                          )}
                           <div className="flex items-center gap-4 text-sm">
                             <span className={`${COMPLEXITY_COLORS[issue.complexity]} text-white px-2 py-1 rounded font-semibold`}>
                               {COMPLEXITY_LABELS[issue.complexity]}

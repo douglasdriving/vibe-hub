@@ -147,6 +147,7 @@ pub async fn add_issue(
         created_at: chrono::Utc::now().to_rfc3339(),
         completed_at: None,
         review_notes: None,
+        bug_report: None,
     };
 
     issues_file.issues.push(new_issue.clone());
@@ -360,6 +361,7 @@ pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Resul
             created_at: feedback.created_at.clone(),
             completed_at: feedback.completed_at,
             review_notes: None,
+            bug_report: None,
         };
 
         issues_file.issues.push(issue);

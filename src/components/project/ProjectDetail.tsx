@@ -184,12 +184,10 @@ export function ProjectDetail() {
     if (!currentProject || !reviewingIssue) return;
 
     try {
-      // Create a new feedback item linked to this issue
-      await addFeedback(currentProject.path, {
-        text: `Bug report for "${reviewingIssue.title}": ${bugNotes}`,
-        priority: 1, // Bug reports are high priority
-        status: 'pending',
-        relatedIssueId: reviewingIssue.id,
+      // Update the issue with bug report and set status to needs-rework
+      await updateIssue(currentProject.path, reviewingIssue.id, {
+        status: 'needs-rework',
+        bugReport: bugNotes,
       });
       setReviewingIssue(undefined);
     } catch (error) {

@@ -21,7 +21,7 @@ pub struct Issue {
     #[serde(default = "default_complexity")]
     pub complexity: u8,
     pub priority: u8,
-    pub status: String, // 'pending' | 'in-progress' | 'for-review' | 'completed'
+    pub status: String, // 'pending' | 'in-progress' | 'for-review' | 'needs-rework' | 'completed'
     #[serde(alias = "createdAt", rename = "createdAt")]
     pub created_at: String,
     #[serde(alias = "completedAt", rename = "completedAt")]
@@ -33,6 +33,13 @@ pub struct Issue {
         default
     )]
     pub review_notes: Option<String>,
+    #[serde(
+        alias = "bugReport",
+        rename = "bugReport",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub bug_report: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,6 +65,7 @@ pub struct UpdateIssue {
     pub status: Option<String>,
     pub completed_at: Option<String>,
     pub review_notes: Option<String>,
+    pub bug_report: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

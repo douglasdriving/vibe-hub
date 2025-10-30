@@ -44,10 +44,11 @@ export interface Issue {
   timeEstimate?: string;         // Estimated time (DEPRECATED - kept for backwards compatibility)
   complexity: 1 | 2 | 3 | 4 | 5; // Complexity rating (1=Trivial, 2=Simple, 3=Moderate, 4=Complex, 5=Very Complex)
   priority: 1 | 2 | 3 | 4 | 5;  // Priority level
-  status: 'pending' | 'in-progress' | 'for-review' | 'completed';
+  status: 'pending' | 'in-progress' | 'for-review' | 'needs-rework' | 'completed';
   createdAt: string;             // ISO 8601 timestamp
   completedAt?: string;          // ISO 8601 timestamp
-  reviewNotes?: string;          // Bug reports or notes from testing/review
+  reviewNotes?: string;          // Bug reports or notes from testing/review (DEPRECATED - use bugReport instead)
+  bugReport?: string;            // Bug reports from testing/review phase
 }
 
 // Settings
