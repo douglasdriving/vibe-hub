@@ -62,13 +62,18 @@ pub struct UpdateIssue {
     pub title: Option<String>,
     pub description: Option<String>,
     pub subtasks: Option<Vec<String>>,
+    #[serde(alias = "timeEstimate")]
     pub time_estimate: Option<String>,
     pub complexity: Option<u8>,
     pub priority: Option<u8>,
     pub status: Option<String>,
+    #[serde(alias = "completedAt")]
     pub completed_at: Option<String>,
+    #[serde(alias = "reviewNotes")]
     pub review_notes: Option<String>,
+    #[serde(alias = "bugReport")]
     pub bug_report: Option<String>,
+    #[serde(alias = "lastUserCritique")]
     pub last_user_critique: Option<String>,
 }
 
