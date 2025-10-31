@@ -112,6 +112,8 @@ pub async fn fetch_github_issues(
     project_path: String,
     github_url: String,
 ) -> Result<usize, String> {
+    println!("[fetch_github_issues] Starting fetch for: {}", github_url);
+
     // Read settings to get GitHub token
     let settings = read_settings(&app)?;
     let token = settings.github_token
@@ -124,11 +126,14 @@ pub async fn fetch_github_issues(
 
     // Parse GitHub URL to extract owner and repo
     let (owner, repo) = parse_github_url(&github_url)?;
+    println!("[fetch_github_issues] Parsed owner='{}', repo='{}'", owner, repo);
 
     // Create GitHub client
     let client = create_github_client(&token)?;
+    println!("[fetch_github_issues] GitHub client created successfully");
 
     // Fetch open issues from GitHub
+    println!("[fetch_github_issues] Fetching open issues from GitHub API...");
     let issues = client
         .issues(&owner, &repo)
         .list()
@@ -137,6 +142,8 @@ pub async fn fetch_github_issues(
         .send()
         .await
         .map_err(|e| format!("Failed to fetch GitHub issues: {}. Please check your GitHub token and repository access.", e))?;
+
+    println!("[fetch_github_issues] Found {} open issues on GitHub", issues.items.len());
 
     // Read existing feedback
     let path = Path::new(&project_path);
@@ -178,7 +185,11 @@ pub async fn fetch_github_issues(
 
     // Save updated feedback file if we imported any issues
     if imported_count > 0 {
+        println!("[fetch_github_issues] Importing {} new issue(s) to feedback file", imported_count);
         write_feedback_file(path, &feedback_file)?;
+        println!("[fetch_github_issues] Feedback file updated successfully");
+    } else {
+        println!("[fetch_github_issues] No new issues to import (all already exist in feedback)");
     }
 
     Ok(imported_count)
@@ -228,11 +239,18 @@ pub async fn sync_all_github_issues(
         .map_err(|e| format!("Failed to read projects directory: {}", e))?;
 
     let mut total_synced = 0;
+    let mut projects_scanned = 0;
+    let mut projects_with_metadata = 0;
+    let mut projects_with_github_url = 0;
+    let mut projects_with_sync_enabled = 0;
 
     for entry in entries {
         let entry = match entry {
             Ok(e) => e,
-            Err(_) => continue,
+            Err(e) => {
+                eprintln!("[sync_all_github_issues] Failed to read entry: {}", e);
+                continue;
+            }
         };
 
         let path = entry.path();
@@ -240,16 +258,25 @@ pub async fn sync_all_github_issues(
             continue;
         }
 
+        projects_scanned += 1;
+        let project_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+
         // Check if project has GitHub integration enabled
         let metadata_path = path.join("vibe-hub.md");
         if !metadata_path.exists() {
+            println!("[sync_all_github_issues] Project '{}': No vibe-hub.md found", project_name);
             continue;
         }
+
+        projects_with_metadata += 1;
 
         // Read metadata to check for GitHub URL and integration enabled
         let content = match fs::read_to_string(&metadata_path) {
             Ok(c) => c,
-            Err(_) => continue,
+            Err(e) => {
+                eprintln!("[sync_all_github_issues] Project '{}': Failed to read vibe-hub.md: {}", project_name, e);
+                continue;
+            }
         };
 
         let mut github_url: Option<String> = None;
@@ -258,7 +285,8 @@ pub async fn sync_all_github_issues(
         for line in content.lines() {
             let line = line.trim();
             if line.starts_with("GitHub:") || line.starts_with("github:") {
-                github_url = Some(line.split(':').nth(1).unwrap_or("").trim().to_string());
+                let url = line.split(':').skip(1).collect::<Vec<_>>().join(":").trim().to_string();
+                github_url = Some(url);
             }
             if line.starts_with("GitHubSync:") || line.starts_with("githubSync:") {
                 let value = line.split(':').nth(1).unwrap_or("").trim().to_lowercase();
@@ -266,33 +294,52 @@ pub async fn sync_all_github_issues(
             }
         }
 
+        if let Some(ref url) = github_url {
+            projects_with_github_url += 1;
+            println!("[sync_all_github_issues] Project '{}': GitHub URL = '{}'", project_name, url);
+            println!("[sync_all_github_issues] Project '{}': GitHubSync = {}", project_name, github_enabled);
+        } else {
+            println!("[sync_all_github_issues] Project '{}': No GitHub URL found in vibe-hub.md", project_name);
+        }
+
         // Skip if no GitHub URL or integration not enabled
         if github_url.is_none() || !github_enabled {
+            if github_url.is_some() && !github_enabled {
+                println!("[sync_all_github_issues] Project '{}': Skipping (GitHubSync not enabled)", project_name);
+            }
             continue;
         }
+
+        projects_with_sync_enabled += 1;
 
         let url = github_url.unwrap();
         if url.is_empty() {
             continue;
         }
 
-        println!("[sync_all_github_issues] Found project with GitHub sync enabled: {:?}", path);
-        println!("[sync_all_github_issues] GitHub URL: {}", url);
+        println!("[sync_all_github_issues] Project '{}': Attempting to sync from {}", project_name, url);
 
         // Try to sync this project
         match fetch_github_issues(app.clone(), path.to_string_lossy().to_string(), url.clone()).await {
             Ok(count) => {
-                println!("[sync_all_github_issues] Synced {} issues from {}", count, url);
+                println!("[sync_all_github_issues] Project '{}': Successfully synced {} issue(s)", project_name, count);
                 total_synced += count;
             },
             Err(e) => {
                 // Log error but continue with other projects
-                eprintln!("[sync_all_github_issues] Failed to sync GitHub issues for {:?}: {}", path, e);
+                eprintln!("[sync_all_github_issues] Project '{}': ERROR - {}", project_name, e);
             }
         }
     }
 
-    println!("[sync_all_github_issues] Total synced: {} issues", total_synced);
+    println!("\n[sync_all_github_issues] ===== SYNC SUMMARY =====");
+    println!("[sync_all_github_issues] Projects scanned: {}", projects_scanned);
+    println!("[sync_all_github_issues] Projects with vibe-hub.md: {}", projects_with_metadata);
+    println!("[sync_all_github_issues] Projects with GitHub URL: {}", projects_with_github_url);
+    println!("[sync_all_github_issues] Projects with sync enabled: {}", projects_with_sync_enabled);
+    println!("[sync_all_github_issues] Total issues synced: {}", total_synced);
+    println!("[sync_all_github_issues] ========================\n");
+
     Ok(total_synced)
 }
 
