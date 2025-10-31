@@ -389,3 +389,10 @@ export async function closeGithubIssue(
 ): Promise<void> {
   return await invoke('close_github_issue', { githubUrl, issueNumber });
 }
+
+export async function toggleGithubSync(
+  projectPath: string,
+  enabled: boolean
+): Promise<void> {
+  return await invoke('toggle_github_sync', { projectPath, enabled });
+}

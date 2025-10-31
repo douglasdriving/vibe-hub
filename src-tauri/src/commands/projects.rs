@@ -482,33 +482,27 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
     }
 
     if metadata_path.exists() {
-        // File exists, check if we need to add GitHub fields
+        // File exists, check if we need to add GitHubSync field
         let content = fs::read_to_string(&metadata_path)
             .map_err(|e| format!("Failed to read metadata file: {}", e))?;
 
-        let has_github_field = content.lines().any(|line| line.trim().starts_with("GitHub:"));
         let has_sync_field = content.lines().any(|line| line.trim().starts_with("GitHubSync:"));
 
-        // If GitHub fields are missing and there's a git remote, add them
-        if !has_github_field || !has_sync_field {
+        // If GitHubSync field is missing and there's a GitHub remote, add it
+        if !has_sync_field {
             if let Some(github_url) = get_git_remote_url(project_path) {
                 if github_url.contains("github.com") {
                     let mut updated_content = String::new();
-                    let mut added_fields = false;
+                    let mut added_field = false;
 
                     for line in content.lines() {
                         updated_content.push_str(line);
                         updated_content.push('\n');
 
-                        // Add GitHub fields after the TextColor line
-                        if !added_fields && (line.trim().starts_with("TextColor:") || line.trim().starts_with("Color:")) {
-                            if !has_github_field {
-                                updated_content.push_str(&format!("GitHub: {}\n", github_url));
-                            }
-                            if !has_sync_field {
-                                updated_content.push_str("GitHubSync: false\n");
-                            }
-                            added_fields = true;
+                        // Add GitHubSync field after the TextColor line
+                        if !added_field && (line.trim().starts_with("TextColor:") || line.trim().starts_with("Color:")) {
+                            updated_content.push_str("GitHubSync: false\n");
+                            added_field = true;
                         }
                     }
 
@@ -525,15 +519,15 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
     let color = assign_project_color(&folder_name);
     let text_color = calculate_text_color(&color);
 
-    // Try to get GitHub URL from git remote
-    let github_field = if let Some(github_url) = get_git_remote_url(project_path) {
+    // Add GitHubSync field if there's a GitHub remote
+    let github_sync_field = if let Some(github_url) = get_git_remote_url(project_path) {
         if github_url.contains("github.com") {
-            format!("GitHub: {}", github_url)
+            "GitHubSync: false\n"
         } else {
-            "GitHub: [e.g., https://github.com/username/repo]".to_string()
+            ""
         }
     } else {
-        "GitHub: [e.g., https://github.com/username/repo]".to_string()
+        ""
     };
 
     let template = format!(r#"Name: {}
@@ -542,8 +536,6 @@ Platform: [e.g., Web, Desktop, Mobile, Tauri App, etc.]
 Color: {}
 TextColor: {}
 {}
-GitHubSync: false
-
 ## Description
 
 [Add a brief description of what this project does and its purpose]
@@ -557,7 +549,7 @@ GitHubSync: false
 ## Deployment
 
 [Add deployment URL if applicable, or remove this section]
-"#, folder_name, color, text_color, github_field);
+"#, folder_name, color, text_color, github_sync_field);
 
     fs::write(&metadata_path, template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
@@ -1595,6 +1587,65 @@ pub async fn get_github_url(project_path: String) -> Result<Option<String>, Stri
     };
 
     Ok(Some(https_url))
+}
+
+#[tauri::command]
+pub async fn toggle_github_sync(
+    app: tauri::AppHandle,
+    project_path: String,
+    enabled: bool,
+) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let metadata_path = path.join(VIBE_DIR).join(METADATA_FILE);
+
+    if !metadata_path.exists() {
+        return Err("Metadata file not found".to_string());
+    }
+
+    let content = fs::read_to_string(&metadata_path)
+        .map_err(|e| format!("Failed to read metadata: {}", e))?;
+
+    let mut updated_content = String::new();
+    let mut found_sync_field = false;
+
+    for line in content.lines() {
+        if line.trim().starts_with("GitHubSync:") {
+            updated_content.push_str(&format!("GitHubSync: {}\n", enabled));
+            found_sync_field = true;
+        } else {
+            updated_content.push_str(line);
+            updated_content.push('\n');
+        }
+    }
+
+    // If GitHubSync field doesn't exist, add it after Color/TextColor
+    if !found_sync_field {
+        updated_content.clear();
+        let mut added = false;
+        for line in content.lines() {
+            updated_content.push_str(line);
+            updated_content.push('\n');
+            if !added && (line.trim().starts_with("TextColor:") || line.trim().starts_with("Color:")) {
+                updated_content.push_str(&format!("GitHubSync: {}\n", enabled));
+                added = true;
+            }
+        }
+    }
+
+    fs::write(&metadata_path, updated_content)
+        .map_err(|e| format!("Failed to write metadata: {}", e))?;
+
+    // If enabled, trigger immediate sync for this project
+    if enabled {
+        if let Some(github_url) = get_git_remote_url(path) {
+            if github_url.contains("github.com") {
+                use crate::commands::github::fetch_github_issues;
+                let _ = fetch_github_issues(app, project_path, github_url).await;
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

@@ -41,6 +41,7 @@ pub fn run() {
             projects::get_project_stats,
             projects::upload_project_icon,
             projects::get_icon_data_url,
+            projects::toggle_github_sync,
             // Feedback commands
             feedback::get_feedback,
             feedback::add_feedback,

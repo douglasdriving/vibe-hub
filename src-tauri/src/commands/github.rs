@@ -53,6 +53,41 @@ fn create_github_client(token: &str) -> Result<Octocrab, String> {
         .map_err(|e| format!("Failed to create GitHub client: {}", e))
 }
 
+/// Get GitHub URL from git remote origin
+fn get_github_url_from_git(project_path: &Path) -> Option<String> {
+    use std::process::Command;
+
+    let output = Command::new("git")
+        .args(&["remote", "get-url", "origin"])
+        .current_dir(project_path)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let url = String::from_utf8(output.stdout)
+        .ok()?
+        .trim()
+        .to_string();
+
+    if url.is_empty() || !url.contains("github.com") {
+        return None;
+    }
+
+    // Convert SSH URLs to HTTPS
+    let https_url = if url.starts_with("git@github.com:") {
+        url.replace("git@github.com:", "https://github.com/")
+            .trim_end_matches(".git")
+            .to_string()
+    } else {
+        url.trim_end_matches(".git").to_string()
+    };
+
+    Some(https_url)
+}
+
 /// Read the feedback file from a project directory
 fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
     let feedback_path = project_path.join("vibe-hub-feedback.json");
@@ -262,65 +297,54 @@ pub async fn sync_all_github_issues(
         let project_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
 
         // Check if project has GitHub integration enabled
-        let metadata_path = path.join(".vibe").join("metadata.md");
-        if !metadata_path.exists() {
-            println!("[sync_all_github_issues] Project '{}': No .vibe/metadata.md found", project_name);
-            continue;
-        }
-
-        projects_with_metadata += 1;
-
-        // Read metadata to check for GitHub URL and integration enabled
-        let content = match fs::read_to_string(&metadata_path) {
-            Ok(c) => c,
-            Err(e) => {
-                eprintln!("[sync_all_github_issues] Project '{}': Failed to read .vibe/metadata.md: {}", project_name, e);
+        // Get GitHub URL from git remote
+        let github_url = match get_github_url_from_git(&path) {
+            Some(url) => url,
+            None => {
+                println!("[sync_all_github_issues] Project '{}': No GitHub remote found", project_name);
                 continue;
             }
         };
 
-        let mut github_url: Option<String> = None;
-        let mut github_enabled = false;
+        projects_with_github_url += 1;
+        println!("[sync_all_github_issues] Project '{}': GitHub URL = '{}'", project_name, github_url);
 
-        for line in content.lines() {
-            let line = line.trim();
-            if line.starts_with("GitHub:") || line.starts_with("github:") {
-                let url = line.split(':').skip(1).collect::<Vec<_>>().join(":").trim().to_string();
-                github_url = Some(url);
+        // Check if GitHub sync is enabled for this project
+        let metadata_path = path.join(".vibe").join("metadata.md");
+        let github_enabled = if metadata_path.exists() {
+            projects_with_metadata += 1;
+            match fs::read_to_string(&metadata_path) {
+                Ok(content) => {
+                    let enabled = content.lines().any(|line| {
+                        let trimmed = line.trim();
+                        if trimmed.starts_with("GitHubSync:") || trimmed.starts_with("githubSync:") {
+                            let value = trimmed.split(':').nth(1).unwrap_or("").trim().to_lowercase();
+                            value == "true" || value == "enabled" || value == "yes"
+                        } else {
+                            false
+                        }
+                    });
+                    println!("[sync_all_github_issues] Project '{}': GitHubSync = {}", project_name, enabled);
+                    enabled
+                }
+                Err(_) => false
             }
-            if line.starts_with("GitHubSync:") || line.starts_with("githubSync:") {
-                let value = line.split(':').nth(1).unwrap_or("").trim().to_lowercase();
-                github_enabled = value == "true" || value == "enabled" || value == "yes";
-            }
-        }
-
-        if let Some(ref url) = github_url {
-            projects_with_github_url += 1;
-            println!("[sync_all_github_issues] Project '{}': GitHub URL = '{}'", project_name, url);
-            println!("[sync_all_github_issues] Project '{}': GitHubSync = {}", project_name, github_enabled);
         } else {
-            println!("[sync_all_github_issues] Project '{}': No GitHub URL found in .vibe/metadata.md", project_name);
-        }
+            println!("[sync_all_github_issues] Project '{}': No .vibe/metadata.md found, defaulting to sync disabled", project_name);
+            false
+        };
 
-        // Skip if no GitHub URL or integration not enabled
-        if github_url.is_none() || !github_enabled {
-            if github_url.is_some() && !github_enabled {
-                println!("[sync_all_github_issues] Project '{}': Skipping (GitHubSync not enabled)", project_name);
-            }
+        if !github_enabled {
+            println!("[sync_all_github_issues] Project '{}': Skipping (GitHubSync not enabled)", project_name);
             continue;
         }
 
         projects_with_sync_enabled += 1;
 
-        let url = github_url.unwrap();
-        if url.is_empty() {
-            continue;
-        }
-
-        println!("[sync_all_github_issues] Project '{}': Attempting to sync from {}", project_name, url);
+        println!("[sync_all_github_issues] Project '{}': Attempting to sync from {}", project_name, github_url);
 
         // Try to sync this project
-        match fetch_github_issues(app.clone(), path.to_string_lossy().to_string(), url.clone()).await {
+        match fetch_github_issues(app.clone(), path.to_string_lossy().to_string(), github_url.clone()).await {
             Ok(count) => {
                 println!("[sync_all_github_issues] Project '{}': Successfully synced {} issue(s)", project_name, count);
                 total_synced += count;
