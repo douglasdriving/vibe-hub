@@ -439,6 +439,38 @@ fn auto_detect_status(_project_path: &Path, has_git: bool, deployment_url: &Opti
     }
 }
 
+fn get_git_remote_url(project_path: &Path) -> Option<String> {
+    let output = git_command()
+        .args(&["remote", "get-url", "origin"])
+        .current_dir(project_path)
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let url = String::from_utf8(output.stdout)
+        .ok()?
+        .trim()
+        .to_string();
+
+    if url.is_empty() {
+        return None;
+    }
+
+    // Convert SSH URLs to HTTPS for consistency
+    let https_url = if url.starts_with("git@github.com:") {
+        url.replace("git@github.com:", "https://github.com/")
+            .trim_end_matches(".git")
+            .to_string()
+    } else {
+        url.trim_end_matches(".git").to_string()
+    };
+
+    Some(https_url)
+}
+
 fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
     let vibe_dir = project_path.join(VIBE_DIR);
     let metadata_path = vibe_dir.join(METADATA_FILE);
@@ -450,6 +482,42 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
     }
 
     if metadata_path.exists() {
+        // File exists, check if we need to add GitHub fields
+        let content = fs::read_to_string(&metadata_path)
+            .map_err(|e| format!("Failed to read metadata file: {}", e))?;
+
+        let has_github_field = content.lines().any(|line| line.trim().starts_with("GitHub:"));
+        let has_sync_field = content.lines().any(|line| line.trim().starts_with("GitHubSync:"));
+
+        // If GitHub fields are missing and there's a git remote, add them
+        if !has_github_field || !has_sync_field {
+            if let Some(github_url) = get_git_remote_url(project_path) {
+                if github_url.contains("github.com") {
+                    let mut updated_content = String::new();
+                    let mut added_fields = false;
+
+                    for line in content.lines() {
+                        updated_content.push_str(line);
+                        updated_content.push('\n');
+
+                        // Add GitHub fields after the TextColor line
+                        if !added_fields && (line.trim().starts_with("TextColor:") || line.trim().starts_with("Color:")) {
+                            if !has_github_field {
+                                updated_content.push_str(&format!("GitHub: {}\n", github_url));
+                            }
+                            if !has_sync_field {
+                                updated_content.push_str("GitHubSync: false\n");
+                            }
+                            added_fields = true;
+                        }
+                    }
+
+                    fs::write(&metadata_path, updated_content)
+                        .map_err(|e| format!("Failed to update metadata file: {}", e))?;
+                }
+            }
+        }
+
         return Ok(());
     }
 
@@ -457,12 +525,23 @@ fn ensure_metadata_file(project_path: &Path) -> Result<(), String> {
     let color = assign_project_color(&folder_name);
     let text_color = calculate_text_color(&color);
 
+    // Try to get GitHub URL from git remote
+    let github_field = if let Some(github_url) = get_git_remote_url(project_path) {
+        if github_url.contains("github.com") {
+            format!("GitHub: {}", github_url)
+        } else {
+            "GitHub: [e.g., https://github.com/username/repo]".to_string()
+        }
+    } else {
+        "GitHub: [e.g., https://github.com/username/repo]".to_string()
+    };
+
     let template = format!(r#"Name: {}
 Status: draft
 Platform: [e.g., Web, Desktop, Mobile, Tauri App, etc.]
 Color: {}
 TextColor: {}
-GitHub: [e.g., https://github.com/username/repo]
+{}
 GitHubSync: false
 
 ## Description
@@ -478,7 +557,7 @@ GitHubSync: false
 ## Deployment
 
 [Add deployment URL if applicable, or remove this section]
-"#, folder_name, color, text_color);
+"#, folder_name, color, text_color, github_field);
 
     fs::write(&metadata_path, template)
         .map_err(|e| format!("Failed to create metadata file: {}", e))?;
