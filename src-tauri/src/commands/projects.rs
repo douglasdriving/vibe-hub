@@ -316,9 +316,13 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
             continue;
         }
 
-        // Parse GitHub Integration Enabled: field
-        if trimmed.starts_with("GitHubIntegration:") {
-            let value = trimmed.trim_start_matches("GitHubIntegration:").trim().to_lowercase();
+        // Parse GitHub Sync: field
+        if trimmed.starts_with("GitHubSync:") || trimmed.starts_with("githubSync:") {
+            let value = if trimmed.starts_with("GitHubSync:") {
+                trimmed.trim_start_matches("GitHubSync:")
+            } else {
+                trimmed.trim_start_matches("githubSync:")
+            }.trim().to_lowercase();
             github_integration_enabled = value == "true" || value == "enabled" || value == "yes";
             continue;
         }
