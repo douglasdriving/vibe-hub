@@ -262,9 +262,9 @@ pub async fn sync_all_github_issues(
         let project_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
 
         // Check if project has GitHub integration enabled
-        let metadata_path = path.join("vibe-hub.md");
+        let metadata_path = path.join(".vibe").join("metadata.md");
         if !metadata_path.exists() {
-            println!("[sync_all_github_issues] Project '{}': No vibe-hub.md found", project_name);
+            println!("[sync_all_github_issues] Project '{}': No .vibe/metadata.md found", project_name);
             continue;
         }
 
@@ -274,7 +274,7 @@ pub async fn sync_all_github_issues(
         let content = match fs::read_to_string(&metadata_path) {
             Ok(c) => c,
             Err(e) => {
-                eprintln!("[sync_all_github_issues] Project '{}': Failed to read vibe-hub.md: {}", project_name, e);
+                eprintln!("[sync_all_github_issues] Project '{}': Failed to read .vibe/metadata.md: {}", project_name, e);
                 continue;
             }
         };
@@ -299,7 +299,7 @@ pub async fn sync_all_github_issues(
             println!("[sync_all_github_issues] Project '{}': GitHub URL = '{}'", project_name, url);
             println!("[sync_all_github_issues] Project '{}': GitHubSync = {}", project_name, github_enabled);
         } else {
-            println!("[sync_all_github_issues] Project '{}': No GitHub URL found in vibe-hub.md", project_name);
+            println!("[sync_all_github_issues] Project '{}': No GitHub URL found in .vibe/metadata.md", project_name);
         }
 
         // Skip if no GitHub URL or integration not enabled

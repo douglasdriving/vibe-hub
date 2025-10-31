@@ -462,6 +462,8 @@ Status: draft
 Platform: [e.g., Web, Desktop, Mobile, Tauri App, etc.]
 Color: {}
 TextColor: {}
+GitHub: [e.g., https://github.com/username/repo]
+GitHubSync: false
 
 ## Description
 
