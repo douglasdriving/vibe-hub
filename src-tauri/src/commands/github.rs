@@ -90,9 +90,15 @@ fn get_github_url_from_git(project_path: &Path) -> Option<String> {
 
 /// Read the feedback file from a project directory
 fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
-    let feedback_path = project_path.join("vibe-hub-feedback.json");
+    let feedback_path = project_path.join(".vibe").join("feedback.json");
 
     if !feedback_path.exists() {
+        // Create .vibe directory if it doesn't exist
+        let vibe_dir = project_path.join(".vibe");
+        if !vibe_dir.exists() {
+            fs::create_dir(&vibe_dir)
+                .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+        }
         return Ok(FeedbackFile::default());
     }
 
@@ -105,7 +111,14 @@ fn read_feedback_file(project_path: &Path) -> Result<FeedbackFile, String> {
 
 /// Write the feedback file to a project directory
 fn write_feedback_file(project_path: &Path, feedback_file: &FeedbackFile) -> Result<(), String> {
-    let feedback_path = project_path.join("vibe-hub-feedback.json");
+    // Ensure .vibe directory exists
+    let vibe_dir = project_path.join(".vibe");
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    let feedback_path = vibe_dir.join("feedback.json");
 
     let content = serde_json::to_string_pretty(&feedback_file)
         .map_err(|e| format!("Failed to serialize feedback: {}", e))?;
