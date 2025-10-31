@@ -34,8 +34,8 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [githubSyncEnabled, setGithubSyncEnabled] = useState(false);
+  const [originalGithubSyncEnabled, setOriginalGithubSyncEnabled] = useState(false);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
-  const [isTogglingSync, setIsTogglingSync] = useState(false);
 
   useEffect(() => {
     if (isOpen && project) {
@@ -45,7 +45,9 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
       setStatus(project.status);
       setDeploymentUrl(project.deploymentUrl || '');
       setIconPath(project.iconPath || null);
-      setGithubSyncEnabled(project.githubIntegrationEnabled || false);
+      const syncEnabled = project.githubIntegrationEnabled || false;
+      setGithubSyncEnabled(syncEnabled);
+      setOriginalGithubSyncEnabled(syncEnabled);
 
       // Fetch GitHub URL from git remote
       tauri.getGithubUrl(project.path)
@@ -122,6 +124,18 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
         deploymentUrl: deploymentUrl.trim(),
         iconPath,
       });
+
+      // Handle GitHub sync toggle if it changed
+      if (githubSyncEnabled !== originalGithubSyncEnabled) {
+        console.log(`[EditMetadataModal] GitHub sync changed to: ${githubSyncEnabled}`);
+        await tauri.toggleGithubSync(project.path, githubSyncEnabled);
+
+        if (githubSyncEnabled) {
+          console.log('[EditMetadataModal] Synced! Refreshing project data...');
+          await refreshProject(project.id);
+        }
+      }
+
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save metadata');
@@ -284,54 +298,24 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
               </div>
               <button
                 type="button"
-                onClick={async () => {
-                  if (isTogglingSync) return;
-                  setIsTogglingSync(true);
-                  setError('');
-
-                  try {
-                    const newValue = !githubSyncEnabled;
-                    console.log(`[EditMetadataModal] Toggling GitHub sync to: ${newValue}`);
-
-                    await tauri.toggleGithubSync(project.path, newValue);
-                    setGithubSyncEnabled(newValue);
-
-                    if (newValue) {
-                      console.log('[EditMetadataModal] Synced! Refreshing project data...');
-                      // Refresh the project to load newly synced feedback
-                      await refreshProject(project.id);
-                      console.log('[EditMetadataModal] Project refreshed. Closing modal...');
-                      // Close modal after a short delay to ensure state updates
-                      setTimeout(() => onClose(), 100);
-                    }
-                  } catch (err) {
-                    console.error('Failed to toggle GitHub sync:', err);
-                    setError(err instanceof Error ? err.message : 'Failed to toggle GitHub sync');
-                  } finally {
-                    setIsTogglingSync(false);
-                  }
+                onClick={() => {
+                  setGithubSyncEnabled(!githubSyncEnabled);
                 }}
-                disabled={isTogglingSync || isSaving}
+                disabled={isSaving}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   githubSyncEnabled ? 'bg-blue-600' : 'bg-gray-300'
-                } ${isTogglingSync ? 'opacity-50 cursor-not-allowed' : ''}`}
+                }`}
               >
-                {isTogglingSync ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                ) : (
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      githubSyncEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                )}
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    githubSyncEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
               </button>
             </div>
             {githubSyncEnabled && (
               <p className="text-xs text-green-600 mt-2">
-                ✓ Issues will sync on app start
+                ✓ {originalGithubSyncEnabled ? 'Issues will sync on app start' : 'Issues will sync when you save'}
               </p>
             )}
           </div>
