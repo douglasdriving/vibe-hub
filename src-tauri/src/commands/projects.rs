@@ -239,11 +239,11 @@ fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
         .map_err(|e| format!("Failed to parse issues file: {}", e))
 }
 
-fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, bool) {
+fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<String>, Vec<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, bool, Option<String>, Option<String>) {
     let metadata_path = project_path.join(VIBE_DIR).join(METADATA_FILE);
 
     if !metadata_path.exists() {
-        return (None, String::new(), None, Vec::new(), None, None, None, None, None, None, false);
+        return (None, String::new(), None, Vec::new(), None, None, None, None, None, None, false, None, None);
     }
 
     let contents = fs::read_to_string(&metadata_path).unwrap_or_default();
@@ -260,11 +260,15 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
     let mut platform: Option<String> = None;
     let mut icon_path: Option<String> = None;
     let mut github_integration_enabled = false;
+    let mut dev_command: Option<String> = None;
+    let mut build_command: Option<String> = None;
     let mut needs_migration = false;
 
     let lines: Vec<&str> = contents.lines().collect();
     let mut in_description = false;
     let mut in_tech_stack = false;
+    let mut in_dev_command = false;
+    let mut in_build_command = false;
 
     for line in lines {
         let trimmed = line.trim();
@@ -330,18 +334,38 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         if trimmed.starts_with("## Description") {
             in_description = true;
             in_tech_stack = false;
+            in_dev_command = false;
+            in_build_command = false;
             continue;
         } else if trimmed.starts_with("## Tech Stack") {
             in_tech_stack = true;
             in_description = false;
+            in_dev_command = false;
+            in_build_command = false;
+            continue;
+        } else if trimmed.starts_with("## Dev Command") {
+            in_dev_command = true;
+            in_description = false;
+            in_tech_stack = false;
+            in_build_command = false;
+            continue;
+        } else if trimmed.starts_with("## Build Command") {
+            in_build_command = true;
+            in_description = false;
+            in_tech_stack = false;
+            in_dev_command = false;
             continue;
         } else if trimmed.starts_with("## Deployment") {
             in_tech_stack = false;
             in_description = false;
+            in_dev_command = false;
+            in_build_command = false;
             continue;
         } else if trimmed.starts_with("##") {
             in_description = false;
             in_tech_stack = false;
+            in_dev_command = false;
+            in_build_command = false;
             continue;
         }
 
@@ -355,7 +379,11 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
             if !tech.is_empty() {
                 tech_stack.push(tech.to_string());
             }
-        } else if !in_description && !in_tech_stack {
+        } else if in_dev_command && !trimmed.is_empty() {
+            dev_command = Some(trimmed.to_string());
+        } else if in_build_command && !trimmed.is_empty() {
+            build_command = Some(trimmed.to_string());
+        } else if !in_description && !in_tech_stack && !in_dev_command && !in_build_command {
             // Check for deployment URL
             if trimmed.starts_with("http://") || trimmed.starts_with("https://") {
                 deployment_url = Some(trimmed.to_string());
@@ -380,7 +408,7 @@ fn parse_metadata_file(project_path: &Path) -> (Option<String>, String, Option<S
         let _ = fs::write(&metadata_path, updated_contents);
     }
 
-    (name, description, deployment_url, tech_stack, status, color, text_color, platform, icon_path, github_url, github_integration_enabled)
+    (name, description, deployment_url, tech_stack, status, color, text_color, platform, icon_path, github_url, github_integration_enabled, dev_command, build_command)
 }
 
 fn assign_project_color(project_name: &str) -> String {
@@ -631,7 +659,7 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
 
             let folder_name = get_project_name(&path);
             let has_git = is_git_repo(&path);
-            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path, github_url, github_integration_enabled) = parse_metadata_file(&path);
+            let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path, github_url, github_integration_enabled, dev_command, build_command) = parse_metadata_file(&path);
 
             // Use metadata status if provided, otherwise auto-detect
             let status = metadata_status.unwrap_or_else(|| auto_detect_status(&path, has_git, &deployment_url));
@@ -679,6 +707,8 @@ pub async fn scan_projects(projects_dir: String) -> Result<Vec<Project>, String>
                 highest_feedback_priority,
                 has_uncommitted_changes: false, // Simplified for now
                 has_git_repo: has_git,
+                dev_command,
+                build_command,
             };
 
             projects.push(project);
@@ -715,7 +745,7 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
 
     let folder_name = get_project_name(path);
     let has_git = is_git_repo(path);
-    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path, github_url, github_integration_enabled) = parse_metadata_file(path);
+    let (display_name, description, deployment_url, _tech_stack, metadata_status, metadata_color, metadata_text_color, platform, icon_path, github_url, github_integration_enabled, dev_command, build_command) = parse_metadata_file(path);
 
     let status = metadata_status.unwrap_or_else(|| auto_detect_status(path, has_git, &deployment_url));
 
@@ -762,6 +792,8 @@ pub async fn get_project_detail(project_path: String) -> Result<Project, String>
         highest_feedback_priority,
         has_uncommitted_changes: false,
         has_git_repo: has_git,
+        dev_command,
+        build_command,
     })
 }
 
@@ -2005,4 +2037,100 @@ pub async fn upload_project_icon(
 
     // Return the relative path from project root
     Ok(format!(".vibe/{}", icon_filename))
+}
+
+#[tauri::command]
+pub async fn update_project_commands(
+    project_path: String,
+    dev_command: Option<String>,
+    build_command: Option<String>,
+) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let vibe_dir = path.join(VIBE_DIR);
+    let metadata_path = vibe_dir.join(METADATA_FILE);
+
+    // Create .vibe directory if it doesn't exist
+    if !vibe_dir.exists() {
+        fs::create_dir(&vibe_dir)
+            .map_err(|e| format!("Failed to create .vibe directory: {}", e))?;
+    }
+
+    // Read existing metadata
+    let contents = if metadata_path.exists() {
+        fs::read_to_string(&metadata_path)
+            .map_err(|e| format!("Failed to read metadata file: {}", e))?
+    } else {
+        return Err("Metadata file does not exist".to_string());
+    };
+
+    let mut updated_lines = Vec::new();
+    let mut has_dev_section = false;
+    let mut has_build_section = false;
+    let mut in_dev_section = false;
+    let mut in_build_section = false;
+    let mut last_header_line = 0;
+
+    for line in contents.lines() {
+        let trimmed = line.trim();
+
+        // Check for existing sections
+        if trimmed.starts_with("## Dev Command") {
+            has_dev_section = true;
+            in_dev_section = true;
+            in_build_section = false;
+            // Skip this line - we'll add it back with content
+            continue;
+        } else if trimmed.starts_with("## Build Command") {
+            has_build_section = true;
+            in_build_section = true;
+            in_dev_section = false;
+            // Skip this line - we'll add it back with content
+            continue;
+        } else if trimmed.starts_with("##") {
+            // Entering a different section
+            in_dev_section = false;
+            in_build_section = false;
+            last_header_line = updated_lines.len();
+        }
+
+        // Skip content inside dev/build sections (we'll replace them)
+        if in_dev_section || in_build_section {
+            continue;
+        }
+
+        updated_lines.push(line.to_string());
+    }
+
+    // If sections don't exist, add them before the first ## section (or at the end)
+    let insert_position = if last_header_line > 0 { last_header_line } else { updated_lines.len() };
+
+    let mut sections_to_insert = Vec::new();
+
+    if !has_dev_section && dev_command.is_some() {
+        sections_to_insert.push("## Dev Command\n".to_string());
+        sections_to_insert.push(format!("{}\n", dev_command.as_ref().unwrap()));
+    } else if has_dev_section && dev_command.is_some() {
+        sections_to_insert.push("## Dev Command\n".to_string());
+        sections_to_insert.push(format!("{}\n", dev_command.as_ref().unwrap()));
+    }
+
+    if !has_build_section && build_command.is_some() {
+        sections_to_insert.push("## Build Command\n".to_string());
+        sections_to_insert.push(format!("{}\n", build_command.as_ref().unwrap()));
+    } else if has_build_section && build_command.is_some() {
+        sections_to_insert.push("## Build Command\n".to_string());
+        sections_to_insert.push(format!("{}\n", build_command.as_ref().unwrap()));
+    }
+
+    // Insert sections
+    for section in sections_to_insert.into_iter().rev() {
+        updated_lines.insert(insert_position, section);
+    }
+
+    let updated_content = updated_lines.join("\n");
+
+    fs::write(&metadata_path, updated_content)
+        .map_err(|e| format!("Failed to write metadata file: {}", e))?;
+
+    Ok(())
 }

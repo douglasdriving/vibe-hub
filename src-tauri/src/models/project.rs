@@ -24,6 +24,8 @@ pub struct Project {
     pub highest_feedback_priority: Option<u8>, // 1-5, None if no pending feedback
     pub has_uncommitted_changes: bool,
     pub has_git_repo: bool,
+    pub dev_command: Option<String>, // Custom dev command (overrides auto-detection)
+    pub build_command: Option<String>, // Custom build command (overrides auto-detection)
 }
 
 #[allow(dead_code)]
