@@ -285,16 +285,24 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
               <button
                 type="button"
                 onClick={async () => {
+                  if (isTogglingSync) return;
                   setIsTogglingSync(true);
+                  setError('');
+
                   try {
                     const newValue = !githubSyncEnabled;
+                    console.log(`[EditMetadataModal] Toggling GitHub sync to: ${newValue}`);
+
                     await tauri.toggleGithubSync(project.path, newValue);
                     setGithubSyncEnabled(newValue);
+
                     if (newValue) {
+                      console.log('[EditMetadataModal] Synced! Refreshing project data...');
                       // Refresh the project to load newly synced feedback
                       await refreshProject(project.id);
-                      // Close modal so user can see the new feedback
-                      onClose();
+                      console.log('[EditMetadataModal] Project refreshed. Closing modal...');
+                      // Close modal after a short delay to ensure state updates
+                      setTimeout(() => onClose(), 100);
                     }
                   } catch (err) {
                     console.error('Failed to toggle GitHub sync:', err);
@@ -308,11 +316,17 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
                   githubSyncEnabled ? 'bg-blue-600' : 'bg-gray-300'
                 } ${isTogglingSync ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    githubSyncEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                {isTogglingSync ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      githubSyncEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                )}
               </button>
             </div>
             {githubSyncEnabled && (
