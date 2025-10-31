@@ -377,6 +377,12 @@ export async function fetchGithubIssues(
   return await invoke('fetch_github_issues', { projectPath, githubUrl });
 }
 
+export async function syncAllGithubIssues(
+  projectsDir: string
+): Promise<number> {
+  return await invoke('sync_all_github_issues', { projectsDir });
+}
+
 export async function closeGithubIssue(
   githubUrl: string,
   issueNumber: number

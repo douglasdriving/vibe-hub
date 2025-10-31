@@ -184,6 +184,102 @@ pub async fn fetch_github_issues(
     Ok(imported_count)
 }
 
+/// Sync GitHub issues for all projects with GitHub integration enabled
+///
+/// This command:
+/// 1. Reads settings to check if global GitHub integration is enabled
+/// 2. Scans all projects in the projects directory
+/// 3. For each project with GitHub integration enabled, fetches and imports issues
+/// 4. Returns count of total issues synced across all projects
+#[tauri::command]
+pub async fn sync_all_github_issues(
+    app: AppHandle,
+    projects_dir: String,
+) -> Result<usize, String> {
+    use std::fs;
+
+    // Read settings to check if GitHub integration is globally enabled
+    let settings = read_settings(&app)?;
+
+    if !settings.github_integration_enabled {
+        return Ok(0); // Silently skip if globally disabled
+    }
+
+    let _token = match &settings.github_token {
+        Some(t) => t,
+        None => return Ok(0), // Silently skip if no token configured
+    };
+
+    let projects_path = Path::new(&projects_dir);
+    if !projects_path.exists() {
+        return Err("Projects directory does not exist".to_string());
+    }
+
+    let entries = fs::read_dir(projects_path)
+        .map_err(|e| format!("Failed to read projects directory: {}", e))?;
+
+    let mut total_synced = 0;
+
+    for entry in entries {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+
+        // Check if project has GitHub integration enabled
+        let metadata_path = path.join("vibe-hub.md");
+        if !metadata_path.exists() {
+            continue;
+        }
+
+        // Read metadata to check for GitHub URL and integration enabled
+        let content = match fs::read_to_string(&metadata_path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+
+        let mut github_url: Option<String> = None;
+        let mut github_enabled = false;
+
+        for line in content.lines() {
+            let line = line.trim();
+            if line.starts_with("GitHub:") || line.starts_with("github:") {
+                github_url = Some(line.split(':').nth(1).unwrap_or("").trim().to_string());
+            }
+            if line.starts_with("GitHubSync:") || line.starts_with("githubSync:") {
+                let value = line.split(':').nth(1).unwrap_or("").trim().to_lowercase();
+                github_enabled = value == "true" || value == "enabled" || value == "yes";
+            }
+        }
+
+        // Skip if no GitHub URL or integration not enabled
+        if github_url.is_none() || !github_enabled {
+            continue;
+        }
+
+        let url = github_url.unwrap();
+        if url.is_empty() {
+            continue;
+        }
+
+        // Try to sync this project
+        match fetch_github_issues(app.clone(), path.to_string_lossy().to_string(), url).await {
+            Ok(count) => total_synced += count,
+            Err(e) => {
+                // Log error but continue with other projects
+                eprintln!("Failed to sync GitHub issues for {:?}: {}", path, e);
+            }
+        }
+    }
+
+    Ok(total_synced)
+}
+
 /// Close a GitHub issue when the corresponding feedback item is marked as completed
 ///
 /// This command:

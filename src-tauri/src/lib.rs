@@ -76,6 +76,7 @@ pub fn run() {
             watcher::get_project_files_timestamps,
             // GitHub commands
             github::fetch_github_issues,
+            github::sync_all_github_issues,
             github::close_github_issue,
         ])
         .run(tauri::generate_context!())

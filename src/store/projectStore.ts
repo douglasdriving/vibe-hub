@@ -82,6 +82,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       }
 
       set({ projects, isLoading: false });
+
+      // Auto-sync GitHub issues for all projects (runs in background)
+      try {
+        const count = await tauri.syncAllGithubIssues(settings.projectsDirectory);
+        if (count > 0) {
+          console.log(`[GitHub Sync] Successfully imported ${count} issue(s) from GitHub`);
+          // Reload projects to show newly synced feedback
+          const updatedProjects = await tauri.scanProjects(settings.projectsDirectory);
+          set({ projects: updatedProjects });
+        }
+      } catch (error) {
+        // Silently fail GitHub sync - don't block app startup
+        console.error('[GitHub Sync] Failed to sync GitHub issues:', error);
+      }
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
     }
@@ -308,7 +322,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   // Toggle issue complete/incomplete
   toggleIssueComplete: async (projectPath: string, issueId: string) => {
     try {
-      const { issues } = get();
+      const { issues, currentProject, feedback } = get();
       const issue = issues.find(i => i.id === issueId);
       if (!issue) return;
 
@@ -321,6 +335,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           : i
       );
       set({ issues: updatedIssues });
+
+      // If marking as completed, check if the original feedback item has a linked GitHub issue
+      if (newStatus === 'completed' && issue.originalFeedbackId) {
+        const linkedFeedback = feedback.find(f => f.id === issue.originalFeedbackId);
+        if (linkedFeedback?.githubIssueNumber && linkedFeedback?.githubIssueUrl && currentProject?.githubUrl) {
+          // Close the GitHub issue
+          try {
+            await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
+            console.log(`[GitHub Sync] Closed GitHub issue #${linkedFeedback.githubIssueNumber}`);
+          } catch (error) {
+            console.error('[GitHub Sync] Failed to close GitHub issue:', error);
+          }
+        }
+      }
     } catch (error) {
       throw error;
     }

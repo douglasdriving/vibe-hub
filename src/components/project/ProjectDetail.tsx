@@ -267,6 +267,20 @@ export function ProjectDetail() {
         status: 'completed',
         completedAt: new Date().toISOString(),
       });
+
+      // If the issue is linked to a GitHub issue, close it on GitHub
+      if (reviewingIssue.originalFeedbackId) {
+        const linkedFeedback = feedback.find(f => f.id === reviewingIssue.originalFeedbackId);
+        if (linkedFeedback?.githubIssueNumber && currentProject.githubUrl) {
+          try {
+            await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
+            console.log(`[GitHub Sync] Closed GitHub issue #${linkedFeedback.githubIssueNumber}`);
+          } catch (error) {
+            console.error('[GitHub Sync] Failed to close GitHub issue:', error);
+          }
+        }
+      }
+
       setReviewingIssue(undefined);
     } catch (error) {
       console.error('Error approving issue:', error);
