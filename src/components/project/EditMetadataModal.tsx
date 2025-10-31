@@ -31,6 +31,9 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
   const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [githubSyncEnabled, setGithubSyncEnabled] = useState(false);
+  const [githubUrl, setGithubUrl] = useState<string | null>(null);
+  const [isTogglingSync, setIsTogglingSync] = useState(false);
 
   useEffect(() => {
     if (isOpen && project) {
@@ -40,6 +43,13 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
       setStatus(project.status);
       setDeploymentUrl(project.deploymentUrl || '');
       setIconPath(project.iconPath || null);
+      setGithubSyncEnabled(project.githubIntegrationEnabled || false);
+
+      // Fetch GitHub URL from git remote
+      tauri.getGithubUrl(project.path)
+        .then(url => setGithubUrl(url || null))
+        .catch(() => setGithubUrl(null));
+
       // Set preview if icon exists
       if (project.iconPath) {
         // Construct absolute path properly
@@ -250,6 +260,64 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
             placeholder="https://example.com"
           />
         </div>
+
+        {githubUrl && (
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  GitHub Integration
+                </label>
+                <p className="text-xs text-gray-600 mb-2">
+                  Automatically sync open issues from{' '}
+                  <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {githubUrl.replace('https://github.com/', '')}
+                  </a>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsTogglingSync(true);
+                  try {
+                    const newValue = !githubSyncEnabled;
+                    await tauri.toggleGithubSync(project.path, newValue);
+                    setGithubSyncEnabled(newValue);
+                    if (newValue) {
+                      // Refresh project to show newly synced issues
+                      window.location.reload();
+                    }
+                  } catch (err) {
+                    console.error('Failed to toggle GitHub sync:', err);
+                    setError(err instanceof Error ? err.message : 'Failed to toggle GitHub sync');
+                  } finally {
+                    setIsTogglingSync(false);
+                  }
+                }}
+                disabled={isTogglingSync || isSaving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  githubSyncEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                } ${isTogglingSync ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    githubSyncEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            {githubSyncEnabled && (
+              <p className="text-xs text-green-600 mt-2">
+                ✓ Issues will sync on app start
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>
