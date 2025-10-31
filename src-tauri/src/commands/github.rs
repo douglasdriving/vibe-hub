@@ -198,16 +198,25 @@ pub async fn sync_all_github_issues(
 ) -> Result<usize, String> {
     use std::fs;
 
+    println!("[sync_all_github_issues] Starting sync for projects in: {}", projects_dir);
+
     // Read settings to check if GitHub integration is globally enabled
     let settings = read_settings(&app)?;
 
+    println!("[sync_all_github_issues] GitHub integration enabled: {}", settings.github_integration_enabled);
+    println!("[sync_all_github_issues] GitHub token present: {}", settings.github_token.is_some());
+
     if !settings.github_integration_enabled {
+        println!("[sync_all_github_issues] GitHub integration is disabled globally, skipping sync");
         return Ok(0); // Silently skip if globally disabled
     }
 
     let _token = match &settings.github_token {
         Some(t) => t,
-        None => return Ok(0), // Silently skip if no token configured
+        None => {
+            println!("[sync_all_github_issues] No GitHub token configured, skipping sync");
+            return Ok(0); // Silently skip if no token configured
+        }
     };
 
     let projects_path = Path::new(&projects_dir);
@@ -267,16 +276,23 @@ pub async fn sync_all_github_issues(
             continue;
         }
 
+        println!("[sync_all_github_issues] Found project with GitHub sync enabled: {:?}", path);
+        println!("[sync_all_github_issues] GitHub URL: {}", url);
+
         // Try to sync this project
-        match fetch_github_issues(app.clone(), path.to_string_lossy().to_string(), url).await {
-            Ok(count) => total_synced += count,
+        match fetch_github_issues(app.clone(), path.to_string_lossy().to_string(), url.clone()).await {
+            Ok(count) => {
+                println!("[sync_all_github_issues] Synced {} issues from {}", count, url);
+                total_synced += count;
+            },
             Err(e) => {
                 // Log error but continue with other projects
-                eprintln!("Failed to sync GitHub issues for {:?}: {}", path, e);
+                eprintln!("[sync_all_github_issues] Failed to sync GitHub issues for {:?}: {}", path, e);
             }
         }
     }
 
+    println!("[sync_all_github_issues] Total synced: {} issues", total_synced);
     Ok(total_synced)
 }
 

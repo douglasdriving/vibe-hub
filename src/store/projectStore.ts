@@ -84,16 +84,18 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       set({ projects, isLoading: false });
 
       // Auto-sync GitHub issues for all projects (runs in background)
+      console.log('[GitHub Sync] Starting automatic GitHub sync...');
       try {
         const count = await tauri.syncAllGithubIssues(settings.projectsDirectory);
+        console.log(`[GitHub Sync] Sync completed. Imported ${count} issue(s)`);
         if (count > 0) {
-          console.log(`[GitHub Sync] Successfully imported ${count} issue(s) from GitHub`);
+          console.log('[GitHub Sync] Reloading projects to show newly synced feedback...');
           // Reload projects to show newly synced feedback
           const updatedProjects = await tauri.scanProjects(settings.projectsDirectory);
           set({ projects: updatedProjects });
         }
       } catch (error) {
-        // Silently fail GitHub sync - don't block app startup
+        // Log error but don't block app startup
         console.error('[GitHub Sync] Failed to sync GitHub issues:', error);
       }
     } catch (error) {
