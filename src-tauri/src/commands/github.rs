@@ -211,10 +211,24 @@ pub async fn fetch_github_issues(
         });
 
         if existing.is_none() {
+            // Format the feedback text with title and body
+            let text = if let Some(body) = &issue.body {
+                let body_trimmed = body.trim();
+                if body_trimmed.is_empty() {
+                    issue.title.clone()
+                } else {
+                    format!("{}\n\n{}", issue.title, body_trimmed)
+                }
+            } else {
+                issue.title.clone()
+            };
+
+            println!("[fetch_github_issues] Importing issue #{}: {}", issue_number, issue.title);
+
             // Create new feedback item from GitHub issue
             let feedback_item = FeedbackItem {
                 id: Uuid::new_v4().to_string(),
-                text: format!("{}", issue.title),
+                text,
                 priority: 3, // Default to medium priority
                 status: "pending".to_string(),
                 created_at: Utc::now().to_rfc3339(),
