@@ -57,11 +57,17 @@ fn create_github_client(token: &str) -> Result<Octocrab, String> {
 fn get_github_url_from_git(project_path: &Path) -> Option<String> {
     use std::process::Command;
 
-    let output = Command::new("git")
-        .args(&["remote", "get-url", "origin"])
-        .current_dir(project_path)
-        .output()
-        .ok()?;
+    #[cfg(target_os = "windows")]
+    use std::os::windows::process::CommandExt;
+
+    let mut cmd = Command::new("git");
+    cmd.args(&["remote", "get-url", "origin"])
+        .current_dir(project_path);
+
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+
+    let output = cmd.output().ok()?;
 
     if !output.status.success() {
         return None;
