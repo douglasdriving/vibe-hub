@@ -6,6 +6,7 @@ import { Upload, Trash2 } from 'lucide-react';
 import type { Project } from '../../store/types';
 import { STATUS_LABELS } from '../../store/types';
 import * as tauri from '../../services/tauri';
+import { useProjectStore } from '../../store/projectStore';
 
 interface EditMetadataModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface EditMetadataModalProps {
 }
 
 export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMetadataModalProps) {
+  const { refreshProject } = useProjectStore();
   const [displayName, setDisplayName] = useState('');
   const [description, setDescription] = useState('');
   const [platform, setPlatform] = useState('');
@@ -289,8 +291,10 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
                     await tauri.toggleGithubSync(project.path, newValue);
                     setGithubSyncEnabled(newValue);
                     if (newValue) {
-                      // Refresh project to show newly synced issues
-                      window.location.reload();
+                      // Refresh the project to load newly synced feedback
+                      await refreshProject(project.id);
+                      // Close modal so user can see the new feedback
+                      onClose();
                     }
                   } catch (err) {
                     console.error('Failed to toggle GitHub sync:', err);
