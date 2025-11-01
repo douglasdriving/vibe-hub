@@ -270,7 +270,10 @@ export function ProjectDetail() {
 
       // If the issue is linked to a GitHub issue, close it on GitHub
       if (reviewingIssue.originalFeedbackId) {
-        const linkedFeedback = feedback.find(f => f.id === reviewingIssue.originalFeedbackId);
+        // Search in both current feedback and archived feedback
+        const linkedFeedback = feedback.find(f => f.id === reviewingIssue.originalFeedbackId)
+          || archivedFeedback.find(f => f.id === reviewingIssue.originalFeedbackId);
+
         if (linkedFeedback?.githubIssueNumber && currentProject.githubUrl) {
           try {
             await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
