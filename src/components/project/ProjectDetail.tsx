@@ -355,6 +355,16 @@ export function ProjectDetail() {
     handleLaunchClaude(undefined);
   };
 
+  const handleMarkAsImplemented = async (item: FeedbackItem) => {
+    if (!currentProject) return;
+    try {
+      await tauri.archiveAndCloseGithubFeedback(currentProject.path, item.id);
+      await refreshProject(currentProject.id);
+    } catch (error) {
+      console.error('Failed to mark as implemented:', error);
+    }
+  };
+
   const handleRunDev = async () => {
     if (!currentProject || !availableScripts?.dev_script_name) return;
     try {
@@ -892,6 +902,7 @@ export function ProjectDetail() {
               onRefineAll={handleRefineAllFeedback}
               onAutomatedWorkflow={handleAutomatedWorkflow}
               onSyncGithub={handleSyncGithub}
+              onMarkAsImplemented={handleMarkAsImplemented}
             />
           )}
 

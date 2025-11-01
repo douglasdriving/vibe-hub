@@ -50,6 +50,7 @@ pub fn run() {
             feedback::delete_feedback,
             feedback::get_archived_feedback,
             feedback::move_feedback_to_archive,
+            feedback::archive_and_close_github_feedback,
             // Issue commands
             issues::get_issues,
             issues::add_issue,

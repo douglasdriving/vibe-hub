@@ -127,6 +127,13 @@ export async function moveFeedbackToArchive(
   return await invoke('move_feedback_to_archive', { projectPath, feedbackId, refinedIntoIssueIds });
 }
 
+export async function archiveAndCloseGithubFeedback(
+  projectPath: string,
+  feedbackId: string
+): Promise<void> {
+  return await invoke('archive_and_close_github_feedback', { projectPath, feedbackId });
+}
+
 // Issue commands
 export async function getIssues(projectPath: string): Promise<Issue[]> {
   return await invoke('get_issues', { projectPath });

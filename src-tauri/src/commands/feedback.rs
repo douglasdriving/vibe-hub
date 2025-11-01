@@ -306,3 +306,59 @@ pub async fn move_feedback_to_archive(
 
     Ok(())
 }
+
+/// Archive a GitHub-synced feedback item and close the corresponding GitHub issue
+///
+/// This command:
+/// 1. Moves the feedback item to the archive with status "refined"
+/// 2. Calls the GitHub API to close the corresponding issue
+/// 3. Returns success or error
+#[tauri::command]
+pub async fn archive_and_close_github_feedback(
+    app: tauri::AppHandle,
+    project_path: String,
+    feedback_id: String,
+) -> Result<(), String> {
+    use crate::commands::github::close_github_issue;
+
+    let path = Path::new(&project_path);
+    let mut pending_file = read_pending_feedback(path)?;
+    let mut archive_file = read_archived_feedback(path)?;
+
+    // Find the feedback item in pending
+    let feedback_index = pending_file.feedback.iter()
+        .position(|f| f.id == feedback_id)
+        .ok_or("Feedback item not found in pending feedback")?;
+
+    // Get the feedback item to check for GitHub metadata
+    let feedback_item = &pending_file.feedback[feedback_index];
+    let github_issue_number = feedback_item.github_issue_number;
+    let github_issue_url = feedback_item.github_issue_url.clone();
+
+    // Remove from pending and mark as refined
+    let mut feedback_item = pending_file.feedback.remove(feedback_index);
+    feedback_item.refined_into_issue_ids = Some(vec!["already-implemented".to_string()]);
+    feedback_item.status = "refined".to_string();
+
+    // Add to archive
+    archive_file.feedback.push(feedback_item);
+
+    // Write both files
+    write_pending_feedback(path, &pending_file)?;
+    write_archived_feedback(path, &archive_file)?;
+
+    // If this feedback has a linked GitHub issue, close it
+    if let (Some(issue_number), Some(issue_url)) = (github_issue_number, github_issue_url) {
+        // Extract the GitHub URL (repo URL) from the issue URL
+        // Issue URL format: https://github.com/owner/repo/issues/123
+        let repo_url = issue_url.split("/issues/").next()
+            .ok_or("Invalid GitHub issue URL format")?;
+
+        match close_github_issue(app, repo_url.to_string(), issue_number).await {
+            Ok(_) => println!("[archive_and_close_github_feedback] Successfully closed GitHub issue #{}", issue_number),
+            Err(e) => eprintln!("[archive_and_close_github_feedback] Failed to close GitHub issue #{}: {}", issue_number, e),
+        }
+    }
+
+    Ok(())
+}

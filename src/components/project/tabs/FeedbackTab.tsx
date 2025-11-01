@@ -1,4 +1,4 @@
-import { Plus, Edit, Trash2, Wrench, Github, Zap } from 'lucide-react';
+import { Plus, Edit, Trash2, Wrench, Github, Zap, CheckCircle } from 'lucide-react';
 import { Button } from '../../common/Button';
 import type { FeedbackItem, Project } from '../../../store/types';
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '../../../store/types';
@@ -14,6 +14,7 @@ interface FeedbackTabProps {
   onRefineAll: () => void;
   onAutomatedWorkflow: () => void;
   onSyncGithub?: () => void;
+  onMarkAsImplemented?: (item: FeedbackItem) => void;
 }
 
 export function FeedbackTab({
@@ -26,6 +27,7 @@ export function FeedbackTab({
   onRefineAll,
   onAutomatedWorkflow,
   onSyncGithub,
+  onMarkAsImplemented,
 }: FeedbackTabProps) {
   const pendingFeedback = feedback.filter(f => f.status === 'pending' || f.status === 'needs-review');
 
@@ -178,6 +180,12 @@ export function FeedbackTab({
                     <span className="text-white/80">{formatDate(item.createdAt)}</span>
                   )}
                   <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    {item.githubIssueNumber && onMarkAsImplemented && (
+                      <button onClick={() => onMarkAsImplemented(item)} className="text-green-300 hover:text-green-100">
+                        <CheckCircle size={14} className="inline mr-1" />
+                        Already Implemented
+                      </button>
+                    )}
                     <button onClick={() => onEditFeedback(item)} className="text-yellow-300 hover:text-yellow-100">
                       <Edit size={14} className="inline mr-1" />
                       Edit
