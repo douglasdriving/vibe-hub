@@ -338,16 +338,27 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       );
       set({ issues: updatedIssues });
 
-      // If marking as completed, check if the original feedback item has a linked GitHub issue
-      if (newStatus === 'completed' && issue.originalFeedbackId) {
-        const linkedFeedback = feedback.find(f => f.id === issue.originalFeedbackId);
-        if (linkedFeedback?.githubIssueNumber && linkedFeedback?.githubIssueUrl && currentProject?.githubUrl) {
-          // Close the GitHub issue
+      // If marking as completed, check if the issue or linked feedback has GitHub metadata
+      if (newStatus === 'completed' && currentProject?.githubUrl) {
+        // First check if the issue itself has GitHub metadata (preferred)
+        if (issue.githubIssueNumber && issue.githubIssueUrl) {
           try {
-            await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
-            console.log(`[GitHub Sync] Closed GitHub issue #${linkedFeedback.githubIssueNumber}`);
+            await tauri.closeGithubIssue(currentProject.githubUrl, issue.githubIssueNumber);
+            console.log(`[GitHub Sync] Closed GitHub issue #${issue.githubIssueNumber} from issue metadata`);
           } catch (error) {
             console.error('[GitHub Sync] Failed to close GitHub issue:', error);
+          }
+        }
+        // Fallback: check the original feedback item for GitHub metadata
+        else if (issue.originalFeedbackId) {
+          const linkedFeedback = feedback.find(f => f.id === issue.originalFeedbackId);
+          if (linkedFeedback?.githubIssueNumber && linkedFeedback?.githubIssueUrl) {
+            try {
+              await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
+              console.log(`[GitHub Sync] Closed GitHub issue #${linkedFeedback.githubIssueNumber} from feedback metadata`);
+            } catch (error) {
+              console.error('[GitHub Sync] Failed to close GitHub issue:', error);
+            }
           }
         }
       }

@@ -268,18 +268,30 @@ export function ProjectDetail() {
         completedAt: new Date().toISOString(),
       });
 
-      // If the issue is linked to a GitHub issue, close it on GitHub
-      if (reviewingIssue.originalFeedbackId) {
-        // Search in both current feedback and archived feedback
-        const linkedFeedback = feedback.find(f => f.id === reviewingIssue.originalFeedbackId)
-          || archivedFeedback.find(f => f.id === reviewingIssue.originalFeedbackId);
-
-        if (linkedFeedback?.githubIssueNumber && currentProject.githubUrl) {
+      // If the issue or linked feedback has GitHub metadata, close it on GitHub
+      if (currentProject.githubUrl) {
+        // First check if the issue itself has GitHub metadata (preferred)
+        if (reviewingIssue.githubIssueNumber && reviewingIssue.githubIssueUrl) {
           try {
-            await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
-            console.log(`[GitHub Sync] Closed GitHub issue #${linkedFeedback.githubIssueNumber}`);
+            await tauri.closeGithubIssue(currentProject.githubUrl, reviewingIssue.githubIssueNumber);
+            console.log(`[GitHub Sync] Closed GitHub issue #${reviewingIssue.githubIssueNumber} from issue metadata`);
           } catch (error) {
             console.error('[GitHub Sync] Failed to close GitHub issue:', error);
+          }
+        }
+        // Fallback: check the original feedback item for GitHub metadata
+        else if (reviewingIssue.originalFeedbackId) {
+          // Search in both current feedback and archived feedback
+          const linkedFeedback = feedback.find(f => f.id === reviewingIssue.originalFeedbackId)
+            || archivedFeedback.find(f => f.id === reviewingIssue.originalFeedbackId);
+
+          if (linkedFeedback?.githubIssueNumber) {
+            try {
+              await tauri.closeGithubIssue(currentProject.githubUrl, linkedFeedback.githubIssueNumber);
+              console.log(`[GitHub Sync] Closed GitHub issue #${linkedFeedback.githubIssueNumber} from feedback metadata`);
+            } catch (error) {
+              console.error('[GitHub Sync] Failed to close GitHub issue:', error);
+            }
           }
         }
       }

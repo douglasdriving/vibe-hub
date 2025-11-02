@@ -9,7 +9,7 @@ const ISSUES_FILE: &str = "issues.json";
 const ISSUES_ARCHIVE_FILE: &str = "issues-archive.json";
 const FEEDBACK_ARCHIVE_FILE: &str = "feedback-archive.json";
 
-fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
+pub fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
     let issues_path = project_path.join(VIBE_DIR).join(ISSUES_FILE);
 
     if !issues_path.exists() {
@@ -23,7 +23,7 @@ fn read_issues_file(project_path: &Path) -> Result<IssueFile, String> {
         .map_err(|e| format!("Failed to parse issues file: {}", e))
 }
 
-fn read_issues_archive_file(project_path: &Path) -> Result<IssueFile, String> {
+pub fn read_issues_archive_file(project_path: &Path) -> Result<IssueFile, String> {
     let archive_path = project_path.join(VIBE_DIR).join(ISSUES_ARCHIVE_FILE);
 
     if !archive_path.exists() {
@@ -75,7 +75,7 @@ fn write_issues_archive_file(project_path: &Path, issues_file: &IssueFile) -> Re
     Ok(())
 }
 
-fn read_archived_feedback(project_path: &Path) -> Result<FeedbackFile, String> {
+pub fn read_archived_feedback(project_path: &Path) -> Result<FeedbackFile, String> {
     let feedback_path = project_path.join(VIBE_DIR).join(FEEDBACK_ARCHIVE_FILE);
 
     if !feedback_path.exists() {
@@ -150,6 +150,8 @@ pub async fn add_issue(
         bug_report: None,
         last_user_critique: None,
         implementation_summary: None,
+        github_issue_number: issue.github_issue_number,
+        github_issue_url: issue.github_issue_url,
     };
 
     issues_file.issues.push(new_issue.clone());
@@ -229,6 +231,12 @@ pub async fn update_issue(
     }
     if let Some(implementation_summary) = updates.implementation_summary {
         issue.implementation_summary = Some(implementation_summary);
+    }
+    if let Some(github_issue_number) = updates.github_issue_number {
+        issue.github_issue_number = Some(github_issue_number);
+    }
+    if let Some(github_issue_url) = updates.github_issue_url {
+        issue.github_issue_url = Some(github_issue_url);
     }
 
     let new_status = issue.status.clone();
@@ -375,6 +383,8 @@ pub async fn migrate_completed_feedback_to_issues(project_path: String) -> Resul
             bug_report: None,
             last_user_critique: None,
             implementation_summary: None,
+            github_issue_number: feedback.github_issue_number,
+            github_issue_url: feedback.github_issue_url,
         };
 
         issues_file.issues.push(issue);

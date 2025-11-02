@@ -57,6 +57,8 @@ export interface Issue {
   bugReport?: string;            // Bug reports from testing/review phase
   lastUserCritique?: string;     // User's last critique when marking as needs-rework
   implementationSummary?: string; // Brief summary of what was implemented (for for-review issues)
+  githubIssueNumber?: number;    // GitHub issue number (if created from GitHub issue)
+  githubIssueUrl?: string;       // GitHub issue URL (if created from GitHub issue)
 }
 
 // Settings

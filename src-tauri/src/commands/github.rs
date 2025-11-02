@@ -199,9 +199,15 @@ pub async fn fetch_github_issues(
 
     println!("[fetch_github_issues] Found {} open issues on GitHub", issues.items.len());
 
-    // Read existing feedback
+    // Read existing feedback and issues
     let path = Path::new(&project_path);
     let mut feedback_file = read_feedback_file(path)?;
+
+    // Also read issues and archived data to avoid re-importing already tracked issues
+    use crate::commands::issues::{read_issues_file, read_issues_archive_file, read_archived_feedback};
+    let issues_file = read_issues_file(path).unwrap_or_default();
+    let issues_archive = read_issues_archive_file(path).unwrap_or_default();
+    let feedback_archive = read_archived_feedback(path).unwrap_or_default();
 
     // Track how many new issues we import
     let mut imported_count = 0;
@@ -211,12 +217,35 @@ pub async fn fetch_github_issues(
         let issue_number = issue.number;
         let issue_url = issue.html_url.to_string();
 
-        // Check if this issue already exists in feedback
-        let existing = feedback_file.feedback.iter().find(|f| {
+        // Check if this issue already exists in:
+        // 1. Active feedback
+        let in_feedback = feedback_file.feedback.iter().any(|f| {
             f.github_issue_number == Some(issue_number)
         });
 
-        if existing.is_none() {
+        // 2. Archived feedback
+        let in_feedback_archive = feedback_archive.feedback.iter().any(|f| {
+            f.github_issue_number == Some(issue_number)
+        });
+
+        // 3. Active issues
+        let in_issues = issues_file.issues.iter().any(|i| {
+            i.github_issue_number == Some(issue_number)
+        });
+
+        // 4. Archived issues
+        let in_issues_archive = issues_archive.issues.iter().any(|i| {
+            i.github_issue_number == Some(issue_number)
+        });
+
+        let already_tracked = in_feedback || in_feedback_archive || in_issues || in_issues_archive;
+
+        if already_tracked {
+            println!("[fetch_github_issues] Skipping issue #{} - already tracked in local data", issue_number);
+            continue;
+        }
+
+        if !already_tracked {
             // Format the feedback text with title and body
             let text = if let Some(body) = &issue.body {
                 let body_trimmed = body.trim();

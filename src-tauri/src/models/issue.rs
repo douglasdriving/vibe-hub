@@ -50,6 +50,20 @@ pub struct Issue {
         default
     )]
     pub implementation_summary: Option<String>,
+    #[serde(
+        alias = "githubIssueNumber",
+        rename = "githubIssueNumber",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub github_issue_number: Option<u64>,
+    #[serde(
+        alias = "githubIssueUrl",
+        rename = "githubIssueUrl",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
+    pub github_issue_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -62,6 +76,10 @@ pub struct NewIssue {
     pub complexity: u8,
     pub priority: u8,
     pub status: String,
+    #[serde(alias = "githubIssueNumber")]
+    pub github_issue_number: Option<u64>,
+    #[serde(alias = "githubIssueUrl")]
+    pub github_issue_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -84,6 +102,10 @@ pub struct UpdateIssue {
     pub last_user_critique: Option<String>,
     #[serde(alias = "implementationSummary")]
     pub implementation_summary: Option<String>,
+    #[serde(alias = "githubIssueNumber")]
+    pub github_issue_number: Option<u64>,
+    #[serde(alias = "githubIssueUrl")]
+    pub github_issue_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
