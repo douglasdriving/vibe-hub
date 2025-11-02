@@ -63,7 +63,9 @@ export async function updateAllMetadata(
   platform: string | null,
   status: string,
   deploymentUrl: string | null,
-  iconPath: string | null
+  iconPath: string | null,
+  devCommand: string | null,
+  buildCommand: string | null
 ): Promise<void> {
   return await invoke('update_all_metadata', {
     projectPath,
@@ -72,7 +74,9 @@ export async function updateAllMetadata(
     platform,
     status,
     deploymentUrl,
-    iconPath
+    iconPath,
+    devCommand,
+    buildCommand
   });
 }
 

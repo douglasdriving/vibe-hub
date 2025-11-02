@@ -18,6 +18,8 @@ interface EditMetadataModalProps {
     status: string;
     deploymentUrl: string;
     iconPath: string | null;
+    devCommand: string;
+    buildCommand: string;
   }) => Promise<void>;
   project: Project;
 }
@@ -36,6 +38,8 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
   const [githubSyncEnabled, setGithubSyncEnabled] = useState(false);
   const [originalGithubSyncEnabled, setOriginalGithubSyncEnabled] = useState(false);
   const [githubUrl, setGithubUrl] = useState<string | null>(null);
+  const [devCommand, setDevCommand] = useState('');
+  const [buildCommand, setBuildCommand] = useState('');
 
   useEffect(() => {
     if (isOpen && project) {
@@ -48,6 +52,42 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
       const syncEnabled = project.githubIntegrationEnabled || false;
       setGithubSyncEnabled(syncEnabled);
       setOriginalGithubSyncEnabled(syncEnabled);
+
+      // Load commands from project metadata or auto-detect them
+      if (project.devCommand || project.buildCommand) {
+        // Use commands from project metadata
+        setDevCommand(project.devCommand || '');
+        setBuildCommand(project.buildCommand || '');
+      } else {
+        // Auto-detect commands from package.json/script files
+        tauri.detectNpmScripts(project.path)
+          .then(scripts => {
+            // Build command strings from detected scripts
+            let detectedDevCmd = '';
+            let detectedBuildCmd = '';
+
+            if (scripts.dev_script_name) {
+              if (scripts.dev_script_type === 'npm') {
+                detectedDevCmd = `npm run ${scripts.dev_script_name}`;
+              } else if (scripts.dev_script_type === 'bat') {
+                detectedDevCmd = `.\\${scripts.dev_script_name}`;
+              } else if (scripts.dev_script_type === 'sh') {
+                detectedDevCmd = `./${scripts.dev_script_name}`;
+              }
+            }
+
+            if (scripts.has_build) {
+              detectedBuildCmd = 'npm run build';
+            }
+
+            setDevCommand(detectedDevCmd);
+            setBuildCommand(detectedBuildCmd);
+          })
+          .catch(() => {
+            setDevCommand('');
+            setBuildCommand('');
+          });
+      }
 
       // Fetch GitHub URL from git remote
       tauri.getGithubUrl(project.path)
@@ -123,6 +163,8 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
         status,
         deploymentUrl: deploymentUrl.trim(),
         iconPath,
+        devCommand: devCommand.trim(),
+        buildCommand: buildCommand.trim(),
       });
 
       // Handle GitHub sync toggle if it changed
@@ -275,6 +317,36 @@ export function EditMetadataModal({ isOpen, onClose, onSave, project }: EditMeta
             onChange={(e) => setDeploymentUrl(e.target.value)}
             placeholder="https://example.com"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-1">
+            Dev Command
+          </label>
+          <Input
+            type="text"
+            value={devCommand}
+            onChange={(e) => setDevCommand(e.target.value)}
+            placeholder="npm run dev"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Command to run the development server (auto-detected from package.json)
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-1">
+            Build Command
+          </label>
+          <Input
+            type="text"
+            value={buildCommand}
+            onChange={(e) => setBuildCommand(e.target.value)}
+            placeholder="npm run build"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Command to build the project for production
+          </p>
         </div>
 
         {githubUrl && (

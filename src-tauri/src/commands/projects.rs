@@ -853,6 +853,8 @@ pub async fn update_all_metadata(
     status: String,
     deployment_url: Option<String>,
     icon_path: Option<String>,
+    dev_command: Option<String>,
+    build_command: Option<String>,
 ) -> Result<(), String> {
     let path = Path::new(&project_path);
     let vibe_dir = path.join(VIBE_DIR);
@@ -874,6 +876,7 @@ pub async fn update_all_metadata(
     let mut existing_color: Option<String> = None;
     let mut existing_text_color: Option<String> = None;
     let mut existing_icon_path: Option<String> = None;
+    let mut existing_github_sync: Option<String> = None;
 
     if let Some(contents) = &existing_contents {
         for line in contents.lines() {
@@ -884,6 +887,8 @@ pub async fn update_all_metadata(
                 existing_text_color = Some(trimmed.trim_start_matches("TextColor:").trim().to_string());
             } else if trimmed.starts_with("IconPath:") {
                 existing_icon_path = Some(trimmed.trim_start_matches("IconPath:").trim().to_string());
+            } else if trimmed.starts_with("GitHubSync:") {
+                existing_github_sync = Some(trimmed.to_string());
             }
         }
     }
@@ -914,12 +919,37 @@ pub async fn update_all_metadata(
         content.push_str(&format!("IconPath: {}\n", icon));
     }
     content.push_str(&format!("Color: {}\n", color));
-    content.push_str(&format!("TextColor: {}\n\n", text_color));
+    content.push_str(&format!("TextColor: {}\n", text_color));
+
+    // Preserve GitHubSync field if it exists
+    if let Some(github_sync_line) = existing_github_sync {
+        content.push_str(&format!("{}\n", github_sync_line));
+    }
+
+    content.push('\n');
 
     content.push_str("## Description\n\n");
     if !description.is_empty() {
         content.push_str(&description);
         content.push_str("\n\n");
+    }
+
+    // Add dev command section if provided
+    if let Some(cmd) = dev_command {
+        if !cmd.is_empty() {
+            content.push_str("## Dev Command\n\n");
+            content.push_str(&cmd);
+            content.push_str("\n\n");
+        }
+    }
+
+    // Add build command section if provided
+    if let Some(cmd) = build_command {
+        if !cmd.is_empty() {
+            content.push_str("## Build Command\n\n");
+            content.push_str(&cmd);
+            content.push_str("\n\n");
+        }
     }
 
     if let Some(url) = deployment_url {

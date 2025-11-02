@@ -46,6 +46,8 @@ pub struct ProjectMetadata {
     pub github_integration_enabled: Option<bool>,
     pub status: Option<String>,
     pub icon_path: Option<String>,
+    pub dev_command: Option<String>,
+    pub build_command: Option<String>,
 }
 
 impl Default for ProjectMetadata {
@@ -62,6 +64,8 @@ impl Default for ProjectMetadata {
             github_integration_enabled: None,
             status: None,
             icon_path: None,
+            dev_command: None,
+            build_command: None,
         }
     }
 }
