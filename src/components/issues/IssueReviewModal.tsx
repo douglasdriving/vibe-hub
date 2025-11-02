@@ -11,6 +11,7 @@ interface IssueReviewModalProps {
     subtasks: string[];
     status: string;
     lastUserCritique?: string;
+    implementationSummary?: string;
   };
   onApprove: () => Promise<void>;
   onReportBug: (bugNotes: string) => Promise<void>;
@@ -99,6 +100,19 @@ export function IssueReviewModal({ isOpen, onClose, issue, onApprove, onReportBu
               {issue.description}
             </div>
           </div>
+
+          {/* Implementation Summary - Show for for-review issues */}
+          {issue.implementationSummary && issue.status === 'for-review' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Implementation Summary:
+              </label>
+              <div className="bg-green-50 border-2 border-green-400 rounded-lg p-4 text-gray-800 whitespace-pre-wrap">
+                <p className="text-xs font-semibold text-green-700 uppercase mb-2">What was changed:</p>
+                {issue.implementationSummary}
+              </div>
+            </div>
+          )}
 
           {/* Previous User Critique - Show if this issue was reworked */}
           {issue.lastUserCritique && (

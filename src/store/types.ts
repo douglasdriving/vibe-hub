@@ -56,6 +56,7 @@ export interface Issue {
   reviewNotes?: string;          // Bug reports or notes from testing/review (DEPRECATED - use bugReport instead)
   bugReport?: string;            // Bug reports from testing/review phase
   lastUserCritique?: string;     // User's last critique when marking as needs-rework
+  implementationSummary?: string; // Brief summary of what was implemented (for for-review issues)
 }
 
 // Settings
