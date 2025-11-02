@@ -40,12 +40,12 @@ export function ReviewModal({ isOpen, onClose, feedbackText, reviewNotes, onSubm
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 border-4 border-black"
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 border-4 border-black max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-4 border-black bg-gradient-to-r from-orange-400 to-red-500">
+        <div className="flex items-center justify-between p-6 border-b-4 border-black bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0">
           <h2 className="text-2xl font-bold text-white uppercase" style={{ textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
             Clarification Needed
           </h2>
@@ -58,8 +58,8 @@ export function ReviewModal({ isOpen, onClose, feedbackText, reviewNotes, onSubm
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-4">
+        {/* Body - scrollable content */}
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* Original Feedback */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -97,7 +97,7 @@ export function ReviewModal({ isOpen, onClose, feedbackText, reviewNotes, onSubm
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-4 border-black bg-gray-50 flex justify-end gap-3">
+        <div className="p-6 border-t-4 border-black bg-gray-50 flex justify-end gap-3 flex-shrink-0">
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
