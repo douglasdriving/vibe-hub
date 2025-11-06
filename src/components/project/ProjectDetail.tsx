@@ -1013,6 +1013,7 @@ export function ProjectDetail() {
             subtasks: reviewingIssue.subtasks,
             status: reviewingIssue.status,
             lastUserCritique: reviewingIssue.lastUserCritique,
+            implementationSummary: reviewingIssue.implementationSummary,
           }}
           onApprove={handleApproveIssue}
           onReportBug={handleReportBug}
